@@ -2365,7 +2365,7 @@ function doLogin(){
     );
   }
 
-  function attemptLogin(usuarios){
+  async function attemptLogin(usuarios){
     const user = findUser(usuarios);
     if(!user){
       err.textContent = 'Usuario no encontrado.';
@@ -2378,12 +2378,32 @@ function doLogin(){
     }
     currentUser = {id:user.id, nombre:user.nombre, username:user.username, rol:user.rol};
     sessionStorage.setItem('ls_session', JSON.stringify(currentUser));
+
+    // Si no hay datos locales, jalamos de la nube ANTES de mostrar la app
+    const localTotal = D.citas.length + D.clientes.length + D.movimientos.length;
+    if(localTotal === 0){
+      btn.textContent='Sincronizando...'; btn.disabled=true;
+      try{
+        const r = await fetch(JSONBIN_URL + '/latest', {headers:{'X-Master-Key': JSONBIN_KEY}});
+        if(r.ok){
+          const json = await r.json();
+          const remote = json.record;
+          if(remote && remote.citas && remote.citas.length > 0){
+            Object.assign(D, remote);
+            saveLocal();
+          }
+        }
+      } catch(e){ /* sin conexión — mostramos lo que hay */ }
+      btn.textContent='ENTRAR'; btn.disabled=false;
+    }
+
     document.getElementById('login-screen').classList.add('hidden');
     applyRoleUI();
     err.textContent='';
     renderAll();
-    pullFromCloud();
     toast('Bienvenida, ' + user.nombre.split(' ')[0] + ' 💅');
+    // Pull secundario para actualizaciones en background
+    pullFromCloud();
   }
 
   const localUser = findUser(D.usuarios);
