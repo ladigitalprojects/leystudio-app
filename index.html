@@ -1266,19 +1266,27 @@ async function pullFromCloud(){
     if(r.ok){
       const json = await r.json();
       const remote = json.record;
-      if(remote && remote.citas){
-        const remoteTotal = (remote.citas||[]).length + (remote.clientes||[]).length + (remote.movimientos||[]).length;
-        const localTotal  = D.citas.length + D.clientes.length + D.movimientos.length;
-        if(remoteTotal >= localTotal){
-          Object.assign(D, remote);
-          saveLocal();
-          actualizarDatalist();
-        }
+      const remoteTotal = remote && remote.citas
+        ? (remote.citas||[]).length + (remote.clientes||[]).length + (remote.movimientos||[]).length
+        : 0;
+      const localTotal  = D.citas.length + D.clientes.length + D.movimientos.length;
+
+      if(remoteTotal > 0 && remoteTotal >= localTotal){
+        // Nube tiene más datos → jalar
+        Object.assign(D, remote);
+        saveLocal();
+        actualizarDatalist();
         setSyncStatus('sync-ok');
-      } else { setSyncStatus('sync-ok'); }
+      } else if(remoteTotal === 0 && localTotal > 0){
+        // Nube vacía pero local tiene datos → empujar (restaurar nube)
+        setSyncStatus('sync-ok');
+        pushToCloud();   // no await — corre en background
+      } else {
+        setSyncStatus('sync-ok');
+      }
     } else { setSyncStatus('sync-err'); }
   } catch(e){ setSyncStatus('sync-err'); }
-  // Siempre re-renderizar al terminar — resuelve problema de timing
+  // Siempre re-renderizar — resuelve problema de timing
   renderAll();
 }
 
