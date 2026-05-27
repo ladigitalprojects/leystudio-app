@@ -1267,20 +1267,19 @@ async function pullFromCloud(){
       const json = await r.json();
       const remote = json.record;
       if(remote && remote.citas){
-        // Solo sobreescribe si la nube tiene MÁS datos que local
         const remoteTotal = (remote.citas||[]).length + (remote.clientes||[]).length + (remote.movimientos||[]).length;
         const localTotal  = D.citas.length + D.clientes.length + D.movimientos.length;
         if(remoteTotal >= localTotal){
           Object.assign(D, remote);
           saveLocal();
-          renderAll();
           actualizarDatalist();
         }
         setSyncStatus('sync-ok');
-        if(remoteTotal > 0) toast('Datos cargados desde la nube');
       } else { setSyncStatus('sync-ok'); }
-    } else { setSyncStatus('sync-err'); toast('Error al conectar con la nube','warn'); }
-  } catch(e){ setSyncStatus('sync-err'); toast('Sin conexión a la nube','warn'); }
+    } else { setSyncStatus('sync-err'); }
+  } catch(e){ setSyncStatus('sync-err'); }
+  // Siempre re-renderizar al terminar — resuelve problema de timing
+  renderAll();
 }
 
 
