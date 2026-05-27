@@ -1113,9 +1113,11 @@ footer span{color:var(--gold);}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
       <button class="hbtn hbtn-gold" onclick="syncNow()">Sincronizar ahora</button>
+      <button class="hbtn hbtn-outline" onclick="probarConexion()">Probar conexión</button>
       <button class="hbtn hbtn-outline" onclick="exportJSON()">Exportar backup</button>
       <label class="hbtn hbtn-outline" style="cursor:pointer">Importar backup<input type="file" accept=".json" style="display:none" onchange="doImport(event)"></label>
     </div>
+    <div id="cloud-test-result" style="display:none;font-size:12px;padding:8px 10px;border-radius:6px;margin-bottom:8px;font-family:monospace;"></div>
     <p class="cfg-note">Los datos se sincronizan automáticamente con cada registro guardado.</p>
   </div>
 
@@ -1239,22 +1241,33 @@ let isSyncing = false;
 
 
 async function pushToCloud(){
-  if(isSyncing) return;
-  // Nunca empujar si los datos locales están vacíos — evita borrar la nube
+  if(isSyncing) return false;
   const localTotal = D.citas.length + D.clientes.length + D.movimientos.length;
-  if(localTotal === 0) return;
+  if(localTotal === 0) return false;
   isSyncing = true;
   setSyncStatus('sync-busy');
+  let success = false;
   try{
     const r = await fetch(JSONBIN_URL, {
       method: 'PUT',
       headers: {'Content-Type':'application/json','X-Master-Key': JSONBIN_KEY,'X-Bin-Versioning':'false'},
       body: JSON.stringify(D)
     });
-    if(r.ok){ setSyncStatus('sync-ok'); }
-    else { setSyncStatus('sync-err'); }
-  } catch(e){ setSyncStatus('sync-err'); }
+    if(r.ok){
+      setSyncStatus('sync-ok');
+      success = true;
+      console.log('[Ley Studio] ✅ Push a nube OK — items:', localTotal);
+    } else {
+      const txt = await r.text().catch(()=>'');
+      console.error('[Ley Studio] ❌ Push falló HTTP', r.status, txt);
+      setSyncStatus('sync-err');
+    }
+  } catch(e){
+    console.error('[Ley Studio] ❌ Push error de red:', e.message);
+    setSyncStatus('sync-err');
+  }
   isSyncing = false;
+  return success;
 }
 
 async function pullFromCloud(){
@@ -1292,10 +1305,38 @@ async function pullFromCloud(){
 
 
 async function syncNow(){
-  // Jala primero; solo empuja si local tiene MÁS datos que la nube
   await pullFromCloud();
   const localTotal = D.citas.length + D.clientes.length + D.movimientos.length;
   if(localTotal > 0) await pushToCloud();
+}
+
+async function probarConexion(){
+  const box = document.getElementById('cloud-test-result');
+  box.style.display = 'block';
+  box.style.background = 'var(--card)';
+  box.style.color = 'var(--gray)';
+  box.textContent = '⏳ Probando conexión con JSONBin...';
+  try{
+    const t0 = Date.now();
+    const r = await fetch(JSONBIN_URL + '/latest', {headers:{'X-Master-Key': JSONBIN_KEY}});
+    const ms = Date.now() - t0;
+    if(r.ok){
+      const json = await r.json();
+      const rec = json.record;
+      const citas = (rec?.citas||[]).length;
+      const clientes = (rec?.clientes||[]).length;
+      const movs = (rec?.movimientos||[]).length;
+      box.style.color = '#4caf50';
+      box.innerHTML = `✅ JSONBin responde OK (${ms}ms)<br>Nube tiene: ${citas} citas · ${clientes} clientes · ${movs} movimientos<br>Local tiene: ${D.citas.length} citas · ${D.clientes.length} clientes · ${D.movimientos.length} movimientos`;
+    } else {
+      const txt = await r.text().catch(()=>'');
+      box.style.color = '#f44336';
+      box.innerHTML = `❌ JSONBin respondió HTTP ${r.status}<br>${txt.slice(0,200)}`;
+    }
+  } catch(e){
+    box.style.color = '#f44336';
+    box.innerHTML = `❌ No se pudo conectar: ${e.message}<br>Posible causa: bloqueado por el navegador o sin internet.`;
+  }
 }
 
 // ── PDF RECEIPT ──
@@ -2098,7 +2139,10 @@ function doImport(e){
       Object.assign(D,JSON.parse(ev.target.result));
       saveLocal();renderAll();actualizarDatalist();
       toast('✅ Datos importados — subiendo a la nube...');
-      pushToCloud().then(()=>toast('☁ Datos guardados en la nube'));
+      pushToCloud().then(ok=>{
+        if(ok) toast('☁ Datos guardados en la nube ✓');
+        else   toast('⚠️ No se pudo subir a la nube — datos guardados localmente','warn');
+      });
     }
     catch(er){toast('❌ Error al importar','warn');}
   };
