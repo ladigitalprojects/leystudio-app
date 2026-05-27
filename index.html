@@ -1281,7 +1281,11 @@ async function pullFromCloud(){
 }
 
 
-function syncNow(){ pullFromCloud(); }
+async function syncNow(){
+  // Primero empuja local → nube, luego jala nube → local
+  await pushToCloud();
+  await pullFromCloud();
+}
 
 // ── PDF RECEIPT ──
 function descargarReciboPDF(citaId){
@@ -2079,7 +2083,12 @@ function doImport(e){
   const f=e.target.files[0];if(!f)return;
   const r=new FileReader();
   r.onload=ev=>{
-    try{Object.assign(D,JSON.parse(ev.target.result));saveLocal();renderAll();toast('✅ Datos importados');}
+    try{
+      Object.assign(D,JSON.parse(ev.target.result));
+      saveLocal();renderAll();actualizarDatalist();
+      toast('✅ Datos importados — subiendo a la nube...');
+      pushToCloud().then(()=>toast('☁ Datos guardados en la nube'));
+    }
     catch(er){toast('❌ Error al importar','warn');}
   };
   r.readAsText(f);
@@ -3024,10 +3033,13 @@ function init(){
   initSvcCatFilter();
   actualizarDatalist();
   initMesFilter();
-  // Agregar primera fila de servicio en formulario
   addSvcRow();
   renderAll();
   ['c-f','m-f','i-f','cl-f'].forEach(id=>{document.getElementById(id).value=todayStr();});
+  // Auto-pull cuando la pestaña vuelve a primer plano
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible' && currentUser) pullFromCloud();
+  });
   // Pull from cloud and update badge
   pullFromCloud().then(()=>{
     const b=document.getElementById('cloud-status-badge');
