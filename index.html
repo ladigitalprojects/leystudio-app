@@ -1240,6 +1240,9 @@ let isSyncing = false;
 
 async function pushToCloud(){
   if(isSyncing) return;
+  // Nunca empujar si los datos locales están vacíos — evita borrar la nube
+  const localTotal = D.citas.length + D.clientes.length + D.movimientos.length;
+  if(localTotal === 0) return;
   isSyncing = true;
   setSyncStatus('sync-busy');
   try{
@@ -1282,9 +1285,10 @@ async function pullFromCloud(){
 
 
 async function syncNow(){
-  // Primero empuja local → nube, luego jala nube → local
-  await pushToCloud();
+  // Jala primero; solo empuja si local tiene MÁS datos que la nube
   await pullFromCloud();
+  const localTotal = D.citas.length + D.clientes.length + D.movimientos.length;
+  if(localTotal > 0) await pushToCloud();
 }
 
 // ── PDF RECEIPT ──
