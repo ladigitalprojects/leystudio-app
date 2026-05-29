@@ -1973,216 +1973,293 @@ function exportarFichaPDF(){
   const f=c.ficha||{};
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=210;
-  // Paleta — igual al PDF original de Leylan
-  const gold=[178,146,87];      // dorado marca
-  const pink=[200,120,130];     // rosa títulos
-  const cream=[250,247,243];    // fondo secciones
-  const dkgray=[60,60,60];      // texto principal
-  const mdgray=[130,130,130];   // texto secundario
-  const lgray=[210,210,210];    // círculo inactivo
-  const bord=[210,200,185];     // línea borde
+  const W=210,H=297;
 
-  // ── Helpers ──────────────────────────────────────────
-  const line=(x1,y1,x2,y2,col=bord,lw=0.3)=>{
-    doc.setDrawColor(...col); doc.setLineWidth(lw); doc.line(x1,y1,x2,y2);
-  };
-  const circle=(cx,cy,r,filled,col)=>{
-    doc.setDrawColor(...col); doc.setLineWidth(0.4);
-    doc.setFillColor(...(filled?col:[255,255,255]));
-    doc.circle(cx,cy,r,filled?'FD':'D');
-  };
-  const sectionTitle=(title,y2)=>{
-    doc.setFont('helvetica','bold'); doc.setFontSize(9);
-    doc.setTextColor(...pink);
-    doc.text(title.toUpperCase(),W/2,y2,{align:'center'});
-    line(14,y2+1,W-14,y2+1,bord,0.3);
-  };
-  const fieldLine=(label,value,lx,ly,maxW)=>{
-    doc.setFont('helvetica','bold'); doc.setFontSize(7);
-    doc.setTextColor(...mdgray); doc.text(label,lx,ly);
-    doc.setFont('helvetica','normal'); doc.setTextColor(...dkgray);
-    const v=String(value||'—');
-    doc.text(v.length>28?v.substring(0,28)+'…':v,lx,ly+4);
-    line(lx,ly+5,lx+(maxW||80),ly+5);
+  // ── Paleta ─────────────────────────────────────────────
+  const gold=[178,146,87];
+  const rose=[210,95,105];   // rosa títulos — igual al original
+  const dkg=[55,55,55];
+  const mdg=[130,130,130];
+  const lg=[210,210,210];
+  const brd=[215,205,190];
+
+  // ── Helpers ─────────────────────────────────────────────
+  const fmtD=s=>{if(!s||!s.includes('-'))return s||'—';const p=s.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s;};
+  const HL=(x1,y,x2,col=brd,lw=0.25)=>{doc.setDrawColor(...col);doc.setLineWidth(lw);doc.line(x1,y,x2,y);};
+  const circ=(cx,cy,r,fill,col)=>{doc.setDrawColor(...col);doc.setLineWidth(0.45);doc.setFillColor(...(fill?col:[255,255,255]));doc.circle(cx,cy,r,fill?'FD':'D');};
+
+  // Dibuja una uña con forma y escala de largo
+  const nail=(type,cx,topY,scaleH,sel)=>{
+    const nw=6, nh=Math.max(8,13*scaleH);
+    const col=sel?gold:lg;
+    doc.setDrawColor(...col); doc.setLineWidth(0.5);
+    doc.setFillColor(...(sel?[240,225,195]:[248,246,242]));
+    const x=cx-nw/2, y=topY;
+    if(type==='Cuadrada'){
+      doc.roundedRect(x,y,nw,nh,1,1,sel?'FD':'D');
+    } else if(type==='Coffin'){
+      const hw=nw*0.42;
+      // plate top wide, narrows to flat tip
+      const pts=[x,y, x+nw,y, x+nw,y+nh*0.65, x+nw/2+hw/2,y+nh, x+nw/2-hw/2,y+nh, x,y+nh*0.65];
+      doc.lines([[nw,0],[0,nh*0.65],[-nw/2+hw/2,nh*0.35],[-hw,0],[-nw/2+hw/2,-nh*0.35],[0,-nh*0.65]],x,y,[1,1],sel?'FD':'D',true);
+    } else if(type==='Almond'){
+      // pointed top, rounded bottom
+      const rx=nw/2, ry=nh/2;
+      doc.ellipse(cx,y+ry,rx,ry,sel?'FD':'D');
+    } else if(type==='Stiletto'){
+      // pointed tip at top, wide base
+      doc.lines([[nw,nh],[-(nw/2),(-nh)],[-( nw/2),nh]],x,y+nh,[1,1],sel?'FD':'D',true);
+    }
+    // cuticle line
+    doc.setDrawColor(...col); doc.setLineWidth(0.3);
+    doc.line(x,y+nh*0.22,x+nw,y+nh*0.22);
   };
 
-  // ── Fondo blanco ─────────────────────────────────────
-  doc.setFillColor(255,255,255); doc.rect(0,0,W,297,'F');
+  // Dibuja dedos simplificados para sección MEDIDAS
+  const drawHand=(hx,hy)=>{
+    doc.setDrawColor(...mdg); doc.setLineWidth(0.4);
+    doc.setFillColor(255,250,245);
+    const fingers=[
+      {x:hx+4,w:5,h:22,r:2.5},  // pulgar
+      {x:hx+11,w:5.5,h:28,r:2.5},// índice
+      {x:hx+18,w:5.5,h:30,r:2.5},// medio
+      {x:hx+25,w:5,h:27,r:2.5}, // anular
+      {x:hx+32,w:4,h:20,r:2},   // meñique
+    ];
+    fingers.forEach(fg=>{
+      doc.roundedRect(fg.x,hy-fg.h,fg.w,fg.h+4,fg.r,fg.r,'FD');
+      // knuckle lines
+      doc.setDrawColor(200,190,180); doc.setLineWidth(0.2);
+      doc.line(fg.x+0.5,hy-fg.h*0.35,fg.x+fg.w-0.5,hy-fg.h*0.35);
+      doc.line(fg.x+0.5,hy-fg.h*0.6,fg.x+fg.w-0.5,hy-fg.h*0.6);
+    });
+    // palm
+    doc.setDrawColor(...mdg); doc.setLineWidth(0.4); doc.setFillColor(255,250,245);
+    doc.roundedRect(hx+3,hy,36,10,2,2,'FD');
+  };
 
-  // ── Barra dorada superior ─────────────────────────────
+  // ══════════════════════════════════
+  // PÁGINA 1 — FICHA TÉCNICA
+  // ══════════════════════════════════
+  doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
+  // borde dorado superior
   doc.setFillColor(...gold); doc.rect(0,0,W,3,'F');
 
-  // ── Logo + Título ──────────────────────────────────────
-  let y=8;
-  // Helper — formatea YYYY-MM-DD a DD/MM/YYYY
-  const fmtBday=s=>{if(!s||!s.includes('-'))return s||'—';const p=s.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s;};
-  // Logo real (izquierda)
-  const logoImgEl=document.querySelector('.logo-img');
-  if(logoImgEl && logoImgEl.src){
-    try{ doc.addImage(logoImgEl.src,'PNG',12,y,26,26); }catch(e){
-      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...gold);
-      doc.text('LS',25,y+11,{align:'center'});
-    }
-  }
+  // Logo
+  let y=6;
+  const logoEl=document.querySelector('.logo-img');
+  if(logoEl&&logoEl.src){try{doc.addImage(logoEl.src,'PNG',12,y,26,26);}catch(e){}}
 
-  // Título central
-  doc.setFont('helvetica','italic'); doc.setFontSize(8); doc.setTextColor(...pink);
-  doc.text('Manicure',W/2+10,y+4,{align:'center'});
-  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...pink);
-  doc.text('Ficha Tecnica',W/2+10,y+12,{align:'center'});
-  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...gold);
-  doc.text('Clientas',W/2+10,y+19,{align:'center'});
+  // Título
+  doc.setFont('helvetica','italic'); doc.setFontSize(8.5); doc.setTextColor(...rose);
+  doc.text('Manicure',W/2+12,y+7,{align:'center'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(...rose);
+  doc.text('Ficha Tecnica',W/2+12,y+15,{align:'center'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(...gold);
+  doc.text('Clientas',W/2+12,y+23,{align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...mdg);
+  doc.text('Toda la información proporcionada se utilizará para beneficio de la clienta',W/2,y+29,{align:'center'});
+  y=37; HL(14,y,W-14,brd,0.4); y+=4;
 
-  y=32;
-  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...mdgray);
-  doc.text('Toda la información proporcionada se utilizará para beneficio de la clienta',W/2,y,{align:'center'});
-  line(14,y+2,W-14,y+2,bord);
-  y+=7;
+  // ── INFORMACION GENERAL ─────────────────────────────────
+  const sectHdr=(title,yy)=>{
+    const tw=doc.getTextWidth(title)+4;
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...rose);
+    doc.text(title,W/2,yy,{align:'center'});
+    HL(14,yy+0.8,W/2-tw/2-2,brd); HL(W/2+tw/2+2,yy+0.8,W-14,brd);
+    return yy+6;
+  };
+  y=sectHdr('INFORMACION GENERAL',y); 
 
-  // ── INFORMACIÓN GENERAL ───────────────────────────────
-  sectionTitle('INFORMACION GENERAL',y); y+=7;
+  const fld=(label,val,lx,ly,fw=88)=>{
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...mdg);
+    doc.text(label,lx,ly);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...dkg);
+    const v=String(val||'—'); doc.text(v.length>32?v.substr(0,32)+'…':v,lx,ly+4.5);
+    HL(lx,ly+5.5,lx+fw,brd);
+  };
+  const L=14, R=W/2+6;
+  fld('NOMBRE COMPLETO',c.nombre,L,y); fld('EDAD & CUMPLEAÑOS',fmtD(c.bday),R,y); y+=11;
+  fld('CORREO',f.correo,L,y); fld('TELÉFONO',c.tel,R,y); y+=11;
+  // Redes sociales
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...mdg);
+  doc.text('REDES SOCIALES',L,y);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...dkg);
+  doc.text('IG: '+(f.ig||c.ig||'—'),L+28,y);
+  HL(L,y+1.5,L+88,brd);
+  fld('TELÉFONO DE EMERGENCIA',f.telEmg,R,y); y+=11;
+  // Tiktok + gustos
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...mdg);
+  doc.text('TikTok',L,y); doc.text('GUSTOS',R,y);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...dkg);
+  doc.text(f.tiktok||'—',L+10,y); doc.text(f.musica||'—',R+10,y);
+  doc.text('snack: '+(f.snack||'—'),R+40,y);
+  HL(L,y+1.5,L+88,brd); HL(R,y+1.5,R+88,brd);
+  y+=8; HL(14,y,W-14,brd,0.4); y+=5;
 
-  // Fila 1: Nombre — Edad & Cumpleaños
-  fieldLine('NOMBRE COMPLETO',c.nombre,14,y,85);
-  fieldLine('EDAD & CUMPLEAÑOS',fmtBday(c.bday),W/2+8,y,78);
-  y+=11;
-  // Fila 2: Correo — Teléfono
-  fieldLine('CORREO',f.correo||'—',14,y,85);
-  fieldLine('TELÉFONO',c.tel||'—',W/2+8,y,78);
-  y+=11;
-  // Fila 3: Redes — Tel emergencia
-  fieldLine('REDES SOCIALES  IG: '+(f.ig||c.ig||'—'),'',14,y,85);
-  fieldLine('TELÉFONO DE EMERGENCIA',f.telEmg||'—',W/2+8,y,78);
-  y+=11;
-  // Fila 4: TikTok / Gustos
-  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...mdgray);
-  doc.text('TikTok: ',14,y+4); doc.setFont('helvetica','normal'); doc.setTextColor(...dkgray);
-  doc.text(f.tiktok||'—',33,y+4);
-  doc.setFont('helvetica','bold'); doc.setTextColor(...mdgray);
-  doc.text('GUSTOS: música ',W/2+8,y+4); doc.setFont('helvetica','normal'); doc.setTextColor(...dkgray);
-  doc.text(f.musica||'—',W/2+8+24,y+4);
-  doc.text('  snack: '+(f.snack||'—'),W/2+8+24+(f.musica||'').length*1.8,y+4);
-  line(14,y+5.5,95,y+5.5);
-  line(W/2+8,y+5.5,W-14,y+5.5);
-  y+=11;
+  // ── HISTORIAL MÉDICO ────────────────────────────────────
+  y=sectHdr('HISTORIAL MEDICO',y);
 
-  line(14,y,W-14,y,bord);
-  y+=5;
-
-  // ── HISTORIAL MÉDICO ──────────────────────────────────
-  sectionTitle('HISTORIAL MEDICO',y); y+=7;
-
-  // Headers de columnas
-  doc.setFont('helvetica','bold'); doc.setFontSize(8);
-  doc.setTextColor(...pink);
-  doc.text('ENFERMEDADES',20,y);
-  doc.text('TIPO DE PIEL',82,y);
-  doc.text('TIPO DE UÑA',145,y);
+  // Cabeceras columnas
+  const c1=22,c2=82,c3=152;
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...rose);
+  doc.text('ENFERMEDADES',c1,y,{align:'center'});
+  doc.text('TIPO DE PIEL',c2,y,{align:'center'});
+  doc.text('TIPO DE UÑA',c3,y,{align:'center'});
   y+=5;
 
   const enf=['Toma algún medicamento','Hongos o bacterias','Psoriasis','Dermatitis','Descamación de uña','Diabetes'];
   const piel=['Normal','Seca','Mixta','Sensible','Madura','Hiperhidrosis'];
   const una=['Sana','Micosis','Onicofágicas','Amarillas','Estriada','Oleosa'];
   for(let i=0;i<6;i++){
-    const chk=(f.enfermedades||[]).includes(enf[i]);
-    circle(19,y-0.8,1.8,chk,chk?gold:lgray);
-    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...dkgray);
-    doc.text(enf[i],23,y);
+    const ce=(f.enfermedades||[]).includes(enf[i]);
+    circ(c1-12,y-0.8,2,ce,ce?gold:lg);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...dkg);
+    doc.text(enf[i],c1-8.5,y);
 
-    const pc=(f.piel||'')===(piel[i]||'');
-    circle(81,y-0.8,1.8,pc,pc?gold:lgray);
-    doc.text(piel[i],85,y);
+    const cp=(f.piel||'')===(piel[i]||'');
+    circ(c2-12,y-0.8,2,cp,cp?gold:lg);
+    doc.text(piel[i],c2-8.5,y);
 
-    const uc=(f.tipoUna||[]).includes(una[i]||'');
-    circle(144,y-0.8,1.8,uc,uc?gold:lgray);
-    doc.text(una[i],148,y);
+    const cu=(f.tipoUna||[]).includes(una[i]);
+    circ(c3-12,y-0.8,2,cu,cu?gold:lg);
+    doc.text(una[i],c3-8.5,y);
     y+=6;
   }
-  line(14,y,W-14,y,bord);
-  y+=5;
+  HL(14,y,W-14,brd,0.4); y+=5;
 
-  // ── MEDIDAS + FORMA Y LARGO (lado a lado) ────────────
-  // Medidas (izquierda)
-  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...pink);
-  doc.text('MEDIDAS',45,y);
-  // Forma y Largo (derecha)
-  doc.text('FORMA Y LARGO',145,y,{align:'center'});
+  // ── MEDIDAS + FORMA Y LARGO ─────────────────────────────
+  const midY=y;
+  // Títulos
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...rose);
+  doc.text('MEDIDAS',52,y,{align:'center'});
+  doc.text('FORMA Y LARGO',155,y,{align:'center'});
   y+=4;
 
+  // Mano izquierda (simplificada)
+  drawHand(16,y+30);
+
   // Tabla medidas
-  const svcsK=['softgel','tips','extensiones'];
-  const dedosK=['pulgar','indice','medio','anular','menique'];
-  const dedosL=['Pulgar','Índice','Medio','Anular','Meñique'];
-  const svcsL=['Soft Gel','Tips','Extensiones'];
-  // Cabecera tabla
-  doc.setFillColor(...cream); doc.rect(14,y,90,5,'F');
-  doc.setDrawColor(...bord); doc.setLineWidth(0.3); doc.rect(14,y,90,5,'D');
-  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...dkgray);
-  doc.text('SERVICIO',16,y+3.5);
-  dedosL.forEach((d,i)=>{doc.text(d,33+i*14,y+3.5,{align:'center'});});
-  y+=5;
+  const tX=50, tY=y;
+  const svcsL=['SOFT GEL','TIPS','EXTENSIONES'], svcsK=['softgel','tips','extensiones'];
+  const dedsL=['Pulgar','Índice','Medio','Anular','Meñique'], dedsK=['pulgar','indice','medio','anular','menique'];
+  const cw=11;
+  // Header
+  doc.setFillColor(245,240,232); doc.rect(tX,tY,90,6,'F');
+  doc.setDrawColor(...brd); doc.setLineWidth(0.3); doc.rect(tX,tY,90,6,'D');
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...dkg);
+  doc.text('SERVICIO',tX+1,tY+4);
+  dedsL.forEach((d,i)=>doc.text(d,tX+24+i*cw,tY+4,{align:'center'}));
   svcsL.forEach((s,si)=>{
-    doc.setDrawColor(...bord); doc.setLineWidth(0.2); doc.rect(14,y,90,6,'D');
-    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...dkgray);
-    // Círculo svc
-    circle(18,y+2.8,1.5,false,gold);
-    doc.text(s,21,y+4);
-    dedosK.forEach((d,di)=>{
+    const ry=tY+6+si*8;
+    doc.setDrawColor(...brd); doc.setLineWidth(0.25); doc.rect(tX,ry,90,8,'D');
+    circ(tX+3,ry+4,1.5,false,gold);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...dkg);
+    doc.text(s,tX+6,ry+5);
+    dedsK.forEach((d,di)=>{
       const val=(f.medidas||{})[svcsK[si]]?.[d]||'';
-      doc.setFont('helvetica','bold'); doc.setTextColor(...gold);
-      doc.text(val,33+di*14,y+4,{align:'center'});
+      if(val){ doc.setFont('helvetica','bold'); doc.setTextColor(...gold); doc.text(val,tX+24+di*cw,ry+5,{align:'center'}); }
     });
-    y+=6;
   });
 
-  // Forma y Largo (derecha, desde y inicial)
-  let fy=y-18; // alinear con inicio tabla medidas
-  // Forma
-  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...dkgray);
-  doc.text('FORMA',110,fy+2);
-  const formas=['Cuadrada','Coffin','Almond','Stiletto'];
+  // Formas de uña — derecha
+  const fx=108, formas=['Cuadrada','Coffin','Almond','Stiletto'];
+  const nailY=y+2;
   formas.forEach((fo,i)=>{
+    const ncx=fx+i*24+12;
     const sel=(f.forma||'')===fo;
-    circle(109+i*24,fy+7,2.5,sel,sel?gold:lgray);
-    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...dkgray);
-    doc.text(fo,105.5+i*24,fy+12,{align:'center'});
-  });
-  fy+=15;
-  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...dkgray);
-  doc.text('LARGO',110,fy);
-  const largos=['#1','#2','#3','#4'];
-  largos.forEach((l,i)=>{
-    const sel=(f.largo||'')===l;
-    circle(112+i*20,fy+5,2.5,sel,sel?gold:lgray);
-    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...dkgray);
-    doc.text(l,109+i*20,fy+10,{align:'center'});
+    nail(fo,ncx,nailY,1.0,sel);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(sel?gold[0]:dkg[0],sel?gold[1]:dkg[1],sel?gold[2]:dkg[2]);
+    doc.text(fo,ncx,nailY+15,{align:'center'});
   });
 
-  y+=3;
-  line(14,y,W-14,y,bord);
-  y+=5;
+  // Largos — derecha abajo
+  const largosY=y+22, largosK=[1,2,3,4], largosNail=['Almond','Almond','Almond','Almond'];
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...rose);
+  doc.text('FORMA',fx+48,y,{align:'center'});
+  doc.text('LARGO',fx+48,largosY-2,{align:'center'});
+  [1,2,3,4].forEach((l,i)=>{
+    const ncx=fx+i*24+12;
+    const sel=(f.largo||'')==='#'+l;
+    const sc=[0.55,0.7,0.85,1.05][i];
+    nail('Almond',ncx,largosY,sc,sel);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(sel?gold[0]:dkg[0],sel?gold[1]:dkg[1],sel?gold[2]:dkg[2]);
+    doc.text('#'+l,ncx,largosY+13*sc+2,{align:'center'});
+  });
 
-  // ── OBSERVACIONES ─────────────────────────────────────
-  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...pink);
-  doc.text('OBSERVACIONES',14,y); y+=3;
-  line(14,y,W-14,y,bord);
-  y+=5;
-  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...dkgray);
-  const obsLines=doc.splitTextToSize(f.obs||'',W-28);
-  if(obsLines.length) doc.text(obsLines,14,y);
-  // Líneas vacías decorativas
-  for(let i=0;i<4;i++){ line(14,y+i*7,W-14,y+i*7); }
-  y+=28;
+  y=tY+30; HL(14,y,W-14,brd,0.4); y+=5;
 
-  // ── Barra dorada inferior ─────────────────────────────
-  doc.setFillColor(...gold); doc.rect(0,291,W,6,'F');
+  // ── OBSERVACIONES ───────────────────────────────────────
+  doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...rose);
+  doc.text('OBSERVACIONES',14,y);
+  HL(50,y+0.5,W-14,brd); y+=6;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...dkg);
+  const obsL=doc.splitTextToSize(f.obs||'',W-28);
+  if(obsL.length && f.obs) doc.text(obsL,14,y);
+  for(let i=0;i<5;i++) HL(14,y+i*8,W-14,brd);
+  y+=42;
+
+  // Footer p1
+  doc.setFillColor(...gold); doc.rect(0,H-5,W,5,'F');
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(255,255,255);
-  doc.text(`Ley Studio · Nail Artist · Tegucigalpa · @ley_studiohn · ${new Date().toLocaleDateString('es-HN')}`,W/2,295,{align:'center'});
+  doc.text(`Ley Studio · Nail Artist · Tegucigalpa · @ley_studiohn · ${new Date().toLocaleDateString('es-HN')}`,W/2,H-2,{align:'center'});
+
+  // ══════════════════════════════════
+  // PÁGINA 2 — HISTORIAL DE VISITAS
+  // ══════════════════════════════════
+  doc.addPage();
+  doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
+  doc.setFillColor(...gold); doc.rect(0,0,W,3,'F');
+  y=12;
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...gold);
+  doc.text('HISTORIAL DE VISITAS',14,y);
+  y+=6; HL(14,y,W-14,gold,0.5); y+=6;
+
+  // Tabla historial
+  const hCols=[{label:'FECHA',w:28},{label:'DÍAS ENTRE\nSERVICIOS',w:22},{label:'SERVICIO',w:70},{label:'OBSERVACIONES',w:70}];
+  let hx2=14;
+  doc.setFillColor(255,255,255); doc.setDrawColor(...gold); doc.setLineWidth(0.3);
+  // Header row
+  hCols.forEach(col=>{
+    doc.rect(hx2,y,col.w,10,'D');
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...rose);
+    doc.text(col.label,hx2+col.w/2,y+4,{align:'center',maxWidth:col.w-2});
+    hx2+=col.w;
+  });
+  y+=10;
+  // Data rows (citas completadas de esta clienta)
+  const citasC=D.citas.filter(ci=>ci.clienta===c.nombre&&ci.estado==='Completada').sort((a,b)=>a.fecha>b.fecha?1:-1);
+  let prevDate=null;
+  const maxRows=Math.max(18,citasC.length);
+  for(let ri=0;ri<maxRows;ri++){
+    const ci=citasC[ri];
+    doc.setDrawColor(...gold); doc.setLineWidth(0.2);
+    hx2=14;
+    hCols.forEach((col,ci2)=>{
+      doc.rect(hx2,y,col.w,9,'D');
+      if(ci){
+        doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...dkg);
+        if(ci2===0) doc.text(fmtD(ci.fecha),hx2+2,y+5.5);
+        else if(ci2===1){
+          if(prevDate){const d=Math.round((new Date(ci.fecha)-new Date(prevDate))/86400000);doc.text(String(d),hx2+col.w/2,y+5.5,{align:'center'});}
+        }
+        else if(ci2===2){const sv=(ci.servicios||[]).map(s=>s.nombre).join(', ');doc.text(sv.length>38?sv.substr(0,38)+'…':sv,hx2+1,y+5.5);}
+        else if(ci2===3) doc.text(ci.notas||'',hx2+1,y+5.5);
+      }
+      hx2+=col.w;
+    });
+    if(ci) prevDate=ci.fecha;
+    y+=9;
+    if(y>H-15){doc.addPage();doc.setFillColor(255,255,255);doc.rect(0,0,W,H,'F');doc.setFillColor(...gold);doc.rect(0,0,W,3,'F');y=12;}
+  }
+  doc.setFillColor(...gold); doc.rect(0,H-5,W,5,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(255,255,255);
+  doc.text(`Ley Studio · Nail Artist · Tegucigalpa · @ley_studiohn`,W/2,H-2,{align:'center'});
 
   doc.save(`Ficha_${c.nombre.replace(/\s/g,'_')}.pdf`);
-  toast('📄 PDF generado');
+  toast('📄 Ficha generada');
 }
+
 
 // ═══════════════════════════════════════════════════
 // FINANZAS
