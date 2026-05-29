@@ -1270,21 +1270,14 @@ async function pullFromCloud(){
     const r = await fetch(FIREBASE_URL);
     if(r.ok){
       const remote = await r.json();
-      // Firebase devuelve null si la BD está vacía
-      if(remote && remote.citas){
+      if(remote && remote.citas && remote.citas.length > 0){
         const remoteTotal = (remote.citas||[]).length + (remote.clientes||[]).length + (remote.movimientos||[]).length;
         const localTotal  = D.citas.length + D.clientes.length + D.movimientos.length;
         if(remoteTotal >= localTotal){
           Object.assign(D, remote);
           saveLocal();
           actualizarDatalist();
-        } else if(localTotal > 0){
-          pushToCloud();
         }
-      } else if(!remote){
-        // BD vacía en Firebase → subir datos locales si existen
-        const localTotal = D.citas.length + D.clientes.length + D.movimientos.length;
-        if(localTotal > 0) pushToCloud();
       }
       setSyncStatus('sync-ok');
     } else { setSyncStatus('sync-err'); }
@@ -1295,8 +1288,13 @@ async function pullFromCloud(){
 
 async function syncNow(){
   await pullFromCloud();
+  // Siempre empujar si hay datos locales (sube a nube o actualiza)
   const localTotal = D.citas.length + D.clientes.length + D.movimientos.length;
-  if(localTotal > 0) await pushToCloud();
+  if(localTotal > 0){
+    const ok = await pushToCloud();
+    if(ok) toast('☁ Datos sincronizados con Firebase ✓');
+    else   toast('⚠️ No se pudo conectar con Firebase','warn');
+  }
 }
 
 async function probarConexion(){
