@@ -529,85 +529,123 @@ footer span{color:var(--gold);}
 
 <div class="modal-overlay" id="modal-ficha">
   <div class="modal" style="max-width:700px;max-height:90vh;overflow-y:auto;">
-    <div class="modal-title">📋 Ficha Técnica — <span id="ficha-nombre-title"></span>
-      <button class="modal-close" onclick="closeModal('modal-ficha')">✕</button>
+    <div class="modal-title">Ficha Tecnica — <span id="ficha-nombre-title"></span>
+      <button class="modal-close" onclick="closeModal('modal-ficha')">&#x2715;</button>
     </div>
     <input type="hidden" id="ficha-cl-id">
+    <p style="font-size:11px;color:var(--gray);margin:-8px 0 16px;font-style:italic">Toda la información se utilizará para beneficio de la clienta</p>
 
-    <p style="font-size:11px;color:var(--gray);margin:-8px 0 16px;font-style:italic">Toda la información proporcionada se utilizará para beneficio de la clienta</p>
-
-    <!-- Información General extendida -->
     <div class="cfg-block-title" style="margin-bottom:8px">INFORMACIÓN GENERAL</div>
     <div class="fg" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
       <div class="fgrp"><label>Correo</label><input type="email" id="f-correo" placeholder="correo@ejemplo.com"></div>
-      <div class="fgrp"><label>Teléfono de emergencia</label><input type="tel" id="f-tel-emg" placeholder="+504 ____-____"></div>
+      <div class="fgrp"><label>Tel. emergencia</label><input type="tel" id="f-tel-emg" placeholder="+504 ____-____"></div>
       <div class="fgrp"><label>Instagram</label><input type="text" id="f-ig2" placeholder="@usuario"></div>
       <div class="fgrp"><label>TikTok</label><input type="text" id="f-tiktok" placeholder="@usuario"></div>
       <div class="fgrp"><label>Música favorita</label><input type="text" id="f-musica" placeholder="Pop, reggaeton..."></div>
       <div class="fgrp"><label>Snack favorito</label><input type="text" id="f-snack" placeholder="Palomitas, fruta..."></div>
     </div>
 
-    <!-- Historial Médico -->
     <div class="cfg-block-title" style="margin-bottom:8px">HISTORIAL MÉDICO</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
       <div>
-        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:0 0 8px;letter-spacing:.5px">ENFERMEDADES</p>
-        ${['Toma algún medicamento','Hongos o bacterias','Psoriasis','Dermatitis','Descamación de uña','Diabetes'].map(e=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px;cursor:pointer"><input type="checkbox" class="f-enfermedad" value="${e}" style="accent-color:var(--gold)"> ${e}</label>`).join('')}
+        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:0 0 8px">ENFERMEDADES</p>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-enfermedad" value="Toma algún medicamento"> Toma algún medicamento</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-enfermedad" value="Hongos o bacterias"> Hongos o bacterias</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-enfermedad" value="Psoriasis"> Psoriasis</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-enfermedad" value="Dermatitis"> Dermatitis</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-enfermedad" value="Descamación de uña"> Descamación de uña</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-enfermedad" value="Diabetes"> Diabetes</label>
       </div>
       <div>
-        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:0 0 8px;letter-spacing:.5px">TIPO DE PIEL</p>
-        ${['Normal','Seca','Mixta','Sensible','Madura','Hiperhidrosis'].map(e=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px;cursor:pointer"><input type="radio" name="f-piel" value="${e}" style="accent-color:var(--gold)"> ${e}</label>`).join('')}
+        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:0 0 8px">TIPO DE PIEL</p>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-piel" value="Normal"> Normal</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-piel" value="Seca"> Seca</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-piel" value="Mixta"> Mixta</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-piel" value="Sensible"> Sensible</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-piel" value="Madura"> Madura</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-piel" value="Hiperhidrosis"> Hiperhidrosis</label>
       </div>
       <div>
-        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:0 0 8px;letter-spacing:.5px">TIPO DE UÑA</p>
-        ${['Sana','Micosis','Onicofágicas','Amarillas','Estriada','Oleosa'].map(e=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px;cursor:pointer"><input type="checkbox" class="f-una" value="${e}" style="accent-color:var(--gold)"> ${e}</label>`).join('')}
-        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:8px 0 6px;letter-spacing:.5px">FORMA</p>
-        ${['Normal','Plana','Coiloniquia','Cóncava','Convexa'].map(e=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px;cursor:pointer"><input type="checkbox" class="f-forma-una" value="${e}" style="accent-color:var(--gold)"> ${e}</label>`).join('')}
+        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:0 0 8px">TIPO DE UÑA</p>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-una" value="Sana"> Sana</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-una" value="Micosis"> Micosis</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-una" value="Onicofágicas"> Onicofágicas</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-una" value="Amarillas"> Amarillas</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-una" value="Estriada"> Estriada</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-una" value="Oleosa"> Oleosa</label>
+        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:8px 0 6px">FORMA DE UÑA</p>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-forma-una" value="Normal"> Normal</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-forma-una" value="Plana"> Plana</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-forma-una" value="Coiloniquia"> Coiloniquia</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-forma-una" value="Cóncava"> Cóncava</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px"><input type="checkbox" class="f-forma-una" value="Convexa"> Convexa</label>
       </div>
     </div>
 
-    <!-- Medidas -->
     <div class="cfg-block-title" style="margin-bottom:8px">MEDIDAS</div>
     <div style="overflow-x:auto;margin-bottom:16px">
       <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr style="background:var(--card)">
-            <th style="padding:6px 8px;text-align:left;border:1px solid var(--border)">Servicio</th>
-            ${['Pulgar','Índice','Medio','Anular','Meñique'].map(d=>`<th style="padding:6px 8px;text-align:center;border:1px solid var(--border)">${d}</th>`).join('')}
-          </tr>
-        </thead>
+        <thead><tr style="background:var(--card)">
+          <th style="padding:6px 8px;text-align:left;border:1px solid var(--border)">Servicio</th>
+          <th style="padding:6px 8px;text-align:center;border:1px solid var(--border)">Pulgar</th>
+          <th style="padding:6px 8px;text-align:center;border:1px solid var(--border)">Índice</th>
+          <th style="padding:6px 8px;text-align:center;border:1px solid var(--border)">Medio</th>
+          <th style="padding:6px 8px;text-align:center;border:1px solid var(--border)">Anular</th>
+          <th style="padding:6px 8px;text-align:center;border:1px solid var(--border)">Meñique</th>
+        </tr></thead>
         <tbody>
-          ${['Soft Gel','Tips','Extensiones'].map(s=>`<tr>
-            <td style="padding:5px 8px;border:1px solid var(--border);font-weight:600;color:var(--gold)">${s}</td>
-            ${['pulgar','indice','medio','anular','menique'].map(d=>`<td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-${s.replace(' ','').toLowerCase()}-${d}" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px;padding:2px" placeholder="0"></td>`).join('')}
-          </tr>`).join('')}
+          <tr><td style="padding:5px 8px;border:1px solid var(--border);font-weight:600;color:var(--gold)">Soft Gel</td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-softgel-pulgar" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-softgel-indice" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-softgel-medio" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-softgel-anular" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-softgel-menique" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+          </tr>
+          <tr><td style="padding:5px 8px;border:1px solid var(--border);font-weight:600;color:var(--gold)">Tips</td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-tips-pulgar" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-tips-indice" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-tips-medio" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-tips-anular" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-tips-menique" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+          </tr>
+          <tr><td style="padding:5px 8px;border:1px solid var(--border);font-weight:600;color:var(--gold)">Extensiones</td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-extensiones-pulgar" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-extensiones-indice" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-extensiones-medio" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-extensiones-anular" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+            <td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-extensiones-menique" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px" placeholder="0"></td>
+          </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Forma y Largo -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
       <div>
         <div class="cfg-block-title" style="margin-bottom:8px">FORMA</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          ${['Cuadrada','Coffin','Almond','Stiletto'].map(f=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="f-forma" value="${f}" style="accent-color:var(--gold)"> ${f}</label>`).join('')}
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px"><input type="radio" name="f-forma" value="Cuadrada"> Cuadrada</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px"><input type="radio" name="f-forma" value="Coffin"> Coffin</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px"><input type="radio" name="f-forma" value="Almond"> Almond</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px"><input type="radio" name="f-forma" value="Stiletto"> Stiletto</label>
         </div>
       </div>
       <div>
         <div class="cfg-block-title" style="margin-bottom:8px">LARGO</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          ${['#1','#2','#3','#4'].map(l=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="f-largo" value="${l}" style="accent-color:var(--gold)"> ${l}</label>`).join('')}
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px"><input type="radio" name="f-largo" value="#1"> #1</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px"><input type="radio" name="f-largo" value="#2"> #2</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px"><input type="radio" name="f-largo" value="#3"> #3</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px"><input type="radio" name="f-largo" value="#4"> #4</label>
         </div>
       </div>
     </div>
 
-    <!-- Observaciones -->
     <div class="cfg-block-title" style="margin-bottom:8px">OBSERVACIONES</div>
     <textarea id="f-obs" rows="3" style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px;font-size:13px;resize:vertical;box-sizing:border-box" placeholder="Observaciones generales..."></textarea>
 
     <div class="factions" style="margin-top:16px">
-      <button class="btn-pri" onclick="guardarFicha()">💾 Guardar ficha</button>
-      <button class="hbtn hbtn-outline" onclick="exportarFichaPDF()">📄 Exportar PDF</button>
+      <button class="btn-pri" onclick="guardarFicha()">Guardar ficha</button>
+      <button class="hbtn hbtn-outline" onclick="exportarFichaPDF()">Exportar PDF</button>
       <button class="btn-sec" onclick="closeModal('modal-ficha')">Cancelar</button>
     </div>
   </div>
