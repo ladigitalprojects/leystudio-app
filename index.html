@@ -1237,6 +1237,13 @@ const FIREBASE_URL = 'https://ley-studio-b069e-default-rtdb.firebaseio.com/data.
 let syncDebounce = null;
 let isSyncing = false;
 
+function setSyncStatus(s){
+  const el = document.getElementById('sync-btn');
+  if(!el) return;
+  if(s==='sync-busy'){ el.style.background='#888'; el.textContent='⏳ Sync'; }
+  else if(s==='sync-ok'){  el.style.background=''; el.textContent='✓ Sync'; setTimeout(()=>{el.textContent='Sync';},2000); }
+  else if(s==='sync-err'){ el.style.background='#c0392b'; el.textContent='✗ Sync'; setTimeout(()=>{el.style.background='';el.textContent='Sync';},3000); }
+}
 
 async function pushToCloud(){
   if(isSyncing){ toast('⏳ Sync en progreso...','warn'); return false; }
@@ -1931,6 +1938,7 @@ function delCustomSvc(id){
 }
 function initSvcDropdown(){
   const sel=document.getElementById('c-svc');
+  if(!sel) return;
   sel.innerHTML='<option value="">Selecciona...</option>';
   getAllSvcs().forEach(s=>{
     const o=document.createElement('option');
