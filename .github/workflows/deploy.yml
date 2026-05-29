@@ -21,9 +21,14 @@ jobs:
           port: 21
           local-dir: ./
           server-dir: /domains/ladigitalhn.com/public_html/leystudio/
-          include: |
-            index.html
           exclude: |
-            .git/**
-            .github/**
+            **/.*
+            **/.git/**
+            **/.github/**
             **/.DS_Store
+            **/node_modules/**
+            Ley's Studio - Precios.pdf
+            LeyStudio_Dashboard.html
+            Logo Moda Femenina Minimalista Negro y Rosa - 10 - Editado.PNG
+            LogoPrincipal.png
+            leystudio_demo_data.json
