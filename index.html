@@ -527,6 +527,92 @@ footer span{color:var(--gold);}
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-ficha">
+  <div class="modal" style="max-width:700px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-title">📋 Ficha Técnica — <span id="ficha-nombre-title"></span>
+      <button class="modal-close" onclick="closeModal('modal-ficha')">✕</button>
+    </div>
+    <input type="hidden" id="ficha-cl-id">
+
+    <p style="font-size:11px;color:var(--gray);margin:-8px 0 16px;font-style:italic">Toda la información proporcionada se utilizará para beneficio de la clienta</p>
+
+    <!-- Información General extendida -->
+    <div class="cfg-block-title" style="margin-bottom:8px">INFORMACIÓN GENERAL</div>
+    <div class="fg" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <div class="fgrp"><label>Correo</label><input type="email" id="f-correo" placeholder="correo@ejemplo.com"></div>
+      <div class="fgrp"><label>Teléfono de emergencia</label><input type="tel" id="f-tel-emg" placeholder="+504 ____-____"></div>
+      <div class="fgrp"><label>Instagram</label><input type="text" id="f-ig2" placeholder="@usuario"></div>
+      <div class="fgrp"><label>TikTok</label><input type="text" id="f-tiktok" placeholder="@usuario"></div>
+      <div class="fgrp"><label>Música favorita</label><input type="text" id="f-musica" placeholder="Pop, reggaeton..."></div>
+      <div class="fgrp"><label>Snack favorito</label><input type="text" id="f-snack" placeholder="Palomitas, fruta..."></div>
+    </div>
+
+    <!-- Historial Médico -->
+    <div class="cfg-block-title" style="margin-bottom:8px">HISTORIAL MÉDICO</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
+      <div>
+        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:0 0 8px;letter-spacing:.5px">ENFERMEDADES</p>
+        ${['Toma algún medicamento','Hongos o bacterias','Psoriasis','Dermatitis','Descamación de uña','Diabetes'].map(e=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px;cursor:pointer"><input type="checkbox" class="f-enfermedad" value="${e}" style="accent-color:var(--gold)"> ${e}</label>`).join('')}
+      </div>
+      <div>
+        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:0 0 8px;letter-spacing:.5px">TIPO DE PIEL</p>
+        ${['Normal','Seca','Mixta','Sensible','Madura','Hiperhidrosis'].map(e=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px;cursor:pointer"><input type="radio" name="f-piel" value="${e}" style="accent-color:var(--gold)"> ${e}</label>`).join('')}
+      </div>
+      <div>
+        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:0 0 8px;letter-spacing:.5px">TIPO DE UÑA</p>
+        ${['Sana','Micosis','Onicofágicas','Amarillas','Estriada','Oleosa'].map(e=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px;cursor:pointer"><input type="checkbox" class="f-una" value="${e}" style="accent-color:var(--gold)"> ${e}</label>`).join('')}
+        <p style="font-size:11px;font-weight:700;color:var(--gold);margin:8px 0 6px;letter-spacing:.5px">FORMA</p>
+        ${['Normal','Plana','Coiloniquia','Cóncava','Convexa'].map(e=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px;cursor:pointer"><input type="checkbox" class="f-forma-una" value="${e}" style="accent-color:var(--gold)"> ${e}</label>`).join('')}
+      </div>
+    </div>
+
+    <!-- Medidas -->
+    <div class="cfg-block-title" style="margin-bottom:8px">MEDIDAS</div>
+    <div style="overflow-x:auto;margin-bottom:16px">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--card)">
+            <th style="padding:6px 8px;text-align:left;border:1px solid var(--border)">Servicio</th>
+            ${['Pulgar','Índice','Medio','Anular','Meñique'].map(d=>`<th style="padding:6px 8px;text-align:center;border:1px solid var(--border)">${d}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${['Soft Gel','Tips','Extensiones'].map(s=>`<tr>
+            <td style="padding:5px 8px;border:1px solid var(--border);font-weight:600;color:var(--gold)">${s}</td>
+            ${['pulgar','indice','medio','anular','menique'].map(d=>`<td style="padding:2px 4px;border:1px solid var(--border)"><input type="text" id="f-med-${s.replace(' ','').toLowerCase()}-${d}" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:12px;padding:2px" placeholder="0"></td>`).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Forma y Largo -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div>
+        <div class="cfg-block-title" style="margin-bottom:8px">FORMA</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${['Cuadrada','Coffin','Almond','Stiletto'].map(f=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="f-forma" value="${f}" style="accent-color:var(--gold)"> ${f}</label>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="cfg-block-title" style="margin-bottom:8px">LARGO</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${['#1','#2','#3','#4'].map(l=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="f-largo" value="${l}" style="accent-color:var(--gold)"> ${l}</label>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="cfg-block-title" style="margin-bottom:8px">OBSERVACIONES</div>
+    <textarea id="f-obs" rows="3" style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px;font-size:13px;resize:vertical;box-sizing:border-box" placeholder="Observaciones generales..."></textarea>
+
+    <div class="factions" style="margin-top:16px">
+      <button class="btn-pri" onclick="guardarFicha()">💾 Guardar ficha</button>
+      <button class="hbtn hbtn-outline" onclick="exportarFichaPDF()">📄 Exportar PDF</button>
+      <button class="btn-sec" onclick="closeModal('modal-ficha')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-cita">
   <div class="modal" style="max-width:560px">
     <div class="modal-title">Editar Cita
@@ -1237,6 +1323,12 @@ const FIREBASE_URL = 'https://ley-studio-b069e-default-rtdb.firebaseio.com/data.
 let syncDebounce = null;
 let isSyncing = false;
 
+function saveAndSync(){
+  saveLocal();
+  clearTimeout(syncDebounce);
+  syncDebounce = setTimeout(()=>pushToCloud(), 2000);
+}
+
 function setSyncStatus(s){
   const el = document.getElementById('sync-btn');
   if(!el) return;
@@ -1717,7 +1809,7 @@ function renderClientes(){
       <td><span class="badge bgo">${st.visitas}</span></td>
       <td><strong style="color:var(--gold)">${fmtM(st.total)}</strong></td>
       <td style="max-width:200px;font-size:11px">${st.ultimoSvc.length>45?st.ultimoSvc.substring(0,45)+'…':st.ultimoSvc}</td>
-      <td style="white-space:nowrap"><button class="wa-btn" onclick="openWAcliente(${c.id})" style="margin-right:4px">💬</button><button class="edit-btn" onclick="openEditCliente(${c.id})">✏️ Editar</button></td></tr>`;
+      <td style="white-space:nowrap"><button class="wa-btn" onclick="openWAcliente(${c.id})" style="margin-right:4px">💬</button><button class="edit-btn" onclick="openFicha(${c.id})" style="margin-right:4px;background:var(--gold);color:#000;border-color:var(--gold)">📋 Ficha</button><button class="edit-btn" onclick="openEditCliente(${c.id})">✏️ Editar</button></td></tr>`;
   }).join('');
 }
 function addCliente(){
@@ -1764,6 +1856,155 @@ function deleteCliente(){
   closeModal('modal-cl'); toast('✅ Clienta eliminada');
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function openFicha(id){
+  const c=D.clientes.find(x=>x.id===id); if(!c) return;
+  const f=c.ficha||{};
+  document.getElementById('ficha-cl-id').value=id;
+  document.getElementById('ficha-nombre-title').textContent=c.nombre;
+  document.getElementById('f-correo').value=f.correo||'';
+  document.getElementById('f-tel-emg').value=f.telEmg||'';
+  document.getElementById('f-ig2').value=f.ig||c.ig||'';
+  document.getElementById('f-tiktok').value=f.tiktok||'';
+  document.getElementById('f-musica').value=f.musica||'';
+  document.getElementById('f-snack').value=f.snack||'';
+  document.getElementById('f-obs').value=f.obs||c.notas||'';
+  // Checkboxes enfermedades
+  document.querySelectorAll('.f-enfermedad').forEach(cb=>{cb.checked=(f.enfermedades||[]).includes(cb.value);});
+  // Radio piel
+  document.querySelectorAll('[name="f-piel"]').forEach(r=>{r.checked=r.value===(f.piel||'');});
+  // Checkboxes uña
+  document.querySelectorAll('.f-una').forEach(cb=>{cb.checked=(f.tipoUna||[]).includes(cb.value);});
+  document.querySelectorAll('.f-forma-una').forEach(cb=>{cb.checked=(f.formaUna||[]).includes(cb.value);});
+  // Medidas
+  const svcs=['softgel','tips','extensiones']; const dedos=['pulgar','indice','medio','anular','menique'];
+  svcs.forEach(s=>dedos.forEach(d=>{const el=document.getElementById(`f-med-${s}-${d}`);if(el)el.value=(f.medidas||{})[s]?.[d]||'';}));
+  // Forma y largo
+  document.querySelectorAll('[name="f-forma"]').forEach(r=>{r.checked=r.value===(f.forma||'');});
+  document.querySelectorAll('[name="f-largo"]').forEach(r=>{r.checked=r.value===(f.largo||'');});
+  document.getElementById('modal-ficha').classList.add('open');
+}
+
+function guardarFicha(){
+  const id=+document.getElementById('ficha-cl-id').value;
+  const c=D.clientes.find(x=>x.id===id); if(!c) return;
+  const svcs=['softgel','tips','extensiones']; const dedos=['pulgar','indice','medio','anular','menique'];
+  const medidas={};
+  svcs.forEach(s=>{medidas[s]={};dedos.forEach(d=>{const el=document.getElementById(`f-med-${s}-${d}`);medidas[s][d]=el?el.value:'';});});
+  c.ficha={
+    correo: document.getElementById('f-correo').value.trim(),
+    telEmg: document.getElementById('f-tel-emg').value.trim(),
+    ig: document.getElementById('f-ig2').value.trim(),
+    tiktok: document.getElementById('f-tiktok').value.trim(),
+    musica: document.getElementById('f-musica').value.trim(),
+    snack: document.getElementById('f-snack').value.trim(),
+    obs: document.getElementById('f-obs').value.trim(),
+    enfermedades:[...document.querySelectorAll('.f-enfermedad:checked')].map(x=>x.value),
+    piel:(document.querySelector('[name="f-piel"]:checked')||{}).value||'',
+    tipoUna:[...document.querySelectorAll('.f-una:checked')].map(x=>x.value),
+    formaUna:[...document.querySelectorAll('.f-forma-una:checked')].map(x=>x.value),
+    forma:(document.querySelector('[name="f-forma"]:checked')||{}).value||'',
+    largo:(document.querySelector('[name="f-largo"]:checked')||{}).value||'',
+    medidas
+  };
+  saveAndSync(); closeModal('modal-ficha'); toast('✅ Ficha técnica guardada');
+}
+
+function exportarFichaPDF(){
+  const id=+document.getElementById('ficha-cl-id').value;
+  const c=D.clientes.find(x=>x.id===id); if(!c) return;
+  guardarFicha();
+  const f=c.ficha||{};
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const gold=[178,146,87]; const pink=[220,150,150]; const gray=[80,80,80]; const lgray=[220,220,220];
+  const W=210; let y=18;
+  // Header
+  doc.setFillColor(...gold); doc.rect(0,0,W,14,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text('LEY STUDIO — Ficha Técnica Manicure',W/2,9,{align:'center'});
+  y=22;
+  // Nombre
+  doc.setTextColor(...gray); doc.setFontSize(16); doc.setFont('helvetica','bold');
+  doc.text(c.nombre||'', W/2, y,{align:'center'}); y+=6;
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.setTextColor(...gray);
+  const info=[[`Tel: ${c.tel||'—'}`,`Correo: ${f.correo||'—'}`],[`Instagram: ${f.ig||c.ig||'—'}`,`TikTok: ${f.tiktok||'—'}`],[`Tel emergencia: ${f.telEmg||'—'}`,`Cumpleaños: ${c.bday||'—'}`],[`Música: ${f.musica||'—'}`,`Snack: ${f.snack||'—'}`]];
+  info.forEach(row=>{doc.text(row[0],14,y);doc.text(row[1],W/2+5,y);y+=5;});
+  y+=3;
+  // Sección helper
+  function section(title){doc.setFillColor(...gold);doc.rect(14,y,W-28,6,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text(title,W/2,y+4,{align:'center'});y+=9;doc.setTextColor(...gray);doc.setFont('helvetica','normal');doc.setFontSize(8);}
+  // Historial médico
+  section('HISTORIAL MÉDICO');
+  const col1=14,col2=80,col3=146;
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('ENFERMEDADES',col1,y);doc.text('TIPO DE PIEL',col2,y);doc.text('TIPO DE UÑA',col3,y);y+=4;
+  doc.setFont('helvetica','normal');
+  const enf=['Toma algún medicamento','Hongos o bacterias','Psoriasis','Dermatitis','Descamación de uña','Diabetes'];
+  const piel=['Normal','Seca','Mixta','Sensible','Madura','Hiperhidrosis'];
+  const una=['Sana','Micosis','Onicofágicas','Amarillas','Estriada','Oleosa'];
+  const rows=6;
+  for(let i=0;i<rows;i++){
+    const checked=(f.enfermedades||[]).includes(enf[i]);
+    doc.setTextColor(checked?...gold:...lgray); doc.text('●',col1,y);
+    doc.setTextColor(...gray); doc.text(enf[i]||'',col1+4,y);
+    const pc=(f.piel||'')===(piel[i]||'');
+    doc.setTextColor(pc?...gold:...lgray); doc.text('●',col2,y);
+    doc.setTextColor(...gray); doc.text(piel[i]||'',col2+4,y);
+    const uc=(f.tipoUna||[]).includes(una[i]||'');
+    doc.setTextColor(uc?...gold:...lgray); doc.text('●',col3,y);
+    doc.setTextColor(...gray); doc.text(una[i]||'',col3+4,y);
+    y+=5;
+  }
+  y+=3;
+  // Medidas
+  section('MEDIDAS');
+  const svcs2=['Soft Gel','Tips','Extensiones']; const svcsK=['softgel','tips','extensiones'];
+  const dedos2=['Pulgar','Índice','Medio','Anular','Meñique']; const dedosK=['pulgar','indice','medio','anular','menique'];
+  const cw=26; const startX=50;
+  doc.setFont('helvetica','bold'); doc.setFontSize(7);
+  doc.text('Servicio',14,y+3);
+  dedos2.forEach((d,i)=>{doc.text(d,startX+i*cw,y+3,{align:'center'});});
+  doc.setFillColor(...lgray); doc.rect(14,y+5,W-28,0.3,'F'); y+=8;
+  svcs2.forEach((s,si)=>{
+    doc.setFont('helvetica','normal'); doc.setTextColor(...gray);
+    doc.text(s,14,y);
+    dedosK.forEach((d,di)=>{
+      const val=(f.medidas||{})[svcsK[si]]?.[d]||'';
+      doc.text(val,startX+di*cw,y,{align:'center'});
+    });
+    y+=6;
+  });
+  y+=2;
+  // Forma y Largo
+  section('FORMA Y LARGO');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('FORMA:',14,y); doc.setFont('helvetica','normal');
+  ['Cuadrada','Coffin','Almond','Stiletto'].forEach((f2,i)=>{
+    const sel=(f.forma||'')=== f2;
+    doc.setTextColor(sel?...gold:...lgray); doc.text('●',45+i*33,y);
+    doc.setTextColor(...gray); doc.text(f2,49+i*33,y);
+  });
+  y+=6;
+  doc.setFont('helvetica','bold'); doc.text('LARGO:',14,y); doc.setFont('helvetica','normal');
+  ['#1','#2','#3','#4'].forEach((l,i)=>{
+    const sel=(f.largo||'')=== l;
+    doc.setTextColor(sel?...gold:...lgray); doc.text('●',45+i*25,y);
+    doc.setTextColor(...gray); doc.text(l,49+i*25,y);
+  });
+  y+=8;
+  // Observaciones
+  section('OBSERVACIONES');
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  const lines=doc.splitTextToSize(f.obs||'—', W-30);
+  doc.text(lines,14,y); y+=lines.length*5+4;
+  // Footer
+  doc.setFillColor(...gold); doc.rect(0,287,W,10,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(7);
+  doc.text(`Ley Studio · @ley_studiohn · +504 9499-4709 · ${new Date().toLocaleDateString('es-HN')}`,W/2,293,{align:'center'});
+  doc.save(`Ficha_${c.nombre.replace(/\s/g,'_')}.pdf`);
+  toast('📄 PDF generado');
+}
 
 // ═══════════════════════════════════════════════════
 // FINANZAS
