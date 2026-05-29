@@ -1232,10 +1232,8 @@ function getAllSvcs(){ return [...BASE_SVCS,...(D.catalogoCustom||[])]; }
 // ═══════════════════════════════════════════════════
 const KEY='leystudio_v3';
 
-// ── JSONBin Config (pre-configured, no setup needed) ──
-const JSONBIN_KEY = '$2a$10$WRGLhrOvKjkUngB6CX1O8u0gKIGu0wFJT2m4mU738jH.3VO6fr5jK';
-const JSONBIN_BIN = '6a171688f47d5c455c3da347';
-const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_BIN;
+// ── Firebase Realtime Database ──
+const FIREBASE_URL = 'https://ley-studio-b069e-default-rtdb.firebaseio.com/data.json';
 let syncDebounce = null;
 let isSyncing = false;
 
@@ -1248,22 +1246,18 @@ async function pushToCloud(){
   setSyncStatus('sync-busy');
   let success = false;
   try{
-    const r = await fetch(JSONBIN_URL, {
+    const r = await fetch(FIREBASE_URL, {
       method: 'PUT',
-      headers: {'Content-Type':'application/json','X-Master-Key': JSONBIN_KEY,'X-Bin-Versioning':'false'},
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify(D)
     });
     if(r.ok){
       setSyncStatus('sync-ok');
       success = true;
-      console.log('[Ley Studio] ✅ Push a nube OK — items:', localTotal);
     } else {
-      const txt = await r.text().catch(()=>'');
-      console.error('[Ley Studio] ❌ Push falló HTTP', r.status, txt);
       setSyncStatus('sync-err');
     }
   } catch(e){
-    console.error('[Ley Studio] ❌ Push error de red:', e.message);
     setSyncStatus('sync-err');
   }
   isSyncing = false;
@@ -1273,33 +1267,28 @@ async function pushToCloud(){
 async function pullFromCloud(){
   setSyncStatus('sync-busy');
   try{
-    const r = await fetch(JSONBIN_URL + '/latest', {
-      headers: {'X-Master-Key': JSONBIN_KEY}
-    });
+    const r = await fetch(FIREBASE_URL);
     if(r.ok){
-      const json = await r.json();
-      const remote = json.record;
-      const remoteTotal = remote && remote.citas
-        ? (remote.citas||[]).length + (remote.clientes||[]).length + (remote.movimientos||[]).length
-        : 0;
-      const localTotal  = D.citas.length + D.clientes.length + D.movimientos.length;
-
-      if(remoteTotal > 0 && remoteTotal >= localTotal){
-        // Nube tiene más datos → jalar
-        Object.assign(D, remote);
-        saveLocal();
-        actualizarDatalist();
-        setSyncStatus('sync-ok');
-      } else if(remoteTotal === 0 && localTotal > 0){
-        // Nube vacía pero local tiene datos → empujar (restaurar nube)
-        setSyncStatus('sync-ok');
-        pushToCloud();   // no await — corre en background
-      } else {
-        setSyncStatus('sync-ok');
+      const remote = await r.json();
+      // Firebase devuelve null si la BD está vacía
+      if(remote && remote.citas){
+        const remoteTotal = (remote.citas||[]).length + (remote.clientes||[]).length + (remote.movimientos||[]).length;
+        const localTotal  = D.citas.length + D.clientes.length + D.movimientos.length;
+        if(remoteTotal >= localTotal){
+          Object.assign(D, remote);
+          saveLocal();
+          actualizarDatalist();
+        } else if(localTotal > 0){
+          pushToCloud();
+        }
+      } else if(!remote){
+        // BD vacía en Firebase → subir datos locales si existen
+        const localTotal = D.citas.length + D.clientes.length + D.movimientos.length;
+        if(localTotal > 0) pushToCloud();
       }
+      setSyncStatus('sync-ok');
     } else { setSyncStatus('sync-err'); }
   } catch(e){ setSyncStatus('sync-err'); }
-  // Siempre re-renderizar — resuelve problema de timing
   renderAll();
 }
 
@@ -1315,27 +1304,25 @@ async function probarConexion(){
   box.style.display = 'block';
   box.style.background = 'var(--card)';
   box.style.color = 'var(--gray)';
-  box.textContent = '⏳ Probando conexión con JSONBin...';
+  box.textContent = '⏳ Probando conexión con Firebase...';
   try{
     const t0 = Date.now();
-    const r = await fetch(JSONBIN_URL + '/latest', {headers:{'X-Master-Key': JSONBIN_KEY}});
+    const r = await fetch(FIREBASE_URL);
     const ms = Date.now() - t0;
     if(r.ok){
-      const json = await r.json();
-      const rec = json.record;
+      const rec = await r.json();
       const citas = (rec?.citas||[]).length;
       const clientes = (rec?.clientes||[]).length;
       const movs = (rec?.movimientos||[]).length;
       box.style.color = '#4caf50';
-      box.innerHTML = `✅ JSONBin responde OK (${ms}ms)<br>Nube tiene: ${citas} citas · ${clientes} clientes · ${movs} movimientos<br>Local tiene: ${D.citas.length} citas · ${D.clientes.length} clientes · ${D.movimientos.length} movimientos`;
+      box.innerHTML = `✅ Firebase OK (${ms}ms)<br>Nube: ${citas} citas · ${clientes} clientes · ${movs} movimientos<br>Local: ${D.citas.length} citas · ${D.clientes.length} clientes · ${D.movimientos.length} movimientos`;
     } else {
-      const txt = await r.text().catch(()=>'');
       box.style.color = '#f44336';
-      box.innerHTML = `❌ JSONBin respondió HTTP ${r.status}<br>${txt.slice(0,200)}`;
+      box.innerHTML = `❌ Firebase respondió HTTP ${r.status}`;
     }
   } catch(e){
     box.style.color = '#f44336';
-    box.innerHTML = `❌ No se pudo conectar: ${e.message}<br>Posible causa: bloqueado por el navegador o sin internet.`;
+    box.innerHTML = `❌ No se pudo conectar: ${e.message}`;
   }
 }
 
@@ -2384,10 +2371,9 @@ function doLogin(){
     if(localTotal === 0){
       btn.textContent='Sincronizando...'; btn.disabled=true;
       try{
-        const r = await fetch(JSONBIN_URL + '/latest', {headers:{'X-Master-Key': JSONBIN_KEY}});
+        const r = await fetch(FIREBASE_URL);
         if(r.ok){
-          const json = await r.json();
-          const remote = json.record;
+          const remote = await r.json();
           if(remote && remote.citas && remote.citas.length > 0){
             Object.assign(D, remote);
             saveLocal();
@@ -2411,11 +2397,10 @@ function doLogin(){
     attemptLogin(D.usuarios);
   } else {
     btn.textContent='Verificando...'; btn.disabled=true; err.textContent='';
-    fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_BIN + '/latest',{
-      headers:{'X-Master-Key': JSONBIN_KEY}
-    }).then(r=>r.ok?r.json():null).then(json=>{
-      if(json && json.record){
-        Object.assign(D, json.record);
+    fetch(FIREBASE_URL)
+    .then(r=>r.ok?r.json():null).then(remote=>{
+      if(remote && remote.usuarios){
+        Object.assign(D, remote);
         saveLocal();
       }
       btn.textContent='ENTRAR'; btn.disabled=false;
