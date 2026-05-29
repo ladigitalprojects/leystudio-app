@@ -1980,8 +1980,9 @@ function exportarFichaPDF(){
   const rose=[210,95,105];
   const dkg=[55,55,55];
   const mdg=[130,130,130];
-  const lg=[210,210,210];
+  const lg=[220,215,205];
   const brd=[215,205,190];
+  const cream=[252,250,246];
 
   // ── Helpers ─────────────────────────────────────────────────
   const fmtD=s=>{
@@ -1990,8 +1991,7 @@ function exportarFichaPDF(){
     return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s;
   };
   const HL=(x1,y,x2,col,lw)=>{
-    col=col||brd; lw=lw||0.25;
-    doc.setDrawColor(...col);doc.setLineWidth(lw);doc.line(x1,y,x2,y);
+    doc.setDrawColor(...(col||brd));doc.setLineWidth(lw||0.25);doc.line(x1,y,x2,y);
   };
   const circ=(cx,cy,r,fill,col)=>{
     doc.setDrawColor(...col);doc.setLineWidth(0.45);
@@ -2003,118 +2003,160 @@ function exportarFichaPDF(){
   const nail=(type,cx,topY,scaleH,sel)=>{
     const nw=8, nh=Math.max(9,14*scaleH);
     const col=sel?gold:lg;
-    doc.setDrawColor(...col); doc.setLineWidth(0.5);
-    doc.setFillColor(...(sel?[240,225,195]:[248,246,242]));
-    const x=cx-nw/2, y=topY;
+    const fill=sel?[240,225,195]:[250,248,244];
+    doc.setDrawColor(...col); doc.setLineWidth(sel?0.6:0.4);
+    doc.setFillColor(...fill);
+    const x=cx-nw/2;
     if(type==='Cuadrada'){
-      doc.roundedRect(x,y,nw,nh,1,1,sel?'FD':'D');
+      doc.roundedRect(x,topY,nw,nh,1.2,1.2,sel?'FD':'D');
+      // cuticle line
+      doc.setDrawColor(...col); doc.setLineWidth(0.3);
+      doc.line(x+0.5,topY+nh*0.22,x+nw-0.5,topY+nh*0.22);
     } else if(type==='Coffin'){
-      const hw=nw*0.38;
-      doc.lines([[nw,0],[0,nh*0.65],[-nw/2+hw/2,nh*0.35],[-hw,0],[-nw/2+hw/2,-nh*0.35],[0,-nh*0.65]],x,y,[1,1],sel?'FD':'D',true);
+      const hw=nw*0.4; // ancho de la punta plana
+      // Polígono: base ancha arriba, estrecha y plana abajo
+      doc.lines([
+        [nw,0],           // top-left → top-right
+        [0,nh*0.65],      // top-right → right shoulder
+        [-nw/2+hw/2, nh*0.35], // right shoulder → tip-right
+        [-hw,0],          // tip-right → tip-left
+        [-nw/2+hw/2,-nh*0.35], // tip-left → left shoulder
+        [0,-nh*0.65]      // left shoulder → top-left (close)
+      ],x,topY,[1,1],sel?'FD':'D',true);
+      doc.setDrawColor(...col); doc.setLineWidth(0.3);
+      doc.line(x+0.5,topY+nh*0.22,x+nw-0.5,topY+nh*0.22);
     } else if(type==='Almond'){
-      doc.ellipse(cx,y+nh/2,nw/2,nh/2,sel?'FD':'D');
+      // Elipse — redondeada arriba y abajo
+      doc.ellipse(cx,topY+nh/2,nw/2,nh/2,sel?'FD':'D');
+      doc.setDrawColor(...col); doc.setLineWidth(0.3);
+      doc.line(cx-nw/2+0.5,topY+nh*0.22,cx+nw/2-0.5,topY+nh*0.22);
     } else if(type==='Stiletto'){
-      doc.lines([[nw,nh],[-(nw/2),(-nh)],[-(nw/2),nh]],x,y+nh,[1,1],sel?'FD':'D',true);
+      // Triángulo: base en la parte superior, punta hacia abajo
+      // top-left → top-right → tip-center-bottom → close
+      doc.lines([
+        [nw,0],           // top-left → top-right
+        [-nw/2,nh],       // top-right → tip (centro abajo)
+        [-nw/2,-nh]       // tip → top-left (cierre)
+      ],x,topY,[1,1],sel?'FD':'D',true);
+      doc.setDrawColor(...col); doc.setLineWidth(0.3);
+      // cuticle line en la parte superior
+      doc.line(x+1,topY+nh*0.18,x+nw-1,topY+nh*0.18);
     }
-    doc.setDrawColor(...col); doc.setLineWidth(0.3);
-    doc.line(x,y+nh*0.22,x+nw,y+nh*0.22);
   };
 
   // ── Mano simplificada ────────────────────────────────────────
   const drawHand=(hx,hy)=>{
-    doc.setDrawColor(...mdg); doc.setLineWidth(0.4);
-    doc.setFillColor(255,250,245);
     const fingers=[
-      {x:hx+2, w:5,  h:19, r:2.5},
-      {x:hx+9, w:5.5,h:26, r:2.5},
-      {x:hx+16,w:5.5,h:28, r:2.5},
-      {x:hx+23,w:5,  h:24, r:2.5},
-      {x:hx+30,w:4,  h:18, r:2},
+      {x:hx+2, w:5,  h:20, r:2.5},
+      {x:hx+9, w:5.5,h:27, r:2.5},
+      {x:hx+16,w:5.5,h:29, r:2.5},
+      {x:hx+23,w:5,  h:25, r:2.5},
+      {x:hx+30,w:4,  h:19, r:2},
     ];
+    // Sombra suave de dedos
     fingers.forEach(fg=>{
-      doc.roundedRect(fg.x,hy-fg.h,fg.w,fg.h+4,fg.r,fg.r,'FD');
-      doc.setDrawColor(200,190,180); doc.setLineWidth(0.2);
-      doc.line(fg.x+0.5,hy-fg.h*0.35,fg.x+fg.w-0.5,hy-fg.h*0.35);
-      doc.line(fg.x+0.5,hy-fg.h*0.6, fg.x+fg.w-0.5,hy-fg.h*0.6);
+      doc.setDrawColor(...mdg); doc.setLineWidth(0.4);
+      doc.setFillColor(255,250,245);
+      doc.roundedRect(fg.x,hy-fg.h,fg.w,fg.h+5,fg.r,fg.r,'FD');
+      // articulaciones
+      doc.setDrawColor(205,195,185); doc.setLineWidth(0.2);
+      doc.line(fg.x+0.5,hy-fg.h*0.33,fg.x+fg.w-0.5,hy-fg.h*0.33);
+      doc.line(fg.x+0.5,hy-fg.h*0.58,fg.x+fg.w-0.5,hy-fg.h*0.58);
     });
+    // palma
     doc.setDrawColor(...mdg); doc.setLineWidth(0.4);
     doc.setFillColor(255,250,245);
-    doc.roundedRect(hx+1,hy,36,9,2,2,'FD');
+    doc.roundedRect(hx+1,hy,36,10,2,2,'FD');
+  };
+
+  // ── Cabecera de sección ──────────────────────────────────────
+  const sectHdr=(title,yy)=>{
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...rose);
+    doc.text(title,W/2,yy,{align:'center'});
+    const tw=doc.getTextWidth(title)+6;
+    HL(14,yy+0.8,W/2-tw/2-2,brd,0.3);
+    HL(W/2+tw/2+2,yy+0.8,W-14,brd,0.3);
+    return yy+6;
   };
 
   // ══════════════════════════════════════════
   // PÁGINA 1 — FICHA TÉCNICA
   // ══════════════════════════════════════════
   doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
+  // Franja dorada superior
   doc.setFillColor(...gold); doc.rect(0,0,W,3,'F');
 
-  // Logo — mantener proporción, max 28mm ancho
+  // ── Logo con ratio correcto ──────────────
   let y=5;
   try{
     const logoEl=document.querySelector('.logo-img');
-    if(logoEl&&logoEl.naturalWidth){
-      const ratio=logoEl.naturalHeight/logoEl.naturalWidth;
-      const lw=26, lh=Math.min(26,lw*ratio);
-      doc.addImage(logoEl.src,'PNG',12,y+1,lw,lh);
+    if(logoEl){
+      // Crear imagen temporal para obtener dimensiones reales
+      const tmpImg=new Image();
+      tmpImg.src=logoEl.src;
+      const nw2=tmpImg.naturalWidth||logoEl.naturalWidth||1;
+      const nh2=tmpImg.naturalHeight||logoEl.naturalHeight||1;
+      const ratio=(nw2>0&&nh2>0)?nh2/nw2:1.15;
+      const lw=24;
+      const lh=lw*ratio;
+      doc.addImage(logoEl.src,'PNG',12,y,lw,lh);
     }
   }catch(e){}
 
-  // Título centrado (desplazado a la derecha para dejar espacio al logo)
-  doc.setFont('helvetica','italic'); doc.setFontSize(8.5); doc.setTextColor(...rose);
-  doc.text('Manicure',W/2+14,y+8,{align:'center'});
-  doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(...rose);
-  doc.text('Ficha Tecnica',W/2+14,y+16,{align:'center'});
+  // ── Títulos ──────────────────────────────
+  doc.setFont('helvetica','italic'); doc.setFontSize(9); doc.setTextColor(...rose);
+  doc.text('Manicure',W/2+14,y+9,{align:'center'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(24); doc.setTextColor(...rose);
+  doc.text('Ficha Tecnica',W/2+14,y+18,{align:'center'});
   doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(...gold);
-  doc.text('Clientas',W/2+14,y+24,{align:'center'});
+  doc.text('Clientas',W/2+14,y+26,{align:'center'});
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...mdg);
-  doc.text('Toda la información proporcionada se utilizará para beneficio de la clienta',W/2,y+30,{align:'center'});
-  y=38; HL(14,y,W-14,brd,0.4); y+=4;
+  doc.text('Toda la información proporcionada se utilizará para beneficio de la clienta',W/2,y+31,{align:'center'});
 
-  // ── Sección helper ───────────────────────────────────────────
-  const sectHdr=(title,yy)=>{
-    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...rose);
-    doc.text(title,W/2,yy,{align:'center'});
-    const tw=doc.getTextWidth(title)+4;
-    HL(14,yy+0.8,W/2-tw/2-2,brd); HL(W/2+tw/2+2,yy+0.8,W-14,brd);
-    return yy+6;
-  };
+  y=39; HL(14,y,W-14,brd,0.5); y+=5;
 
-  // ── INFORMACION GENERAL ──────────────────────────────────────
+  // ── INFORMACION GENERAL ──────────────────
   y=sectHdr('INFORMACION GENERAL',y);
   const fld=(label,val,lx,ly,fw)=>{
     fw=fw||88;
-    doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...mdg);
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.2); doc.setTextColor(...mdg);
     doc.text(label,lx,ly);
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...dkg);
     const v=String(val||'—');
-    doc.text(v.length>32?v.substr(0,32)+'…':v,lx,ly+4.5);
-    HL(lx,ly+5.5,lx+fw,brd);
+    doc.text(v.length>34?v.substr(0,34)+'…':v,lx,ly+4.5);
+    HL(lx,ly+5.8,lx+fw,brd,0.3);
   };
   const L=14, R=W/2+6;
-  fld('NOMBRE COMPLETO',c.nombre,L,y);  fld('EDAD & CUMPLEAÑOS',fmtD(c.bday),R,y); y+=11;
-  fld('CORREO',f.correo,L,y);           fld('TELÉFONO',c.tel,R,y); y+=11;
-  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...mdg);
+  fld('NOMBRE COMPLETO',c.nombre,L,y);
+  fld('EDAD & CUMPLEAÑOS',fmtD(c.bday),R,y); y+=12;
+  fld('CORREO',f.correo,L,y);
+  fld('TELÉFONO',c.tel,R,y); y+=12;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.2); doc.setTextColor(...mdg);
   doc.text('REDES SOCIALES',L,y);
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...dkg);
-  doc.text('IG: '+(f.ig||c.ig||'—'),L+28,y);
-  HL(L,y+1.5,L+88,brd);
-  fld('TELÉFONO DE EMERGENCIA',f.telEmg,R,y); y+=11;
-  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...mdg);
+  doc.text('IG:  '+(f.ig||c.ig||'—'),L+28,y);
+  HL(L,y+1.8,L+90,brd,0.3);
+  fld('TELÉFONO DE EMERGENCIA',f.telEmg,R,y); y+=12;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.2); doc.setTextColor(...mdg);
   doc.text('TikTok',L,y); doc.text('GUSTOS',R,y);
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...dkg);
-  doc.text(f.tiktok||'—',L+10,y); doc.text(f.musica||'—',R+10,y);
-  doc.text('snack: '+(f.snack||'—'),R+40,y);
-  HL(L,y+1.5,L+88,brd); HL(R,y+1.5,R+88,brd);
-  y+=8; HL(14,y,W-14,brd,0.4); y+=5;
+  doc.text(f.tiktok||'—',L+11,y);
+  doc.text(f.musica||'—',R+11,y);
+  doc.text('snack: '+(f.snack||'—'),R+44,y);
+  HL(L,y+1.8,L+90,brd,0.3); HL(R,y+1.8,R+90,brd,0.3);
+  y+=9; HL(14,y,W-14,brd,0.5); y+=5;
 
-  // ── HISTORIAL MÉDICO ─────────────────────────────────────────
+  // ── HISTORIAL MÉDICO ─────────────────────
   y=sectHdr('HISTORIAL MEDICO',y);
   const c1=28,c2=88,c3=158;
   doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...rose);
   doc.text('ENFERMEDADES',c1,y,{align:'center'});
   doc.text('TIPO DE PIEL',c2,y,{align:'center'});
-  doc.text('TIPO DE UÑA', c3,y,{align:'center'});
+  doc.text('TIPO DE UÑA',c3,y,{align:'center'});
   y+=5;
+
   const enf=['Toma algún medicamento','Hongos o bacterias','Psoriasis','Dermatitis','Descamación de uña','Diabetes'];
   const piel=['Normal','Seca','Mixta','Sensible','Madura','Hiperhidrosis'];
   const una=['Sana','Micosis','Onicofágicas','Amarillas','Estriada','Oleosa'];
@@ -2123,118 +2165,117 @@ function exportarFichaPDF(){
     circ(c1-14,y-0.8,2,ce,ce?gold:lg);
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...dkg);
     doc.text(enf[i],c1-10,y);
-    const cp=(f.piel||'')===(piel[i]||'');
+    const cp=(f.piel||'')===(piel[i]);
     circ(c2-14,y-0.8,2,cp,cp?gold:lg);
     doc.text(piel[i],c2-10,y);
     const cu=(f.tipoUna||[]).includes(una[i]);
     circ(c3-14,y-0.8,2,cu,cu?gold:lg);
     doc.text(una[i],c3-10,y);
-    y+=6;
+    y+=6.5;
   }
-  HL(14,y,W-14,brd,0.4); y+=4;
+  HL(14,y,W-14,brd,0.5); y+=5;
 
-  // ── MEDIDAS + FORMA Y LARGO ──────────────────────────────────
-  // Dividimos la página en dos mitades: izq=14..103, der=107..196
+  // ── MEDIDAS + FORMA Y LARGO ──────────────
+  // Zona izquierda: x=14..105 | Zona derecha: x=111..196
   const secTop=y;
 
-  // Títulos de sección
   doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...rose);
-  doc.text('MEDIDAS',58,y,{align:'center'});       // centro de zona izq
-  doc.text('FORMA Y LARGO',152,y,{align:'center'}); // centro de zona der
+  doc.text('MEDIDAS',60,y,{align:'center'});
+  doc.text('FORMA Y LARGO',154,y,{align:'center'});
   y+=5;
 
-  // — Mano — zona izq, alineada arriba
-  drawHand(16,y+28);
+  // Mano
+  drawHand(16,y+31);
 
-  // — Tabla MEDIDAS — dentro de zona izq, a la derecha de la mano
-  const tX=58, tY=y;
+  // Tabla MEDIDAS
+  // Columnas: Servicio(18mm) + 5 dedos(6.5mm c/u = 32.5) → total 50.5mm
+  const tX=57, tY=y;
+  const svcW=18, cw=6.5;
+  const tableW=svcW+5*cw; // 50.5mm → ends at 57+50.5=107.5
   const svcsL=['SOFT GEL','TIPS','EXTENSIONES'], svcsK=['softgel','tips','extensiones'];
-  const dedsL=['Pulgar','Índice','Medio','Anular','Meñique'], dedsK=['pulgar','indice','medio','anular','menique'];
-  const cw=7.5; // ancho columna dedo
-  const svcW=17; // ancho columna servicio
-  const tableW=svcW+5*cw; // 17+37.5=54.5
+  const dedsL=['Pulg.','Índ.','Med.','Anu.','Meñ.'], dedsK=['pulgar','indice','medio','anular','menique'];
 
-  // Header tabla
-  doc.setFillColor(245,240,232); doc.rect(tX,tY,tableW,6,'F');
-  doc.setDrawColor(...brd); doc.setLineWidth(0.3); doc.rect(tX,tY,tableW,6,'D');
+  // Header
+  doc.setFillColor(...cream); doc.rect(tX,tY,tableW,7,'F');
+  doc.setDrawColor(...brd); doc.setLineWidth(0.3); doc.rect(tX,tY,tableW,7,'D');
   doc.setFont('helvetica','bold'); doc.setFontSize(6); doc.setTextColor(...dkg);
-  doc.text('SERVICIO',tX+1,tY+4);
-  dedsL.forEach((d,i)=>doc.text(d,tX+svcW+i*cw+cw/2,tY+4,{align:'center',maxWidth:cw}));
+  doc.text('SERVICIO',tX+1,tY+4.5);
+  dedsL.forEach((d,i)=>{
+    doc.text(d,tX+svcW+i*cw+cw/2,tY+4.5,{align:'center'});
+  });
 
   // Filas
   svcsL.forEach((s,si)=>{
-    const ry=tY+6+si*8;
-    doc.setDrawColor(...brd); doc.setLineWidth(0.25); doc.rect(tX,ry,tableW,8,'D');
-    circ(tX+2.5,ry+4,1.5,false,gold);
+    const ry=tY+7+si*8;
+    doc.setDrawColor(...brd); doc.setLineWidth(0.25);
+    doc.rect(tX,ry,tableW,8,'D');
+    circ(tX+2.8,ry+4,1.6,false,gold);
     doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...dkg);
-    doc.text(s,tX+5,ry+5);
+    doc.text(s,tX+5.5,ry+5.2);
     dedsK.forEach((d,di)=>{
       const val=((f.medidas||{})[svcsK[si]]||{})[d]||'';
       if(val){
         doc.setFont('helvetica','bold'); doc.setTextColor(...gold);
-        doc.text(String(val),tX+svcW+di*cw+cw/2,ry+5,{align:'center'});
+        doc.text(String(val),tX+svcW+di*cw+cw/2,ry+5.2,{align:'center'});
       }
     });
   });
 
-  // — FORMA Y LARGO — zona derecha (x: 107..196)
-  const rX=107; // inicio zona derecha
-  const rW=89;  // ancho zona derecha
-  const formas=['Cuadrada','Coffin','Almond','Stiletto'];
-  const nailSpacing=rW/4; // ~22mm por uña
-  const formaY=y+1;
+  // FORMA Y LARGO — zona derecha x=111..196 (85mm)
+  const rX=111, rW=85;
+  const sp=rW/4; // ~21.25mm por uña
 
-  // Título FORMA
+  // FORMA
   doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...rose);
-  doc.text('FORMA',rX+rW/2,formaY,{align:'center'});
-
-  // 4 formas
+  doc.text('FORMA',rX+rW/2,y,{align:'center'});
+  const formas=['Cuadrada','Coffin','Almond','Stiletto'];
   formas.forEach((fo,i)=>{
-    const ncx=rX+nailSpacing*i+nailSpacing/2;
+    const ncx=rX+sp*i+sp/2;
     const sel=(f.forma||'')===(fo);
-    nail(fo,ncx,formaY+3,1.0,sel);
-    doc.setFont('helvetica','normal'); doc.setFontSize(6);
+    nail(fo,ncx,y+3,1.0,sel);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.2);
     doc.setTextColor(...(sel?gold:dkg));
-    doc.text(fo,ncx,formaY+20,{align:'center'});
+    doc.text(fo,ncx,y+21,{align:'center'});
   });
 
-  // Título LARGO
-  const largosY=formaY+24;
+  // LARGO
+  const largosY=y+26;
   doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...rose);
   doc.text('LARGO',rX+rW/2,largosY,{align:'center'});
-
-  // 4 largos (escalas crecientes)
-  const scales=[0.55,0.72,0.88,1.05];
+  const scales=[0.52,0.68,0.84,1.0];
+  const maxNh=14; // altura máxima (scale 1.0)
   scales.forEach((sc,i)=>{
-    const ncx=rX+nailSpacing*i+nailSpacing/2;
+    const ncx=rX+sp*i+sp/2;
     const sel=(f.largo||'')==='#'+(i+1);
-    const topY=largosY+3+(1.05-sc)*14*0.5; // alinear bases
-    nail('Almond',ncx,topY,sc,sel);
-    const nh=Math.max(9,14*sc);
-    doc.setFont('helvetica','normal'); doc.setFontSize(6);
+    const nh=Math.max(9,maxNh*sc);
+    const baseY=largosY+3+maxNh; // base común para todas
+    nail('Almond',ncx,baseY-nh,sc,sel);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.2);
     doc.setTextColor(...(sel?gold:dkg));
-    doc.text('#'+(i+1),ncx,topY+nh+3,{align:'center'});
+    doc.text('#'+(i+1),ncx,baseY+4,{align:'center'});
   });
 
-  // Avanzar y lo suficiente para cubrir ambas zonas
-  const sectionHeight=Math.max(
-    6+3*8,             // tabla: header(6)+3rows(24)=30
-    1+20+4+10+14+3    // forma+largo: título+nails+gap+título+nails+label≈52
+  // Avanzar y cubriendo la sección completa
+  y=secTop+6+Math.max(
+    7+3*8+4,           // tabla: 7header + 24rows + 4pad = 35
+    26+3+maxNh+8       // largo section bottom ≈ 51
   );
-  y=secTop+sectionHeight+10;
-  HL(14,y,W-14,brd,0.4); y+=4;
+  HL(14,y,W-14,brd,0.5); y+=5;
 
-  // ── OBSERVACIONES ────────────────────────────────────────────
+  // ── OBSERVACIONES ────────────────────────
   doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...rose);
   doc.text('OBSERVACIONES',14,y);
-  HL(55,y+0.5,W-14,brd);
-  y+=6;
-  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...dkg);
-  if(f.obs){const obsL=doc.splitTextToSize(f.obs,W-28);doc.text(obsL,14,y);}
-  for(let i=0;i<5;i++) HL(14,y+i*8,W-14,brd);
+  HL(56,y+0.5,W-14,brd,0.3);
+  y+=7;
+  if(f.obs){
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...dkg);
+    const obsL=doc.splitTextToSize(f.obs,W-28);
+    doc.text(obsL.slice(0,3),14,y);
+  }
+  for(let i=0;i<5;i++) HL(14,y+i*8,W-14,brd,0.25);
   y+=42;
 
-  // Footer p1
+  // ── Footer p1 ─────────────────────────────
   doc.setFillColor(...gold); doc.rect(0,H-5,W,5,'F');
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(255,255,255);
   doc.text(`Ley Studio · Nail Artist · Tegucigalpa · @ley_studiohn · ${new Date().toLocaleDateString('es-HN')}`,W/2,H-2,{align:'center'});
@@ -2246,61 +2287,66 @@ function exportarFichaPDF(){
   doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
   doc.setFillColor(...gold); doc.rect(0,0,W,3,'F');
   y=12;
-  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...gold);
-  doc.text('HISTORIAL DE VISITAS',14,y);
-  y+=6; HL(14,y,W-14,gold,0.5); y+=6;
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...gold);
+  doc.text('HISTORIAL DE VISITAS',W/2,y,{align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...mdg);
+  doc.text(c.nombre,W/2,y+6,{align:'center'});
+  y+=12; HL(14,y,W-14,gold,0.5); y+=6;
 
   const hCols=[
-    {label:'FECHA',     w:28},
-    {label:'DÍAS ENTRE\nSERVICIOS',w:22},
-    {label:'SERVICIO',  w:80},
-    {label:'OBSERVACIONES',w:60},
+    {label:'FECHA',      w:28},
+    {label:'DÍAS\nENTRE',w:18},
+    {label:'SERVICIO',   w:82},
+    {label:'NOTAS',      w:62},
   ];
   let hx2=14;
-  doc.setDrawColor(...gold); doc.setLineWidth(0.3);
+  // Header
+  doc.setDrawColor(...gold); doc.setLineWidth(0.35);
+  doc.setFillColor(...cream);
   hCols.forEach(col=>{
-    doc.rect(hx2,y,col.w,10,'D');
+    doc.rect(hx2,y,col.w,10,'FD');
     doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...rose);
-    doc.text(col.label,hx2+col.w/2,y+4,{align:'center',maxWidth:col.w-2});
+    doc.text(col.label,hx2+col.w/2,y+4,{align:'center',maxWidth:col.w-2,lineHeightFactor:1.3});
     hx2+=col.w;
   });
   y+=10;
 
-  const citasC=D.citas.filter(ci=>ci.clienta===c.nombre&&ci.estado==='Completada')
+  const citasC=D.citas
+    .filter(ci=>ci.clienta===c.nombre&&ci.estado==='Completada')
     .sort((a,b)=>a.fecha>b.fecha?1:-1);
   let prevDate=null;
-  const maxRows=Math.max(18,citasC.length);
+  const maxRows=Math.max(20,citasC.length);
   for(let ri=0;ri<maxRows;ri++){
     const ci=citasC[ri];
+    const rowH=8;
     hx2=14;
-    doc.setDrawColor(...gold); doc.setLineWidth(0.2);
-    hCols.forEach((col,ci2)=>{
-      doc.rect(hx2,y,col.w,9,'D');
-      if(ci){
-        doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...dkg);
-        if(ci2===0) doc.text(fmtD(ci.fecha),hx2+2,y+5.5);
-        else if(ci2===1&&prevDate){
-          const d=Math.round((new Date(ci.fecha)-new Date(prevDate))/86400000);
-          doc.text(String(d),hx2+col.w/2,y+5.5,{align:'center'});
-        }
-        else if(ci2===2){
-          const sv=(ci.servicios||[]).map(s=>s.nombre).join(', ');
-          doc.text(sv.length>45?sv.substr(0,45)+'…':sv,hx2+1,y+5.5);
-        }
-        else if(ci2===3) doc.text((ci.notas||'').substr(0,35),hx2+1,y+5.5);
+    doc.setDrawColor(...brd); doc.setLineWidth(0.2);
+    if(ci&&ri%2===0){doc.setFillColor(252,250,247);hCols.forEach(col=>{doc.rect(hx2,y,col.w,rowH,'FD');hx2+=col.w;});}
+    else{hx2=14;hCols.forEach(col=>{doc.rect(hx2,y,col.w,rowH,'D');hx2+=col.w;});}
+    hx2=14;
+    if(ci){
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...dkg);
+      doc.text(fmtD(ci.fecha),hx2+2,y+5.2); hx2+=hCols[0].w;
+      if(prevDate){
+        const d=Math.round((new Date(ci.fecha)-new Date(prevDate))/86400000);
+        doc.text(String(d),hx2+hCols[1].w/2,y+5.2,{align:'center'});
       }
-      hx2+=col.w;
-    });
-    if(ci) prevDate=ci.fecha;
-    y+=9;
-    if(y>H-15){
+      hx2+=hCols[1].w;
+      const sv=(ci.servicios||[]).map(s=>s.nombre).join(', ');
+      doc.text(sv.length>46?sv.substr(0,46)+'…':sv,hx2+1.5,y+5.2); hx2+=hCols[2].w;
+      doc.text((ci.notas||'').substr(0,34),hx2+1.5,y+5.2);
+      prevDate=ci.fecha;
+    }
+    y+=rowH;
+    if(y>H-12){
       doc.addPage();
       doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
       doc.setFillColor(...gold); doc.rect(0,0,W,3,'F');
-      y=12;
+      y=10;
     }
   }
 
+  // Footer p2
   doc.setFillColor(...gold); doc.rect(0,H-5,W,5,'F');
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(255,255,255);
   doc.text('Ley Studio · Nail Artist · Tegucigalpa · @ley_studiohn',W/2,H-2,{align:'center'});
@@ -2308,6 +2354,7 @@ function exportarFichaPDF(){
   doc.save(`Ficha_${c.nombre.replace(/\s/g,'_')}.pdf`);
   toast('Ficha generada');
 }
+
 
 
 
