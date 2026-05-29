@@ -3526,6 +3526,8 @@ function init(){
   initMesFilter();
   addSvcRow();
   renderAll();
+  // Restaurar último tab activo
+  try{ const lt=localStorage.getItem('ls_last_tab'); if(lt && lt!=='dashboard') showTab(lt); }catch(e){}
   ['c-f','m-f','i-f','cl-f'].forEach(id=>{const el=document.getElementById(id); if(el) el.value=todayStr();});
   // Flatpickr — selector de fechas moderno
   if(typeof flatpickr !== 'undefined'){
