@@ -1984,13 +1984,13 @@ function exportarFichaPDF(){
   const rows=6;
   for(let i=0;i<rows;i++){
     const checked=(f.enfermedades||[]).includes(enf[i]);
-    doc.setTextColor(checked?...gold:...lgray); doc.text('●',col1,y);
+    doc.setTextColor(...(checked?gold:lgray)); doc.text('●',col1,y);
     doc.setTextColor(...gray); doc.text(enf[i]||'',col1+4,y);
     const pc=(f.piel||'')===(piel[i]||'');
-    doc.setTextColor(pc?...gold:...lgray); doc.text('●',col2,y);
+    doc.setTextColor(...(pc?gold:lgray)); doc.text('●',col2,y);
     doc.setTextColor(...gray); doc.text(piel[i]||'',col2+4,y);
     const uc=(f.tipoUna||[]).includes(una[i]||'');
-    doc.setTextColor(uc?...gold:...lgray); doc.text('●',col3,y);
+    doc.setTextColor(...(uc?gold:lgray)); doc.text('●',col3,y);
     doc.setTextColor(...gray); doc.text(una[i]||'',col3+4,y);
     y+=5;
   }
@@ -2020,14 +2020,14 @@ function exportarFichaPDF(){
   doc.text('FORMA:',14,y); doc.setFont('helvetica','normal');
   ['Cuadrada','Coffin','Almond','Stiletto'].forEach((f2,i)=>{
     const sel=(f.forma||'')=== f2;
-    doc.setTextColor(sel?...gold:...lgray); doc.text('●',45+i*33,y);
+    doc.setTextColor(...(sel?gold:lgray)); doc.text('●',45+i*33,y);
     doc.setTextColor(...gray); doc.text(f2,49+i*33,y);
   });
   y+=6;
   doc.setFont('helvetica','bold'); doc.text('LARGO:',14,y); doc.setFont('helvetica','normal');
   ['#1','#2','#3','#4'].forEach((l,i)=>{
     const sel=(f.largo||'')=== l;
-    doc.setTextColor(sel?...gold:...lgray); doc.text('●',45+i*25,y);
+    doc.setTextColor(...(sel?gold:lgray)); doc.text('●',45+i*25,y);
     doc.setTextColor(...gray); doc.text(l,49+i*25,y);
   });
   y+=8;
