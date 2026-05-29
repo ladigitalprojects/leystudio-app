@@ -538,7 +538,7 @@ footer span{color:var(--gold);}
     <div class="cfg-block-title" style="margin-bottom:8px">INFORMACIÓN GENERAL</div>
     <div class="fg" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
       <div class="fgrp"><label>Correo</label><input type="email" id="f-correo" placeholder="correo@ejemplo.com"></div>
-      <div class="fgrp"><label>Tel. emergencia</label><input type="tel" id="f-tel-emg" placeholder="+504 ____-____"></div>
+      <div class="fgrp"><label>Tel. emergencia</label><input type="tel" id="f-tel-emg" placeholder="9999-9999"></div>
       <div class="fgrp"><label>Instagram</label><input type="text" id="f-ig2" placeholder="@usuario"></div>
       <div class="fgrp"><label>TikTok</label><input type="text" id="f-tiktok" placeholder="@usuario"></div>
       <div class="fgrp"><label>Música favorita</label><input type="text" id="f-musica" placeholder="Pop, reggaeton..."></div>
@@ -910,7 +910,7 @@ footer span{color:var(--gold);}
             <div class="ac-dropdown" id="ac-drop"></div>
           </div>
         </div>
-        <div class="fgrp"><label>Teléfono</label><input type="tel" id="c-tel" placeholder="+504 ____-____"></div>
+        <div class="fgrp"><label>Teléfono</label><input type="tel" id="c-tel" placeholder="9999-9999"></div>
         <div class="fgrp"><label>Método de pago</label>
           <select id="c-pago"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option><option>Por cobrar</option></select></div>
         <div class="fgrp"><label>Estado</label>
@@ -957,7 +957,7 @@ footer span{color:var(--gold);}
     <div class="form-box" id="fcl">
       <div class="fg">
         <div class="fgrp"><label>Nombre completo</label><input type="text" id="cl-n" placeholder="Nombre y apellido"></div>
-        <div class="fgrp"><label>Teléfono</label><input type="tel" id="cl-tel" placeholder="+504 ____-____"></div>
+        <div class="fgrp"><label>Teléfono</label><input type="tel" id="cl-tel" placeholder="9999-9999"></div>
         <div class="fgrp"><label>Instagram</label><input type="text" id="cl-ig" placeholder="@usuario"></div>
         <div class="fgrp"><label>Fecha 1ra visita</label><input type="date" id="cl-f"></div>
         <div class="fgrp"><label>Cumpleaños</label><input type="date" id="cl-bday"></div>
@@ -973,7 +973,7 @@ footer span{color:var(--gold);}
       <input type="text" id="s-cl" placeholder="Buscar clienta..." oninput="renderClientes()">
     </div>
     <div class="tbl-wrap">
-    <table><thead><tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Instagram</th><th>1ra Visita</th><th>Visitas</th><th>Total gastado</th><th>Último servicio</th><th>Acciones</th></tr></thead>
+    <table><thead><tr><th>#</th><th onclick="clSortBy('nombre')" style="cursor:pointer" title="Ordenar">Nombre ⇅</th><th>Teléfono</th><th>Instagram</th><th onclick="clSortBy('fecha')" style="cursor:pointer" title="Ordenar">1ra Visita ⇅</th><th onclick="clSortBy('visitas')" style="cursor:pointer" title="Ordenar">Visitas ⇅</th><th onclick="clSortBy('total')" style="cursor:pointer" title="Ordenar">Total gastado ⇅</th><th>Último servicio</th><th>Acciones</th></tr></thead>
     <tbody id="cl-tb"></tbody></table></div>
     <p class="tip">Visitas y total calculados automáticamente desde citas completadas. Toca Editar para modificar datos de la clienta.</p>
 
@@ -1469,124 +1469,103 @@ async function probarConexion(){
 function descargarReciboPDF(citaId){
   const c = D.citas.find(x=>x.id===citaId); if(!c) return;
   if(typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined'){
-    toast('Cargando PDF... intenta de nuevo en 2s','warn');
-    return;
+    toast('Cargando PDF... intenta de nuevo en 2s','warn'); return;
   }
   const { jsPDF } = window.jspdf || jspdf;
   const doc = new jsPDF({unit:'mm',format:'a5',orientation:'portrait'});
-  const W = doc.internal.pageSize.getWidth();
-  
-  // Background
-  doc.setFillColor(10,10,10);
-  doc.rect(0,0,W,210,'F');
-  
-  // Gold header bar
-  doc.setFillColor(178,146,87);
-  doc.rect(0,0,W,2,'F');
-  
-  // Logo area - gold box
-  doc.setFillColor(20,20,20);
-  doc.roundedRect(W/2-18,8,36,20,3,3,'F');
-  doc.setDrawColor(178,146,87);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(W/2-18,8,36,20,3,3,'S');
-  
-  // LS text in logo
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(16);
-  doc.setTextColor(178,146,87);
-  doc.text('Ls', W/2, 20, {align:'center'});
-  
-  // Brand name
-  doc.setFontSize(14);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(178,146,87);
-  doc.text('LEY STUDIO', W/2, 36, {align:'center'});
-  doc.setFontSize(7);
-  doc.setFont('helvetica','normal');
-  doc.setTextColor(100,80,40);
-  doc.text('NAIL ARTIST · TEGUCIGALPA', W/2, 41, {align:'center'});
-  
-  // Divider
-  doc.setDrawColor(40,40,40);
-  doc.setLineWidth(0.3);
-  doc.line(12, 46, W-12, 46);
-  
-  // Receipt title
-  doc.setFontSize(9);
-  doc.setTextColor(120,120,120);
-  doc.setFont('helvetica','normal');
-  doc.text('RECIBO DE SERVICIO', W/2, 52, {align:'center'});
-  
-  // Client & date info
-  let y = 60;
-  const addRow = (label, value, bold=false) => {
-    doc.setFontSize(8);
-    doc.setTextColor(100,100,100);
-    doc.setFont('helvetica','normal');
-    doc.text(label, 14, y);
-    doc.setTextColor(200,200,200);
-    if(bold) doc.setFont('helvetica','bold');
-    doc.text(String(value), W-14, y, {align:'right'});
-    doc.setFont('helvetica','normal');
-    y += 6;
+  const W = doc.internal.pageSize.getWidth(); // 148mm
+  const H = 210;
+  const gold=[178,146,87]; const cream=[250,247,242]; const dkgray=[55,55,55]; const mdgray=[120,110,100]; const bord=[210,200,185];
+
+  // Fondo blanco crema
+  doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
+  // Borde superior dorado
+  doc.setFillColor(...gold); doc.rect(0,0,W,4,'F');
+  // Franja decorativa crema
+  doc.setFillColor(...cream); doc.rect(0,4,W,40,'F');
+
+  // Logo LS
+  doc.setFillColor(255,255,255);
+  doc.setDrawColor(...gold); doc.setLineWidth(0.5);
+  doc.roundedRect(W/2-14,8,28,16,2,2,'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...gold);
+  doc.text('LS',W/2,18.5,{align:'center'});
+
+  // Nombre marca
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...dkgray);
+  doc.text('LEY STUDIO',W/2,33,{align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...mdgray);
+  doc.text('NAIL ARTIST  ·  TEGUCIGALPA',W/2,38,{align:'center'});
+
+  // Línea dorada separadora
+  doc.setDrawColor(...gold); doc.setLineWidth(0.8);
+  doc.line(W/2-25,42,W/2+25,42);
+
+  // Título recibo
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...mdgray);
+  doc.text('RECIBO DE SERVICIO',W/2,49,{align:'center'});
+  doc.setDrawColor(...bord); doc.setLineWidth(0.3);
+  doc.line(12,51,W-12,51);
+
+  // Info cliente
+  let y=59;
+  const row=(label,val,bold=false,valColor=dkgray)=>{
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...mdgray);
+    doc.text(label,14,y);
+    doc.setFont('helvetica',bold?'bold':'normal'); doc.setTextColor(...valColor);
+    doc.text(String(val||'—'),W-14,y,{align:'right'});
+    doc.setDrawColor(...bord); doc.setLineWidth(0.2); doc.line(14,y+1.5,W-14,y+1.5);
+    y+=8;
   };
-  
-  addRow('Fecha', fmtD(c.fecha));
-  addRow('Hora', c.hora);
-  addRow('Clienta', c.clienta, true);
-  addRow('Teléfono', c.tel||'—');
-  
-  // Services divider
-  y += 2;
-  doc.setDrawColor(30,30,30);
-  doc.line(14, y, W-14, y); y += 5;
-  
-  doc.setFontSize(7);
-  doc.setTextColor(178,146,87);
-  doc.setFont('helvetica','bold');
-  doc.text('SERVICIOS', 14, y); y += 6;
-  
-  (c.servicios||[]).forEach(s => {
-    doc.setFont('helvetica','normal');
-    doc.setTextColor(180,180,180);
-    doc.setFontSize(8);
-    const sName = s.nombre.length > 38 ? s.nombre.substring(0,38)+'…' : s.nombre;
-    doc.text(sName, 16, y);
-    doc.setTextColor(200,200,200);
-    doc.text('L. '+Number(s.precio).toLocaleString('es-HN'), W-14, y, {align:'right'});
-    y += 6;
+  row('Fecha',fmtD(c.fecha));
+  row('Hora',c.hora||'—');
+  row('Clienta',c.clienta,true);
+  row('Teléfono',c.tel||'—');
+
+  // Servicios
+  y+=2;
+  doc.setFillColor(...cream); doc.rect(12,y-3,W-24,6,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...gold);
+  doc.text('SERVICIOS',14,y+1); y+=8;
+
+  (c.servicios||[]).forEach(s=>{
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...dkgray);
+    const nm=s.nombre.length>35?s.nombre.substring(0,35)+'…':s.nombre;
+    doc.text('·  '+nm,14,y);
+    doc.setFont('helvetica','bold'); doc.setTextColor(...gold);
+    doc.text('L. '+Number(s.precio).toLocaleString('es-HN'),W-14,y,{align:'right'});
+    doc.setDrawColor(...bord); doc.setLineWidth(0.2); doc.line(14,y+1.5,W-14,y+1.5);
+    y+=7;
   });
-  
+
   // Total
-  y += 2;
-  doc.setDrawColor(60,50,25);
-  doc.line(14, y, W-14, y); y += 5;
-  doc.setFontSize(10);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(178,146,87);
-  doc.text('TOTAL', 14, y);
-  doc.text('L. '+Number(c.precioTotal||0).toLocaleString('es-HN'), W-14, y, {align:'right'});
-  y += 7;
-  
-  // Payment
-  doc.setFontSize(7);
-  doc.setFont('helvetica','normal');
-  doc.setTextColor(100,100,100);
-  doc.text('Método de pago: '+c.pago, 14, y); y += 10;
-  
+  y+=3;
+  doc.setFillColor(245,240,230); doc.rect(12,y-3,W-24,9,'F');
+  doc.setDrawColor(...gold); doc.setLineWidth(0.5); doc.rect(12,y-3,W-24,9,'D');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...dkgray);
+  doc.text('TOTAL',14,y+3);
+  doc.setTextColor(...gold);
+  doc.text('L. '+Number(c.precioTotal||0).toLocaleString('es-HN'),W-14,y+3,{align:'right'});
+  y+=14;
+
+  // Método de pago
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...mdgray);
+  doc.text('Método de pago:',14,y);
+  doc.setFont('helvetica','bold'); doc.setTextColor(...dkgray);
+  doc.text(c.pago||'—',60,y);
+  y+=12;
+
   // Footer
-  doc.setDrawColor(40,40,40);
-  doc.line(14, y, W-14, y); y += 5;
-  doc.setFontSize(7);
-  doc.setTextColor(80,80,80);
-  doc.text('¡Gracias por tu visita! Síguenos en @ley_studiohn', W/2, y, {align:'center'});
-  
-  // Gold bottom bar
-  doc.setFillColor(178,146,87);
-  doc.rect(0,208,W,2,'F');
-  
-  const filename = `LeyStudio_Recibo_${c.clienta.replace(/\s/g,'_')}_${c.fecha}.pdf`;
+  doc.setDrawColor(...bord); doc.setLineWidth(0.3); doc.line(14,y,W-14,y); y+=5;
+  doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(...mdgray);
+  doc.text('¡Gracias por tu visita! 💅',W/2,y,{align:'center'}); y+=5;
+  doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...gold);
+  doc.text('@ley_studiohn',W/2,y,{align:'center'});
+
+  // Borde inferior dorado
+  doc.setFillColor(...gold); doc.rect(0,H-4,W,4,'F');
+
+  const filename=`LeyStudio_Recibo_${c.clienta.replace(/\s/g,'_')}_${c.fecha}.pdf`;
   doc.save(filename);
   toast('Recibo descargado');
 }
@@ -1828,9 +1807,26 @@ function delCita(id){
 // ═══════════════════════════════════════════════════
 // CLIENTES
 // ═══════════════════════════════════════════════════
+let _clSort={col:'id',dir:-1};
+function clSortBy(col){
+  if(_clSort.col===col) _clSort.dir*=-1; else {_clSort.col=col;_clSort.dir=-1;}
+  renderClientes();
+}
 function renderClientes(){
   const q=(document.getElementById('s-cl').value||'').toLowerCase();
-  const list=D.clientes.filter(c=>!q||c.nombre.toLowerCase().includes(q));
+  let list=D.clientes.filter(c=>!q||c.nombre.toLowerCase().includes(q));
+  // Ordenar
+  list=[...list].sort((a,b)=>{
+    const st_a=_clSort.col==='visitas'||_clSort.col==='total'?clientStats(a.nombre):null;
+    const st_b=_clSort.col==='visitas'||_clSort.col==='total'?clientStats(b.nombre):null;
+    let va,vb;
+    if(_clSort.col==='nombre'){va=a.nombre.toLowerCase();vb=b.nombre.toLowerCase();}
+    else if(_clSort.col==='fecha'){va=a.fecha||'';vb=b.fecha||'';}
+    else if(_clSort.col==='visitas'){va=st_a.visitas;vb=st_b.visitas;}
+    else if(_clSort.col==='total'){va=st_a.total;vb=st_b.total;}
+    else{va=a.id;vb=b.id;}
+    return va<vb?-_clSort.dir:va>vb?_clSort.dir:0;
+  });
   document.getElementById('cl-tb').innerHTML=list.map((c,i)=>{
     const st=clientStats(c.nombre);
     const bdayBadge=(()=>{
@@ -1955,91 +1951,212 @@ function exportarFichaPDF(){
   const f=c.ficha||{};
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const gold=[178,146,87]; const pink=[220,150,150]; const gray=[80,80,80]; const lgray=[220,220,220];
-  const W=210; let y=18;
-  // Header
-  doc.setFillColor(...gold); doc.rect(0,0,W,14,'F');
-  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(14);
-  doc.text('LEY STUDIO — Ficha Técnica Manicure',W/2,9,{align:'center'});
-  y=22;
-  // Nombre
-  doc.setTextColor(...gray); doc.setFontSize(16); doc.setFont('helvetica','bold');
-  doc.text(c.nombre||'', W/2, y,{align:'center'}); y+=6;
-  doc.setFontSize(9); doc.setFont('helvetica','normal');
-  doc.setTextColor(...gray);
-  const info=[[`Tel: ${c.tel||'—'}`,`Correo: ${f.correo||'—'}`],[`Instagram: ${f.ig||c.ig||'—'}`,`TikTok: ${f.tiktok||'—'}`],[`Tel emergencia: ${f.telEmg||'—'}`,`Cumpleaños: ${c.bday||'—'}`],[`Música: ${f.musica||'—'}`,`Snack: ${f.snack||'—'}`]];
-  info.forEach(row=>{doc.text(row[0],14,y);doc.text(row[1],W/2+5,y);y+=5;});
-  y+=3;
-  // Sección helper
-  function section(title){doc.setFillColor(...gold);doc.rect(14,y,W-28,6,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text(title,W/2,y+4,{align:'center'});y+=9;doc.setTextColor(...gray);doc.setFont('helvetica','normal');doc.setFontSize(8);}
-  // Historial médico
-  section('HISTORIAL MÉDICO');
-  const col1=14,col2=80,col3=146;
+  const W=210;
+  // Paleta — igual al PDF original de Leylan
+  const gold=[178,146,87];      // dorado marca
+  const pink=[200,120,130];     // rosa títulos
+  const cream=[250,247,243];    // fondo secciones
+  const dkgray=[60,60,60];      // texto principal
+  const mdgray=[130,130,130];   // texto secundario
+  const lgray=[210,210,210];    // círculo inactivo
+  const bord=[210,200,185];     // línea borde
+
+  // ── Helpers ──────────────────────────────────────────
+  const line=(x1,y1,x2,y2,col=bord,lw=0.3)=>{
+    doc.setDrawColor(...col); doc.setLineWidth(lw); doc.line(x1,y1,x2,y2);
+  };
+  const circle=(cx,cy,r,filled,col)=>{
+    doc.setDrawColor(...col); doc.setLineWidth(0.4);
+    doc.setFillColor(...(filled?col:[255,255,255]));
+    doc.circle(cx,cy,r,filled?'FD':'D');
+  };
+  const sectionTitle=(title,y2)=>{
+    doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    doc.setTextColor(...pink);
+    doc.text(title.toUpperCase(),W/2,y2,{align:'center'});
+    line(14,y2+1,W-14,y2+1,bord,0.3);
+  };
+  const fieldLine=(label,value,lx,ly,maxW)=>{
+    doc.setFont('helvetica','bold'); doc.setFontSize(7);
+    doc.setTextColor(...mdgray); doc.text(label,lx,ly);
+    doc.setFont('helvetica','normal'); doc.setTextColor(...dkgray);
+    const v=String(value||'—');
+    doc.text(v.length>28?v.substring(0,28)+'…':v,lx,ly+4);
+    line(lx,ly+5,lx+(maxW||80),ly+5);
+  };
+
+  // ── Fondo blanco ─────────────────────────────────────
+  doc.setFillColor(255,255,255); doc.rect(0,0,W,297,'F');
+
+  // ── Barra dorada superior ─────────────────────────────
+  doc.setFillColor(...gold); doc.rect(0,0,W,3,'F');
+
+  // ── Logo + Título ──────────────────────────────────────
+  let y=8;
+  // Logo "LS" box (izquierda)
+  doc.setFillColor(245,241,235);
+  doc.setDrawColor(...gold); doc.setLineWidth(0.5);
+  doc.roundedRect(14,y,22,18,2,2,'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...gold);
+  doc.text('LS',25,y+11,{align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(5.5); doc.setTextColor(...mdgray);
+  doc.text('LEY STUDIO',25,y+15.5,{align:'center'});
+  doc.text('NAIL ARTIST',25,y+18.5,{align:'center'});
+
+  // Título central
+  doc.setFont('helvetica','italic'); doc.setFontSize(8); doc.setTextColor(...pink);
+  doc.text('Manicure',W/2+10,y+4,{align:'center'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...pink);
+  doc.text('Ficha Tecnica',W/2+10,y+12,{align:'center'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...gold);
+  doc.text('Clientas',W/2+10,y+19,{align:'center'});
+
+  y=32;
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...mdgray);
+  doc.text('Toda la información proporcionada se utilizará para beneficio de la clienta',W/2,y,{align:'center'});
+  line(14,y+2,W-14,y+2,bord);
+  y+=7;
+
+  // ── INFORMACIÓN GENERAL ───────────────────────────────
+  sectionTitle('INFORMACION GENERAL',y); y+=7;
+
+  // Fila 1: Nombre — Edad & Cumpleaños
+  fieldLine('NOMBRE COMPLETO',c.nombre,14,y,85);
+  fieldLine('EDAD & CUMPLEAÑOS',c.bday||'—',W/2+8,y,78);
+  y+=11;
+  // Fila 2: Correo — Teléfono
+  fieldLine('CORREO',f.correo||'—',14,y,85);
+  fieldLine('TELÉFONO',c.tel||'—',W/2+8,y,78);
+  y+=11;
+  // Fila 3: Redes — Tel emergencia
+  fieldLine('REDES SOCIALES  IG: '+(f.ig||c.ig||'—'),'',14,y,85);
+  fieldLine('TELÉFONO DE EMERGENCIA',f.telEmg||'—',W/2+8,y,78);
+  y+=11;
+  // Fila 4: TikTok / Gustos
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...mdgray);
+  doc.text('TikTok: ',14,y+4); doc.setFont('helvetica','normal'); doc.setTextColor(...dkgray);
+  doc.text(f.tiktok||'—',33,y+4);
+  doc.setFont('helvetica','bold'); doc.setTextColor(...mdgray);
+  doc.text('GUSTOS: música ',W/2+8,y+4); doc.setFont('helvetica','normal'); doc.setTextColor(...dkgray);
+  doc.text(f.musica||'—',W/2+8+24,y+4);
+  doc.text('  snack: '+(f.snack||'—'),W/2+8+24+(f.musica||'').length*1.8,y+4);
+  line(14,y+5.5,95,y+5.5);
+  line(W/2+8,y+5.5,W-14,y+5.5);
+  y+=11;
+
+  line(14,y,W-14,y,bord);
+  y+=5;
+
+  // ── HISTORIAL MÉDICO ──────────────────────────────────
+  sectionTitle('HISTORIAL MEDICO',y); y+=7;
+
+  // Headers de columnas
   doc.setFont('helvetica','bold'); doc.setFontSize(8);
-  doc.text('ENFERMEDADES',col1,y);doc.text('TIPO DE PIEL',col2,y);doc.text('TIPO DE UÑA',col3,y);y+=4;
-  doc.setFont('helvetica','normal');
+  doc.setTextColor(...pink);
+  doc.text('ENFERMEDADES',20,y);
+  doc.text('TIPO DE PIEL',82,y);
+  doc.text('TIPO DE UÑA',145,y);
+  y+=5;
+
   const enf=['Toma algún medicamento','Hongos o bacterias','Psoriasis','Dermatitis','Descamación de uña','Diabetes'];
   const piel=['Normal','Seca','Mixta','Sensible','Madura','Hiperhidrosis'];
   const una=['Sana','Micosis','Onicofágicas','Amarillas','Estriada','Oleosa'];
-  const rows=6;
-  for(let i=0;i<rows;i++){
-    const checked=(f.enfermedades||[]).includes(enf[i]);
-    doc.setTextColor(...(checked?gold:lgray)); doc.text('●',col1,y);
-    doc.setTextColor(...gray); doc.text(enf[i]||'',col1+4,y);
+  for(let i=0;i<6;i++){
+    const chk=(f.enfermedades||[]).includes(enf[i]);
+    circle(19,y-0.8,1.8,chk,chk?gold:lgray);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...dkgray);
+    doc.text(enf[i],23,y);
+
     const pc=(f.piel||'')===(piel[i]||'');
-    doc.setTextColor(...(pc?gold:lgray)); doc.text('●',col2,y);
-    doc.setTextColor(...gray); doc.text(piel[i]||'',col2+4,y);
+    circle(81,y-0.8,1.8,pc,pc?gold:lgray);
+    doc.text(piel[i],85,y);
+
     const uc=(f.tipoUna||[]).includes(una[i]||'');
-    doc.setTextColor(...(uc?gold:lgray)); doc.text('●',col3,y);
-    doc.setTextColor(...gray); doc.text(una[i]||'',col3+4,y);
-    y+=5;
+    circle(144,y-0.8,1.8,uc,uc?gold:lgray);
+    doc.text(una[i],148,y);
+    y+=6;
   }
-  y+=3;
-  // Medidas
-  section('MEDIDAS');
-  const svcs2=['Soft Gel','Tips','Extensiones']; const svcsK=['softgel','tips','extensiones'];
-  const dedos2=['Pulgar','Índice','Medio','Anular','Meñique']; const dedosK=['pulgar','indice','medio','anular','menique'];
-  const cw=26; const startX=50;
-  doc.setFont('helvetica','bold'); doc.setFontSize(7);
-  doc.text('Servicio',14,y+3);
-  dedos2.forEach((d,i)=>{doc.text(d,startX+i*cw,y+3,{align:'center'});});
-  doc.setFillColor(...lgray); doc.rect(14,y+5,W-28,0.3,'F'); y+=8;
-  svcs2.forEach((s,si)=>{
-    doc.setFont('helvetica','normal'); doc.setTextColor(...gray);
-    doc.text(s,14,y);
+  line(14,y,W-14,y,bord);
+  y+=5;
+
+  // ── MEDIDAS + FORMA Y LARGO (lado a lado) ────────────
+  // Medidas (izquierda)
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...pink);
+  doc.text('MEDIDAS',45,y);
+  // Forma y Largo (derecha)
+  doc.text('FORMA Y LARGO',145,y,{align:'center'});
+  y+=4;
+
+  // Tabla medidas
+  const svcsK=['softgel','tips','extensiones'];
+  const dedosK=['pulgar','indice','medio','anular','menique'];
+  const dedosL=['Pulgar','Índice','Medio','Anular','Meñique'];
+  const svcsL=['Soft Gel','Tips','Extensiones'];
+  // Cabecera tabla
+  doc.setFillColor(...cream); doc.rect(14,y,90,5,'F');
+  doc.setDrawColor(...bord); doc.setLineWidth(0.3); doc.rect(14,y,90,5,'D');
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...dkgray);
+  doc.text('SERVICIO',16,y+3.5);
+  dedosL.forEach((d,i)=>{doc.text(d,33+i*14,y+3.5,{align:'center'});});
+  y+=5;
+  svcsL.forEach((s,si)=>{
+    doc.setDrawColor(...bord); doc.setLineWidth(0.2); doc.rect(14,y,90,6,'D');
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...dkgray);
+    // Círculo svc
+    circle(18,y+2.8,1.5,false,gold);
+    doc.text(s,21,y+4);
     dedosK.forEach((d,di)=>{
       const val=(f.medidas||{})[svcsK[si]]?.[d]||'';
-      doc.text(val,startX+di*cw,y,{align:'center'});
+      doc.setFont('helvetica','bold'); doc.setTextColor(...gold);
+      doc.text(val,33+di*14,y+4,{align:'center'});
     });
     y+=6;
   });
-  y+=2;
-  // Forma y Largo
-  section('FORMA Y LARGO');
-  doc.setFont('helvetica','bold'); doc.setFontSize(8);
-  doc.text('FORMA:',14,y); doc.setFont('helvetica','normal');
-  ['Cuadrada','Coffin','Almond','Stiletto'].forEach((f2,i)=>{
-    const sel=(f.forma||'')=== f2;
-    doc.setTextColor(...(sel?gold:lgray)); doc.text('●',45+i*33,y);
-    doc.setTextColor(...gray); doc.text(f2,49+i*33,y);
+
+  // Forma y Largo (derecha, desde y inicial)
+  let fy=y-18; // alinear con inicio tabla medidas
+  // Forma
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...dkgray);
+  doc.text('FORMA',110,fy+2);
+  const formas=['Cuadrada','Coffin','Almond','Stiletto'];
+  formas.forEach((fo,i)=>{
+    const sel=(f.forma||'')===fo;
+    circle(109+i*24,fy+7,2.5,sel,sel?gold:lgray);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...dkgray);
+    doc.text(fo,105.5+i*24,fy+12,{align:'center'});
   });
-  y+=6;
-  doc.setFont('helvetica','bold'); doc.text('LARGO:',14,y); doc.setFont('helvetica','normal');
-  ['#1','#2','#3','#4'].forEach((l,i)=>{
-    const sel=(f.largo||'')=== l;
-    doc.setTextColor(...(sel?gold:lgray)); doc.text('●',45+i*25,y);
-    doc.setTextColor(...gray); doc.text(l,49+i*25,y);
+  fy+=15;
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...dkgray);
+  doc.text('LARGO',110,fy);
+  const largos=['#1','#2','#3','#4'];
+  largos.forEach((l,i)=>{
+    const sel=(f.largo||'')===l;
+    circle(112+i*20,fy+5,2.5,sel,sel?gold:lgray);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...dkgray);
+    doc.text(l,109+i*20,fy+10,{align:'center'});
   });
-  y+=8;
-  // Observaciones
-  section('OBSERVACIONES');
-  doc.setFont('helvetica','normal'); doc.setFontSize(9);
-  const lines=doc.splitTextToSize(f.obs||'—', W-30);
-  doc.text(lines,14,y); y+=lines.length*5+4;
-  // Footer
-  doc.setFillColor(...gold); doc.rect(0,287,W,10,'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(7);
-  doc.text(`Ley Studio · @ley_studiohn · +504 9499-4709 · ${new Date().toLocaleDateString('es-HN')}`,W/2,293,{align:'center'});
+
+  y+=3;
+  line(14,y,W-14,y,bord);
+  y+=5;
+
+  // ── OBSERVACIONES ─────────────────────────────────────
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...pink);
+  doc.text('OBSERVACIONES',14,y); y+=3;
+  line(14,y,W-14,y,bord);
+  y+=5;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...dkgray);
+  const obsLines=doc.splitTextToSize(f.obs||'',W-28);
+  if(obsLines.length) doc.text(obsLines,14,y);
+  // Líneas vacías decorativas
+  for(let i=0;i<4;i++){ line(14,y+i*7,W-14,y+i*7); }
+  y+=28;
+
+  // ── Barra dorada inferior ─────────────────────────────
+  doc.setFillColor(...gold); doc.rect(0,291,W,6,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(255,255,255);
+  doc.text(`Ley Studio · Nail Artist · Tegucigalpa · @ley_studiohn · ${new Date().toLocaleDateString('es-HN')}`,W/2,295,{align:'center'});
+
   doc.save(`Ficha_${c.nombre.replace(/\s/g,'_')}.pdf`);
   toast('📄 PDF generado');
 }
@@ -2676,6 +2793,7 @@ function doLogin(){
     applyRoleUI();
     err.textContent='';
     renderAll();
+    try{ const lt=localStorage.getItem('ls_last_tab'); if(lt && lt!=='dashboard') showTab(lt); }catch(e){}
     toast('Bienvenida, ' + user.nombre.split(' ')[0] + ' 💅');
     // Pull secundario para actualizaciones en background
     pullFromCloud();
@@ -3158,6 +3276,7 @@ function showTab(name){
   if(name==='config') renderUsuarios();
   if(name==='notificaciones') renderNotificaciones();
   if(name==='estadisticas') renderStatsTab('gasto');
+  try{ localStorage.setItem('ls_last_tab', name); }catch(e){}
 }
 function toggleForm(id){document.getElementById(id).classList.toggle('open');}
 function renderAll(){
