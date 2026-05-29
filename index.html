@@ -1239,26 +1239,30 @@ let isSyncing = false;
 
 
 async function pushToCloud(){
-  if(isSyncing) return false;
+  if(isSyncing){ toast('⏳ Sync en progreso...','warn'); return false; }
   const localTotal = D.citas.length + D.clientes.length + D.movimientos.length;
-  if(localTotal === 0) return false;
+  if(localTotal === 0){ toast('⚠️ Sin datos locales para subir','warn'); return false; }
   isSyncing = true;
   setSyncStatus('sync-busy');
   let success = false;
   try{
+    const body = JSON.stringify(D);
     const r = await fetch(FIREBASE_URL, {
       method: 'PUT',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(D)
+      body
     });
     if(r.ok){
       setSyncStatus('sync-ok');
       success = true;
     } else {
+      const txt = await r.text().catch(()=>'');
       setSyncStatus('sync-err');
+      toast('❌ Firebase rechazó: HTTP ' + r.status + ' — ' + txt.slice(0,80), 'warn');
     }
   } catch(e){
     setSyncStatus('sync-err');
+    toast('❌ Error de red al subir: ' + e.message, 'warn');
   }
   isSyncing = false;
   return success;
