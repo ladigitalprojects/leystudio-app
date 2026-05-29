@@ -500,6 +500,23 @@ footer span{color:var(--gold);}
 .inv-btn:hover{background:#252550;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+<style>
+.flatpickr-calendar{background:#1c1c1c!important;border:1px solid #2c2c2c!important;border-radius:10px!important;box-shadow:0 8px 32px rgba(0,0,0,.5)!important;}
+.flatpickr-months,.flatpickr-weekdays{background:#141414!important;border-radius:10px 10px 0 0!important;}
+.flatpickr-month,.flatpickr-weekday{color:#B29257!important;fill:#B29257!important;}
+.flatpickr-current-month,.flatpickr-current-month .numInputWrapper{color:#B29257!important;}
+.flatpickr-current-month input,.flatpickr-current-month .cur-year{color:#B29257!important;}
+.flatpickr-day{color:#ccc!important;border-radius:6px!important;}
+.flatpickr-day.selected,.flatpickr-day.selected:hover{background:#B29257!important;border-color:#B29257!important;color:#000!important;}
+.flatpickr-day:hover{background:#2c2c2c!important;color:#B29257!important;}
+.flatpickr-day.today{border-color:#B29257!important;color:#B29257!important;}
+.flatpickr-day.today.selected{color:#000!important;}
+.numInputWrapper:hover{background:transparent!important;}
+.flatpickr-prev-month svg,.flatpickr-next-month svg{fill:#B29257!important;}
+.flatpickr-innerContainer{border-top:1px solid #2c2c2c!important;}
+</style>
 </head>
 <body>
 <div id="toast"></div>
@@ -515,8 +532,8 @@ footer span{color:var(--gold);}
       <div class="fgrp"><label>Nombre</label><input type="text" id="e-cl-n"></div>
       <div class="fgrp"><label>Teléfono</label><input type="tel" id="e-cl-tel"></div>
       <div class="fgrp"><label>Instagram</label><input type="text" id="e-cl-ig"></div>
-      <div class="fgrp"><label>1ra Visita</label><input type="date" id="e-cl-f"></div>
-      <div class="fgrp"><label>Cumpleaños</label><input type="date" id="e-cl-bday" placeholder="dd/mm/aaaa"></div>
+      <div class="fgrp"><label>1ra Visita</label><input type="text" class="fpdate" id="e-cl-f"></div>
+      <div class="fgrp"><label>Cumpleaños</label><input type="text" class="fpdate" id="e-cl-bday" placeholder="dd/mm/aaaa"></div>
       <div class="fgrp" style="grid-column:span 2"><label>Notas / Preferencias</label><input type="text" id="e-cl-notas"></div>
     </div>
     <div class="factions">
@@ -658,7 +675,7 @@ footer span{color:var(--gold);}
     </div>
     <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px;">
       <input type="hidden" id="e-cit-id">
-      <div class="fgrp"><label>Fecha</label><input type="date" id="e-cit-f"></div>
+      <div class="fgrp"><label>Fecha</label><input type="text" class="fpdate" id="e-cit-f"></div>
       <div class="fgrp"><label>Hora</label><input type="time" id="e-cit-h"></div>
       <div class="fgrp"><label>Clienta</label><input type="text" id="e-cit-cl" list="cl-list"></div>
       <div class="fgrp"><label>Teléfono</label><input type="tel" id="e-cit-tel"></div>
@@ -688,7 +705,7 @@ footer span{color:var(--gold);}
     </div>
     <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px;">
       <input type="hidden" id="e-mov-id">
-      <div class="fgrp"><label>Fecha</label><input type="date" id="e-mov-f"></div>
+      <div class="fgrp"><label>Fecha</label><input type="text" class="fpdate" id="e-mov-f"></div>
       <div class="fgrp"><label>Tipo</label>
         <select id="e-mov-tipo"><option>Ingreso</option><option>Gasto</option></select>
       </div>
@@ -900,7 +917,7 @@ footer span{color:var(--gold);}
 
     <div class="form-box" id="fc">
       <div class="fg">
-        <div class="fgrp"><label>Fecha</label><input type="date" id="c-f"></div>
+        <div class="fgrp"><label>Fecha</label><input type="text" class="fpdate" id="c-f"></div>
         <div class="fgrp"><label>Hora</label><input type="time" id="c-h"></div>
         <div class="fgrp">
           <label>Clienta</label>
@@ -959,8 +976,8 @@ footer span{color:var(--gold);}
         <div class="fgrp"><label>Nombre completo</label><input type="text" id="cl-n" placeholder="Nombre y apellido"></div>
         <div class="fgrp"><label>Teléfono</label><input type="tel" id="cl-tel" placeholder="9999-9999"></div>
         <div class="fgrp"><label>Instagram</label><input type="text" id="cl-ig" placeholder="@usuario"></div>
-        <div class="fgrp"><label>Fecha 1ra visita</label><input type="date" id="cl-f"></div>
-        <div class="fgrp"><label>Cumpleaños</label><input type="date" id="cl-bday"></div>
+        <div class="fgrp"><label>Fecha 1ra visita</label><input type="text" class="fpdate" id="cl-f"></div>
+        <div class="fgrp"><label>Cumpleaños</label><input type="text" class="fpdate" id="cl-bday"></div>
         <div class="fgrp span2" style="grid-column:span 2"><label>Notas / Preferencias</label><input type="text" id="cl-notas" placeholder="Preferencias, alergias..."></div>
       </div>
       <div class="factions">
@@ -1002,7 +1019,7 @@ footer span{color:var(--gold);}
 
     <div class="form-box" id="fm">
       <div class="fg">
-        <div class="fgrp"><label>Fecha</label><input type="date" id="m-f"></div>
+        <div class="fgrp"><label>Fecha</label><input type="text" class="fpdate" id="m-f"></div>
         <div class="fgrp"><label>Tipo</label><select id="m-tipo"><option>Ingreso</option><option>Gasto</option></select></div>
         <div class="fgrp"><label>Categoría</label>
           <select id="m-cat"><option>Servicio</option><option>Propina</option><option>Otro</option><option>Insumos</option><option>Herramientas</option><option>Publicidad</option><option>Arriendo</option><option>Varios</option></select></div>
@@ -1021,9 +1038,9 @@ footer span{color:var(--gold);}
       <input type="text" id="s-fin" placeholder="Buscar..." oninput="renderFinanzas()" style="flex:1;min-width:140px">
       <select id="f-tipo-fin" onchange="renderFinanzas()"><option value="">Todos</option><option>Ingreso</option><option>Gasto</option></select>
       <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-        <input type="date" id="f-fin-desde" onchange="renderFinanzas()" class="date-input-bare">
+        <input type="text" class="fpdate date-input-bare" id="f-fin-desde">
         <span style="color:#555;font-size:11px">—</span>
-        <input type="date" id="f-fin-hasta" onchange="renderFinanzas()" class="date-input-bare">
+        <input type="text" class="fpdate date-input-bare" id="f-fin-hasta">
       </div>
       <div style="display:flex;gap:4px;flex-wrap:wrap">
         <button class="hbtn hbtn-outline" onclick="setFinRango('mes')" id="fr-mes" style="font-size:10px;padding:5px 9px">Este mes</button>
@@ -1054,7 +1071,7 @@ footer span{color:var(--gold);}
         <div class="fgrp"><label>Unidad</label><input type="text" id="i-u" placeholder="Frasco, Pote..."></div>
         <div class="fgrp"><label>Precio compra (L.)</label><input type="number" id="i-p" placeholder="0"></div>
         <div class="fgrp"><label>Proveedor</label><input type="text" id="i-prov" placeholder="Proveedor..."></div>
-        <div class="fgrp"><label>Última compra</label><input type="date" id="i-f"></div>
+        <div class="fgrp"><label>Última compra</label><input type="text" class="fpdate" id="i-f"></div>
       </div>
       <div class="factions">
         <button class="btn-pri" onclick="addInventario()">Guardar</button>
@@ -1484,31 +1501,36 @@ function descargarReciboPDF(citaId){
   // Franja decorativa crema
   doc.setFillColor(...cream); doc.rect(0,4,W,40,'F');
 
-  // Logo LS
-  doc.setFillColor(255,255,255);
-  doc.setDrawColor(...gold); doc.setLineWidth(0.5);
-  doc.roundedRect(W/2-14,8,28,16,2,2,'FD');
-  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...gold);
-  doc.text('LS',W/2,18.5,{align:'center'});
+  // Logo real desde DOM
+  const logoEl=document.querySelector('.logo-img');
+  if(logoEl && logoEl.src){
+    try{ doc.addImage(logoEl.src,'PNG',W/2-14,7,28,28); }catch(e){}
+  } else {
+    doc.setFillColor(255,255,255);
+    doc.setDrawColor(...gold); doc.setLineWidth(0.5);
+    doc.roundedRect(W/2-14,8,28,16,2,2,'FD');
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...gold);
+    doc.text('LS',W/2,18.5,{align:'center'});
+  }
 
   // Nombre marca
   doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...dkgray);
-  doc.text('LEY STUDIO',W/2,33,{align:'center'});
+  doc.text('LEY STUDIO',W/2,43,{align:'center'});
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...mdgray);
-  doc.text('NAIL ARTIST  ·  TEGUCIGALPA',W/2,38,{align:'center'});
+  doc.text('NAIL ARTIST  ·  TEGUCIGALPA',W/2,48,{align:'center'});
 
   // Línea dorada separadora
   doc.setDrawColor(...gold); doc.setLineWidth(0.8);
-  doc.line(W/2-25,42,W/2+25,42);
+  doc.line(W/2-25,51,W/2+25,51);
 
   // Título recibo
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...mdgray);
-  doc.text('RECIBO DE SERVICIO',W/2,49,{align:'center'});
+  doc.text('RECIBO DE SERVICIO',W/2,57,{align:'center'});
   doc.setDrawColor(...bord); doc.setLineWidth(0.3);
-  doc.line(12,51,W-12,51);
+  doc.line(12,59,W-12,59);
 
   // Info cliente
-  let y=59;
+  let y=66;
   const row=(label,val,bold=false,valColor=dkgray)=>{
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...mdgray);
     doc.text(label,14,y);
@@ -1558,7 +1580,7 @@ function descargarReciboPDF(citaId){
   // Footer
   doc.setDrawColor(...bord); doc.setLineWidth(0.3); doc.line(14,y,W-14,y); y+=5;
   doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(...mdgray);
-  doc.text('¡Gracias por tu visita! 💅',W/2,y,{align:'center'}); y+=5;
+  doc.text('Gracias por tu visita!',W/2,y,{align:'center'}); y+=5;
   doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...gold);
   doc.text('@ley_studiohn',W/2,y,{align:'center'});
 
@@ -1993,15 +2015,16 @@ function exportarFichaPDF(){
 
   // ── Logo + Título ──────────────────────────────────────
   let y=8;
-  // Logo "LS" box (izquierda)
-  doc.setFillColor(245,241,235);
-  doc.setDrawColor(...gold); doc.setLineWidth(0.5);
-  doc.roundedRect(14,y,22,18,2,2,'FD');
-  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...gold);
-  doc.text('LS',25,y+11,{align:'center'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(5.5); doc.setTextColor(...mdgray);
-  doc.text('LEY STUDIO',25,y+15.5,{align:'center'});
-  doc.text('NAIL ARTIST',25,y+18.5,{align:'center'});
+  // Helper — formatea YYYY-MM-DD a DD/MM/YYYY
+  const fmtBday=s=>{if(!s||!s.includes('-'))return s||'—';const p=s.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s;};
+  // Logo real (izquierda)
+  const logoImgEl=document.querySelector('.logo-img');
+  if(logoImgEl && logoImgEl.src){
+    try{ doc.addImage(logoImgEl.src,'PNG',12,y,26,26); }catch(e){
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...gold);
+      doc.text('LS',25,y+11,{align:'center'});
+    }
+  }
 
   // Título central
   doc.setFont('helvetica','italic'); doc.setFontSize(8); doc.setTextColor(...pink);
@@ -2022,7 +2045,7 @@ function exportarFichaPDF(){
 
   // Fila 1: Nombre — Edad & Cumpleaños
   fieldLine('NOMBRE COMPLETO',c.nombre,14,y,85);
-  fieldLine('EDAD & CUMPLEAÑOS',c.bday||'—',W/2+8,y,78);
+  fieldLine('EDAD & CUMPLEAÑOS',fmtBday(c.bday),W/2+8,y,78);
   y+=11;
   // Fila 2: Correo — Teléfono
   fieldLine('CORREO',f.correo||'—',14,y,85);
@@ -3503,7 +3526,22 @@ function init(){
   initMesFilter();
   addSvcRow();
   renderAll();
-  ['c-f','m-f','i-f','cl-f'].forEach(id=>{document.getElementById(id).value=todayStr();});
+  ['c-f','m-f','i-f','cl-f'].forEach(id=>{const el=document.getElementById(id); if(el) el.value=todayStr();});
+  // Flatpickr — selector de fechas moderno
+  if(typeof flatpickr !== 'undefined'){
+    const fpOpts = {dateFormat:'Y-m-d', locale:{firstDayOfWeek:1,
+      months:{shorthand:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+              longhand:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']},
+      weekdays:{shorthand:['Do','Lu','Ma','Mi','Ju','Vi','Sá'],longhand:['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']}},
+      allowInput:true, disableMobile:true};
+    document.querySelectorAll('.fpdate').forEach(el=>{
+      const fp=flatpickr(el, {...fpOpts,
+        onChange(sel,ds){ el.dispatchEvent(new Event('change')); }
+      });
+      // Sync initial value
+      if(el.value) fp.setDate(el.value,false,'Y-m-d');
+    });
+  }
   // Auto-pull cuando la pestaña vuelve a primer plano
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='visible' && currentUser) pullFromCloud();
