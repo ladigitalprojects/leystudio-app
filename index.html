@@ -229,6 +229,8 @@ tbody tr td:first-child{color:#666;font-size:12px;font-variant-numeric:tabular-n
 .fgrp{display:flex;flex-direction:column;gap:4px;}
 .fgrp label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;}
 .fgrp input,.fgrp select,.fgrp textarea{background:#141414;border:1px solid #2a2a2a;color:var(--cream);padding:8px 10px;border-radius:6px;font-size:13px;outline:none;transition:border-color .2s;width:100%;}
+.fgrp .tel-code{width:72px!important;flex-shrink:0;padding:0 8px;}
+.fgrp .tel-num{width:0!important;flex:1;background:transparent!important;border:none!important;}
 .fgrp input:focus,.fgrp select:focus{border-color:var(--gold);}
 .fgrp select option{background:#141414;}
 .factions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
@@ -526,6 +528,14 @@ footer span{color:var(--gold);}
 .login-btn:active{transform:scale(.98);}
 .login-btn:disabled{opacity:.5;cursor:not-allowed;}
 .login-error{color:#e74c3c;font-size:12px;margin-top:8px;min-height:16px;text-align:center;}
+.pass-wrap{position:relative;}
+.pass-wrap .login-input{padding-right:40px;}
+.pass-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#888;cursor:pointer;padding:0;font-size:16px;line-height:1;}
+.pass-eye:hover{color:var(--gold);}
+.forgot-link{color:var(--gold);font-size:12px;text-align:right;cursor:pointer;background:none;border:none;padding:0;margin-top:-2px;opacity:.8;}
+.forgot-link:hover{opacity:1;text-decoration:underline;}
+#reset-box{display:none;margin-top:12px;}
+#reset-box.open{display:block;}
 
 /* ── USERS MANAGEMENT ── */
 .user-row{display:flex;align-items:center;justify-content:space-between;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:10px 14px;margin-bottom:8px;}
@@ -718,7 +728,10 @@ footer span{color:var(--gold);}
     <div class="fg" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div class="fgrp" style="grid-column:span 2"><label>Nombre completo</label><input type="text" id="e-usr-nombre" placeholder="Nombre de la usuaria"></div>
       <div class="fgrp"><label>Usuario</label><input type="text" id="e-usr-user" placeholder="username" autocomplete="off"></div>
-      <div class="fgrp"><label>Contraseña</label><input type="password" id="e-usr-pass" placeholder="Nueva contraseña" autocomplete="new-password"></div>
+      <div class="fgrp"><label>Contraseña</label><div class="pass-wrap" style="position:relative;">
+        <input type="password" id="e-usr-pass" placeholder="Nueva contraseña" autocomplete="new-password" style="padding-right:36px;">
+        <button class="pass-eye" type="button" onclick="togglePassVis('e-usr-pass',this)" title="Mostrar/ocultar">👁</button>
+      </div></div>
       <div class="fgrp" style="grid-column:span 2"><label>Rol</label>
         <select id="e-usr-rol">
           <option value="admin">Admin — acceso completo</option>
@@ -830,7 +843,19 @@ footer span{color:var(--gold);}
       </div>
       <div style="position:relative;margin-bottom:6px">
         <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%)"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="#555" stroke-width="1.8"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="M7 9V6a3 3 0 016 0v3"/></svg></span>
-        <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-left:38px">
+        <div class="pass-wrap">
+          <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-left:38px">
+          <button class="pass-eye" type="button" onclick="togglePassVis('login-pass',this)" title="Mostrar/ocultar">👁</button>
+        </div>
+        <div style="text-align:right;margin-top:4px;">
+          <button class="forgot-link" onclick="toggleForgot()">¿Olvidaste tu contraseña?</button>
+        </div>
+        <div id="reset-box">
+          <div style="font-size:11px;color:#aaa;margin-bottom:8px;">Ingresa tu usuario para que el administrador pueda restablecer tu contraseña.</div>
+          <input class="login-input" type="text" id="reset-user" placeholder="Tu usuario" style="margin-bottom:8px;">
+          <button class="login-btn" style="background:#333;color:#ccc;" onclick="doResetRequest()">Enviar solicitud</button>
+          <div class="login-error" id="reset-msg" style="color:var(--gold);"></div>
+        </div>
       </div>
       <div class="login-error" id="login-error"></div>
     </div>
@@ -3011,6 +3036,29 @@ function hashPass(p){
   return btoa(unescape(encodeURIComponent(p + '_leyStudio')));
 }
 
+function togglePassVis(id, btn){
+  const inp = document.getElementById(id);
+  if(!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+function toggleForgot(){
+  const box = document.getElementById('reset-box');
+  box.classList.toggle('open');
+}
+function doResetRequest(){
+  const user = (document.getElementById('reset-user')?.value||'').trim();
+  const msg = document.getElementById('reset-msg');
+  if(!user){msg.textContent='Ingresa tu usuario.';return;}
+  const u = (D.usuarios||[]).find(x=>x.username===user||x.nombre.toLowerCase()===user.toLowerCase());
+  if(!u){msg.textContent='Usuario no encontrado.';return;}
+  msg.style.color='var(--gold)';
+  msg.textContent='Solicitud enviada. Un administrador restablecerá tu contraseña.';
+  // Log reset request in DB
+  if(window.db){
+    window.db.ref('resetRequests').push({usuario:user,nombre:u.nombre,fecha:new Date().toISOString(),atendido:false});
+  }
+}
 function doLogin(){
   const raw = document.getElementById('login-user').value.trim();
   const p   = document.getElementById('login-pass').value;
