@@ -165,7 +165,7 @@ nav::-webkit-scrollbar{display:none;}
   nav{flex-direction:column;padding:0;overflow:hidden;max-height:0;transition:max-height .35s ease;top:64px;position:sticky;z-index:40;}
   nav.nav-open{max-height:600px;overflow-y:auto;}
   .tab{height:46px;padding:0 20px;border-bottom:1px solid var(--border) !important;border-left:3px solid transparent;width:100%;justify-content:flex-start;}
-  .tab.active{border-bottom:1px solid var(--border) !important;border-left:3px solid var(--gold) !important;background:rgba(178,146,87,.06);}
+  .tab.active{border-bottom:1px solid var(--border) !important;border-left:3px solid var(--pink) !important;background:rgba(221,152,177,.06);}
 }
 .tab{
   padding:0 22px;height:50px;
@@ -227,8 +227,8 @@ th{padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--
 td{padding:14px 14px;background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--cream);vertical-align:middle;transition:background .15s;}
 td:first-child{border-left:1px solid #222;border-radius:8px 0 0 8px;}
 td:last-child{border-right:1px solid #222;border-radius:0 8px 8px 0;white-space:nowrap;}
-tbody tr:hover td{background:rgba(221,152,177,.08)!important;}
-tbody tr td:first-child{color:#666;font-size:12px;font-variant-numeric:tabular-nums;}
+tbody tr:hover td{background:rgba(221,152,177,.08)!important;}tbody tr td:first-child{border-left:3px solid var(--pink);}
+tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:tabular-nums;font-weight:700;}
 
 /* ── BADGES ── */
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
@@ -272,11 +272,11 @@ tbody tr td:first-child{color:#666;font-size:12px;font-variant-numeric:tabular-n
 
 /* ── ICON BTNS ── */
 .ibtn{background:none;border:none;cursor:pointer;font-size:14px;padding:3px 5px;border-radius:4px;transition:background .15s;}
-.ibtn:hover{background:var(--champagne);}
-.complete-btn{background:#e6f9f0;color:#1a7a45;border:1px solid #b2e8d0;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
-.complete-btn:hover{background:#b2e8d0;color:#1a7a45;}
-.edit-btn{background:#e8f0fb;color:#1a5c9a;border:none;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;}
-.edit-btn:hover{background:#5dade2;color:var(--black);}
+.ibtn:hover{background:rgba(221,152,177,.2);}
+.complete-btn{background:var(--pink);color:#fff;border:none;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.complete-btn:hover{opacity:.85;}
+.edit-btn{background:rgba(221,152,177,.15);color:var(--pink);border:1px solid var(--pink);border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;}
+.edit-btn:hover{background:var(--pink);color:#fff;}
 .add-btn{background:var(--gold);color:var(--black);border:none;padding:7px 14px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;}
 .add-btn:hover{background:var(--gold-lt);}
 
@@ -491,8 +491,8 @@ footer span{color:var(--gold);}
 }
 
 /* ── WHATSAPP NOTIFICATIONS ── */
-.wa-btn{background:#075e54;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s;}
-.wa-btn:hover{background:#128c7e;}
+.wa-btn{background:var(--pink);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s;}
+.wa-btn:hover{opacity:.85;}
 .wa-btn-lg{padding:9px 16px;font-size:13px;border-radius:8px;}
 .wa-template{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;cursor:pointer;transition:border-color .2s;}
 .wa-template:hover{border-color:var(--gold);}
@@ -1926,7 +1926,7 @@ function renderCitas(){
       <td>${c.notas||'—'}</td>
       <td style="white-space:nowrap">
         ${c.estado==='Confirmada'?`<button class="complete-btn" onclick="completarCita(${c.id})">✔ Listo</button> `:''}
-        ${c.estado==='Completada'?`<button class="inv-btn" onclick="generarFactura(${c.id})" title="Enviar factura por WhatsApp" style="background:#075e54;border-color:#075e54;color:#fff;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">WA</button> <button class="inv-btn" onclick="descargarReciboPDF(${c.id})" title="Descargar recibo PDF" style="background:var(--gold);border-color:var(--gold);color:#fff;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer">PDF</button> `:''}
+        ${c.estado==='Completada'?`<button class="inv-btn" onclick="generarFactura(${c.id})" title="Enviar factura por WhatsApp" style="background:var(--pink);border:none;color:#fff;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">WA</button> <button class="inv-btn" onclick="descargarReciboPDF(${c.id})" title="Descargar recibo PDF" style="background:var(--gold-deep);border:none;color:#fff;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">PDF</button> `:''}
         <button class="wa-btn" onclick="openWAcita(${c.id})" title="WhatsApp" style="padding:4px 8px;font-size:11px">💬</button>
         <button class="edit-btn" onclick="openEditCita(${c.id})" title="Editar">✏️</button>
         <button class="ibtn" onclick="delCita(${c.id})" title="Eliminar">🗑</button>
