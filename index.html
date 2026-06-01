@@ -34,16 +34,16 @@ body.dark-mode .tab.active{color:var(--gold);border-bottom-color:var(--gold);}
 body.dark-mode .tab.active svg{stroke:var(--gold);}
 /* Tables */
 body.dark-mode th{color:var(--gold)!important;border-bottom-color:#2a2a2a!important;}
-body.dark-mode td{color:#fdfbf7!important;background:#141414!important;}
+body.dark-mode td{color:#fdfbf7!important;background:#1a1a1a!important;}
 body.dark-mode td:first-child{background:#fff;color:#888;}
 body.dark-mode tbody tr:nth-child(even) td{background:#1a1a1a!important;}
 body.dark-mode tbody tr:hover td{background:#222!important;}
 /* Cards */
 body.dark-mode .table-card{background:#1c1c1c!important;border-color:#2c2c2c!important;}
 body.dark-mode .card{background:#fff;border-color:#e0d8cc;}
-body.dark-mode .cfg-block{background:#fff;border-color:#e0d8cc;}
+body.dark-mode .cfg-block{background:#1c1c1c!important;border-color:#2a2a2a!important;}
 body.dark-mode .kpi-card{background:#1c1c1c!important;border-color:#2c2c2c!important;}
-body.dark-mode .chart-card{background:#fff;border-color:#e0d8cc;}
+body.dark-mode .chart-card{background:#1c1c1c!important;border-color:#2a2a2a!important;}
 body.dark-mode .util-card{background:#f8f5f0;}
 body.dark-mode .kpi-sub{color:#888;}
 /* Forms */
@@ -68,7 +68,7 @@ body.dark-mode .ac-item .ac-tel{color:#888;}
 body.dark-mode .ac-empty{color:#999;}
 /* Stats */
 body.dark-mode .stats-panel{background:#fff;border-color:#e0d8cc;}
-body.dark-mode .stat-card{background:#f8f5f0;border-color:#e0d8cc;}
+body.dark-mode .stat-card{background:#111!important;border-color:#2a2a2a!important;}
 body.dark-mode .stat-card:hover{border-color:var(--gold-deep);}
 body.dark-mode .stat-rank{color:#d0c8bc;}
 body.dark-mode .stat-name{color:#1a1410;}
@@ -80,7 +80,8 @@ body.dark-mode .modal{background:#1c1c1c!important;border-color:#333!important;}
 body.dark-mode .modal-overlay{background:rgba(0,0,0,.35);}
 body.dark-mode .modal-title{border-bottom-color:#e8e2da;}
 body.dark-mode .modal-close{color:#aaa;}
-body.dark-mode #login-screen{background:#141414;}
+body.dark-mode #login-screen{background:#0a0a0a!important;}
+body.dark-mode #login-screen > div:first-child{background:radial-gradient(ellipse at 60% 20%, #1a1408 0%, #0a0a0a 70%)!important;}
 body.dark-mode .login-box{background:rgba(20,20,20,0.95);border-color:#333;box-shadow:0 32px 80px rgba(0,0,0,.8);}
 body.dark-mode .login-input{background:#0d0d0d;border-color:#2a2a2a;color:#fdfbf7;}
 body.dark-mode .wa-panel{background:#f0faf7;border-color:#a0d4c0;}
@@ -155,6 +156,15 @@ header{background:var(--card);border-bottom:2px solid var(--gold);padding:0 24px
 /* ── NAV ── */
 nav{background:var(--card);border-bottom:1px solid var(--border);box-shadow:0 1px 8px rgba(100,70,40,.07);display:flex;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;position:sticky;top:64px;z-index:40;}
 nav::-webkit-scrollbar{display:none;}
+.ham-btn{display:none;background:none;border:none;cursor:pointer;padding:6px 8px;color:var(--gold-deep);flex-shrink:0;}
+.ham-btn svg{display:block;}
+@media(max-width:900px){
+  .ham-btn{display:flex;align-items:center;justify-content:center;}
+  nav{flex-direction:column;padding:0;overflow:hidden;max-height:0;transition:max-height .35s ease;top:64px;position:sticky;z-index:40;}
+  nav.nav-open{max-height:600px;overflow-y:auto;}
+  .tab{height:46px;padding:0 20px;border-bottom:1px solid var(--border) !important;border-left:3px solid transparent;width:100%;justify-content:flex-start;}
+  .tab.active{border-bottom:1px solid var(--border) !important;border-left:3px solid var(--gold) !important;background:rgba(178,146,87,.06);}
+}
 .tab{
   padding:0 22px;height:50px;
   font-size:11px;font-weight:600;color:var(--gray);
@@ -212,7 +222,7 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 table{width:100%;border-collapse:separate;border-spacing:0 3px;font-size:13px;min-width:600px;}
 thead tr{background:transparent;}
 th{padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--gold-lt);text-transform:uppercase;letter-spacing:.6px;border-bottom:2px solid #252525;white-space:nowrap;}
-td{padding:14px 14px;background:#1a1a1a;border-top:1px solid #222;border-bottom:1px solid #161616;color:#ccc;vertical-align:middle;transition:background .15s;}
+td{padding:14px 14px;background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--cream);vertical-align:middle;transition:background .15s;}
 td:first-child{border-left:1px solid #222;border-radius:8px 0 0 8px;}
 td:last-child{border-right:1px solid #222;border-radius:0 8px 8px 0;white-space:nowrap;}
 tbody tr:hover td{background:var(--champagne)!important;}
@@ -495,7 +505,7 @@ footer span{color:var(--gold);}
 .inactive-row{background:#141414;border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid #333;}
 
 /* ── LOGIN SCREEN ── */
-#login-screen{position:fixed;inset:0;background:var(--black);z-index:9999;display:flex;align-items:center;justify-content:center;}
+#login-screen{position:fixed;inset:0;background:#F5EFE6;z-index:9999;display:flex;align-items:center;justify-content:center;}
 #login-screen.hidden{display:none;}
 .login-box{
   background:#fff;
@@ -504,6 +514,7 @@ footer span{color:var(--gold);}
   padding:40px 36px;
   width:100%;max-width:380px;
   position:relative;
+  z-index:1;
   box-shadow:0 8px 40px rgba(100,70,40,.12);
 }
 .login-input{
@@ -540,8 +551,8 @@ footer span{color:var(--gold);}
 /* ── USERS MANAGEMENT ── */
 .user-row{display:flex;align-items:center;justify-content:space-between;background:var(--champagne);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;}
 .user-role-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;text-transform:uppercase;}
-.role-admin{background:rgba(178,146,87,.12);color:var(--gold);letter-spacing:.5px;}
-.role-user{background:rgba(255,255,255,.06);color:#888;letter-spacing:.5px;}
+.role-admin{background:rgba(178,146,87,.15);color:var(--gold-deep);letter-spacing:.5px;border:1px solid rgba(178,146,87,.3);}
+.role-user{background:rgba(221,152,177,.15);color:#b0607a;letter-spacing:.5px;border:1px solid rgba(221,152,177,.3);}
 #modal-user .modal{max-width:420px;}
 
 /* ── INVOICE BUTTON ── */
@@ -828,7 +839,7 @@ footer span{color:var(--gold);}
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen">
-  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 60% 20%, #1a1408 0%, #0a0a0a 70%);"></div>
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 60% 20%, #EDE0C8 0%, #F5EFE6 70%);"></div>
   <div class="login-box">
     <div style="width:3px;background:linear-gradient(180deg,var(--gold),transparent);position:absolute;left:0;top:0;bottom:0;border-radius:16px 0 0 16px"></div>
     <div style="text-align:center;margin-bottom:24px">
