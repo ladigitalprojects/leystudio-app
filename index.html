@@ -189,7 +189,7 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .kpi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden;}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
 .kpi-gold::before{background:var(--gold);} .kpi-red::before{background:var(--red);}
-.kpi-blue::before{background:var(--blue);} .kpi-purple::before{background:var(--purple);}
+.kpi-blue::before{background:var(--blue);} .kpi-purple::before{background:var(--pink);}
 .kpi-label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
 .kpi-value{font-size:26px;font-weight:800;line-height:1.1;}
 .kpi-gold .kpi-value{color:var(--gold);} .kpi-red .kpi-value{color:#e74c3c;}
@@ -211,8 +211,8 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 /* ── CHARTS ── */
 .charts-row{display:grid;grid-template-columns:1.6fr 1fr;gap:18px;margin-bottom:20px;}
 .chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}
-.chart-title{font-size:11px;font-weight:700;color:var(--gold);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;}
-.chart-wrap{position:relative;height:200px;}
+.chart-title{font-size:11px;font-weight:700;color:var(--gold-deep);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;}
+.chart-wrap{position:relative;height:220px;}
 
 /* ── TABLE CARD ── */
 .table-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
@@ -225,17 +225,17 @@ th{padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--
 td{padding:14px 14px;background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--cream);vertical-align:middle;transition:background .15s;}
 td:first-child{border-left:1px solid #222;border-radius:8px 0 0 8px;}
 td:last-child{border-right:1px solid #222;border-radius:0 8px 8px 0;white-space:nowrap;}
-tbody tr:hover td{background:var(--champagne)!important;}
+tbody tr:hover td{background:rgba(221,152,177,.08)!important;}
 tbody tr td:first-child{color:#666;font-size:12px;font-variant-numeric:tabular-nums;}
 
 /* ── BADGES ── */
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
 .bg{background:#1a3d2b;color:#2ecc71;} .bb{background:#1a2d3d;color:#5dade2;}
 .br{background:#fde8e8;color:#a93226;} .bgr{background:#eee;color:#666;}
-.bgo{background:#fdf1dc;color:#8a6520;} .borg{background:rgba(221,152,177,.2);color:#b0607a;}
+.bgo{background:#fdf1dc;color:#8a6520;} .bb-pink{background:rgba(221,152,177,.2);color:#9a3a60;border:1px solid rgba(221,152,177,.3);}
 
 /* ── FORMS ── */
-.form-box{background:var(--champagne);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:18px;display:none;}
+.form-box{background:var(--champagne);border:1px solid var(--border);border-left:3px solid var(--pink);border-radius:10px;padding:20px;margin-bottom:18px;display:none;}
 .form-box.open{display:block;}
 .fg{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
 .fgrp{display:flex;flex-direction:column;gap:4px;}
@@ -243,7 +243,7 @@ tbody tr td:first-child{color:#666;font-size:12px;font-variant-numeric:tabular-n
 .fgrp input,.fgrp select,.fgrp textarea{background:#fff;border:1px solid var(--border);color:var(--cream);padding:8px 10px;border-radius:6px;font-size:13px;outline:none;transition:border-color .2s;width:100%;}
 .fgrp .tel-code{width:72px!important;flex-shrink:0;padding:0 8px;}
 .fgrp .tel-num{width:0!important;flex:1;background:transparent!important;border:none!important;}
-.fgrp input:focus,.fgrp select:focus{border-color:var(--gold);}
+.fgrp input:focus,.fgrp select:focus{border-color:var(--pink);}
 .fgrp select option{background:#fff;}
 .factions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
 .btn-pri{background:var(--gold);color:var(--black);border:none;padding:9px 20px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;}
@@ -2802,15 +2802,20 @@ function renderDashboard(){
     ing6.push(D.movimientos.filter(x=>x.tipo==='Ingreso'&&new Date(x.fecha).getMonth()===mm&&new Date(x.fecha).getFullYear()===yy).reduce((s,x)=>s+x.monto,0));
     gas6.push(D.movimientos.filter(x=>x.tipo==='Gasto'&&new Date(x.fecha).getMonth()===mm&&new Date(x.fecha).getFullYear()===yy).reduce((s,x)=>s+x.monto,0));
   }
+  // Chart 1: Ingresos vs Gastos — PIE
+  const ing6Total=ing6.reduce((a,b)=>a+b,0);
+  const gas6Total=gas6.reduce((a,b)=>a+b,0);
+  const pieColors=['#DD98B1','#B29257','#D4B483','#E8C4D4','#A9884D','#C8A96E'];
   if(cIG)cIG.destroy();
-  cIG=new Chart(document.getElementById('cIG'),{type:'bar',
-    data:{labels:months,datasets:[
-      {label:'Ingresos',data:ing6,backgroundColor:'rgba(178,146,87,.85)',borderRadius:5},
-      {label:'Gastos',data:gas6,backgroundColor:'rgba(192,57,43,.75)',borderRadius:5}
-    ]},
+  cIG=new Chart(document.getElementById('cIG'),{type:'pie',
+    data:{labels:['Ingresos (6m)','Gastos (6m)'],datasets:[{
+      data:[ing6Total,gas6Total],
+      backgroundColor:['#B29257','#DD98B1'],
+      borderColor:'#fff',borderWidth:3,hoverOffset:6
+    }]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#aaa',font:{size:10}}},tooltip:{callbacks:{label:c=>`L. ${c.raw.toLocaleString('es-HN')}`}}},
-      scales:{x:{ticks:{color:'#666'},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#666',callback:v=>'L.'+v.toLocaleString()},grid:{color:'#1a1a1a'}}}}});
+      plugins:{legend:{position:'bottom',labels:{color:'#6B5040',font:{size:11},boxWidth:14,padding:12}},
+        tooltip:{callbacks:{label:c=>`L. ${c.raw.toLocaleString('es-HN')}`}}}}});
 
   const catMap={};
   D.citas.filter(c=>c.estado==='Completada'&&inThisMo(c.fecha)).forEach(c=>{
@@ -2819,12 +2824,11 @@ function renderDashboard(){
     catMap[cat]=(catMap[cat]||0)+(c.precioTotal||0);
   });
   const catL=Object.keys(catMap),catV=Object.values(catMap);
-  const golds=['#B29257','#A9884D','#D4B483','#8B6914','#C8A96E','#E8D4A8','#6B4F2A'];
   if(cCat)cCat.destroy();
-  cCat=new Chart(document.getElementById('cCat'),{type:'doughnut',
-    data:{labels:catL.length?catL:['Sin datos'],datasets:[{data:catV.length?catV:[1],backgroundColor:golds,borderColor:'#0f0f0f',borderWidth:2}]},
+  cCat=new Chart(document.getElementById('cCat'),{type:'pie',
+    data:{labels:catL.length?catL:['Sin datos'],datasets:[{data:catV.length?catV:[1],backgroundColor:pieColors,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'right',labels:{color:'#aaa',font:{size:10},boxWidth:12}},
+      plugins:{legend:{position:'bottom',labels:{color:'#6B5040',font:{size:10},boxWidth:12,padding:10}},
         tooltip:{callbacks:{label:c=>`L. ${c.raw.toLocaleString('es-HN')}`}}}}});
 }
 
