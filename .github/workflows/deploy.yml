@@ -19,6 +19,8 @@ jobs:
           username: u449988667
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
+          protocol: ftp
+          timeout: 60000
           local-dir: ./
           server-dir: /domains/ladigitalhn.com/public_html/leystudio/
           exclude: |
