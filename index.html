@@ -127,7 +127,7 @@ body.light-mode .modal input,body.light-mode .modal select,body.light-mode .moda
   background:#f0ebe2!important;border-color:#d0c8bc!important;color:#1a1410!important;
 }
 /* Svc rows */
-body.light-mode .add-svc-btn{background:#e6f9f0;color:#1a7a45;border-color:#8ad4b0;}
+body.light-mode .add-svc-btn{background:rgba(178,146,87,.1);color:#8a6a30;border-color:rgba(178,146,87,.4);}
 body.light-mode .del-svc-btn{background:#fde8e8;color:#a93226;border-color:#e08080;}
 /* del-svc inline */
 body.light-mode .btn-red{background:#fde8e8;color:#a93226;border-color:#e08080;}
@@ -241,7 +241,7 @@ tbody tr td:first-child{color:#666;font-size:12px;font-variant-numeric:tabular-n
 .svc-row{display:grid;grid-template-columns:1fr 120px auto;gap:8px;align-items:center;}
 .svc-row select,.svc-row input{background:#141414;border:1px solid #2a2a2a;color:var(--cream);padding:7px 9px;border-radius:6px;font-size:12px;outline:none;width:100%;}
 .svc-row select:focus,.svc-row input:focus{border-color:var(--gold);}
-.add-svc-btn{background:#1e2a1e;color:#2ecc71;border:1px solid #2ecc71;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;}
+.add-svc-btn{background:rgba(178,146,87,.12);color:var(--gold);border:1px solid rgba(178,146,87,.4);padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:600;transition:all .2s;} .add-svc-btn:hover{background:rgba(178,146,87,.22);border-color:var(--gold);}
 .del-svc-btn{background:#2a1a1a;border:1px solid #e74c3c;color:#e74c3c;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;}
 .total-display{background:#1a1a1a;border:1px solid var(--gold);border-radius:6px;padding:8px 14px;color:var(--gold);font-weight:700;font-size:14px;display:inline-block;margin-top:4px;}
 
@@ -721,8 +721,8 @@ footer span{color:var(--gold);}
       <div class="fgrp"><label>Contraseña</label><input type="password" id="e-usr-pass" placeholder="Nueva contraseña" autocomplete="new-password"></div>
       <div class="fgrp" style="grid-column:span 2"><label>Rol</label>
         <select id="e-usr-rol">
-          <option value="admin">👑 Admin — acceso completo</option>
-          <option value="user">👤 Usuaria — acceso operativo</option>
+          <option value="admin">Admin — acceso completo</option>
+          <option value="user">Usuaria — acceso operativo</option>
         </select>
       </div>
     </div>
@@ -1173,16 +1173,16 @@ footer span{color:var(--gold);}
   <!-- Agregar servicio personalizado -->
   <div class="table-card">
     <div class="th"><div class="tt">➕ Agregar servicio al catálogo</div>
-      <button class="add-btn" onclick="toggleForm('fsvc')">+ Nuevo servicio</button></div>
+      <button class="add-btn" onclick="toggleForm('fsvc'); setTimeout(initSvCatSelect,50)">+ Nuevo servicio</button></div>
     <div class="form-box" id="fsvc">
       <div class="fg" style="grid-template-columns:1fr 1fr 1fr;">
         <div class="fgrp"><label>Categoría</label>
-          <select id="sv-cat">
+          <select id="sv-cat" onchange="onSvCatChange(this)">
             <option>Uñas Acrílicas</option><option>Baños de Acrílico</option><option>Tech Gel</option>
             <option>Refill Acrílico</option><option>Esmaltados</option><option>Nail Art / Efectos</option>
-            <option>Refill Esmaltado</option><option>Nueva categoría...</option>
+            <option>Refill Esmaltado</option><option value="__nueva__">+ Nueva categoría...</option>
           </select></div>
-        <div class="fgrp"><label>Categoría personalizada (si aplica)</label><input type="text" id="sv-cat-custom" placeholder="Ej: Pedicura"></div>
+        <div class="fgrp" id="sv-cat-custom-grp" style="display:none"><label>Nueva categoría</label><input type="text" id="sv-cat-custom" placeholder="Ej: Pedicura, Diseño especial..."></div>
         <div class="fgrp"><label>Nombre del servicio</label><input type="text" id="sv-nombre" placeholder="Descripción del servicio..."></div>
         <div class="fgrp"><label>Precio (L.)</label><input type="number" id="sv-precio" placeholder="0"></div>
         <div class="fgrp"><label>Nota (opcional)</label><input type="text" id="sv-nota" placeholder="Ej: precio adicional..."></div>
@@ -1857,15 +1857,16 @@ function onSvcSelect(sel){
 function recalcTotal(){
   let total=0;
   document.querySelectorAll('#svc-rows .svc-row').forEach(row=>{
-    total+=parseFloat(row.querySelector('input').value)||0;
+    const inp=row.querySelector('input[type=number]');
+    total+=parseFloat(inp?.value)||0;
   });
   document.getElementById('cita-total').textContent=fmtM(total);
 }
 function getSvcRowsData(){
   const rows=[];
   document.querySelectorAll('#svc-rows .svc-row').forEach(row=>{
-    const nombre=row.querySelector('select').value;
-    const precio=parseFloat(row.querySelector('input').value)||0;
+    const nombre=(row.querySelector('.svc-search-inp')?.value||'').trim();
+    const precio=parseFloat(row.querySelector('input[type=number]')?.value)||0;
     if(nombre) rows.push({nombre,precio});
   });
   return rows;
@@ -2548,10 +2549,29 @@ function renderServicios(){
       <td>${s.custom?`<button class="ibtn" onclick="delCustomSvc(${s.id})">🗑</button>`:''}</td></tr>`;
   }).join('');
 }
+
+function onSvCatChange(sel){
+  const grp=document.getElementById('sv-cat-custom-grp');
+  grp.style.display=sel.value==='__nueva__'?'block':'none';
+}
+function initSvCatSelect(){
+  const sel=document.getElementById('sv-cat');
+  if(!sel) return;
+  // Añadir categorías custom existentes
+  const existing=[...sel.options].map(o=>o.value);
+  const cats=[...new Set((D.catalogoCustom||[]).map(s=>s.cat))];
+  cats.forEach(cat=>{
+    if(!existing.includes(cat)){
+      const o=document.createElement('option');
+      o.value=o.textContent=cat;
+      sel.insertBefore(o, sel.options[sel.options.length-1]);
+    }
+  });
+}
 function addCustomSvc(){
   const catSel=document.getElementById('sv-cat').value;
   const catCustom=document.getElementById('sv-cat-custom').value.trim();
-  const cat=catSel==='Nueva categoría...'?catCustom:catSel;
+  const cat=catSel==='__nueva__'?catCustom:catSel;
   const nombre=document.getElementById('sv-nombre').value.trim();
   const precio=+document.getElementById('sv-precio').value||0;
   const nota=document.getElementById('sv-nota').value.trim();
@@ -2819,14 +2839,16 @@ function addSvcRowEdit(nombre='',precio=0){
 }
 function recalcTotalEdit(){
   let t=0;
-  document.querySelectorAll('#svc-rows-edit .svc-row').forEach(r=>{t+=parseFloat(r.querySelector('input').value)||0;});
+  document.querySelectorAll('#svc-rows-edit .svc-row').forEach(r=>{
+    t+=parseFloat(r.querySelector('input[type=number]')?.value)||0;
+  });
   document.getElementById('e-cit-total').textContent=t>0?'Total: L. '+t.toLocaleString('es-HN'):'';
 }
 function getSvcRowsEditData(){
   const rows=[];
   document.querySelectorAll('#svc-rows-edit .svc-row').forEach(r=>{
-    const n=r.querySelector('select').value;
-    const p=parseFloat(r.querySelector('input').value)||0;
+    const n=(r.querySelector('.svc-search-inp')?.value||'').trim();
+    const p=parseFloat(r.querySelector('input[type=number]')?.value)||0;
     if(n) rows.push({nombre:n,precio:p});
   });
   return rows;
