@@ -730,7 +730,7 @@ footer span{color:var(--gold);}
       <div class="fgrp"><label>Usuario</label><input type="text" id="e-usr-user" placeholder="username" autocomplete="off"></div>
       <div class="fgrp"><label>Contraseña</label><div class="pass-wrap" style="position:relative;">
         <input type="password" id="e-usr-pass" placeholder="Nueva contraseña" autocomplete="new-password" style="padding-right:36px;">
-        <button class="pass-eye" type="button" onclick="togglePassVis('e-usr-pass',this)" title="Mostrar/ocultar">👁</button>
+        <button class="pass-eye" type="button" onclick="togglePassVis('e-usr-pass',this)" title="Mostrar/ocultar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
       </div></div>
       <div class="fgrp" style="grid-column:span 2"><label>Rol</label>
         <select id="e-usr-rol">
@@ -845,7 +845,7 @@ footer span{color:var(--gold);}
         <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%)"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="#555" stroke-width="1.8"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="M7 9V6a3 3 0 016 0v3"/></svg></span>
         <div class="pass-wrap">
           <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-left:38px">
-          <button class="pass-eye" type="button" onclick="togglePassVis('login-pass',this)" title="Mostrar/ocultar">👁</button>
+          <button class="pass-eye" type="button" onclick="togglePassVis('login-pass',this)" title="Mostrar/ocultar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
         </div>
         <div style="text-align:right;margin-top:4px;">
           <button class="forgot-link" onclick="toggleForgot()">¿Olvidaste tu contraseña?</button>
@@ -3040,7 +3040,9 @@ function togglePassVis(id, btn){
   const inp = document.getElementById(id);
   if(!inp) return;
   inp.type = inp.type === 'password' ? 'text' : 'password';
-  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+  const open = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const closed = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+  btn.innerHTML = inp.type === 'password' ? open : closed;
 }
 function toggleForgot(){
   const box = document.getElementById('reset-box');
