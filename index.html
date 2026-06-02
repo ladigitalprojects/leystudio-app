@@ -190,12 +190,12 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
 .kpi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden;}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-.kpi-gold::before{background:var(--gold);} .kpi-red::before{background:var(--red);}
-.kpi-blue::before{background:var(--blue);} .kpi-purple::before{background:var(--pink);}
+.kpi-gold::before{background:var(--gold);} .kpi-red::before{background:var(--pink);}
+.kpi-blue::before{background:var(--gold-lt);} .kpi-purple::before{background:var(--pink);}
 .kpi-label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
 .kpi-value{font-size:26px;font-weight:800;line-height:1.1;}
-.kpi-gold .kpi-value{color:var(--gold);} .kpi-red .kpi-value{color:#e74c3c;}
-.kpi-blue .kpi-value{color:#5dade2;} .kpi-purple .kpi-value{color:#bb8fce;}
+.kpi-gold .kpi-value{color:var(--gold-deep);} .kpi-red .kpi-value{color:var(--pink);}
+.kpi-blue .kpi-value{color:var(--gold);} .kpi-purple .kpi-value{color:var(--pink);}
 .kpi-sub{font-size:11px;color:var(--gray);margin-top:4px;}
 .kpi-icon{position:absolute;top:14px;right:14px;opacity:.13;width:32px;height:32px;}
 .kpi-icon svg{width:32px;height:32px;}
@@ -354,10 +354,10 @@ footer span{color:var(--gold);}
 .stat-card:hover{border-color:var(--pink);box-shadow:0 2px 12px rgba(221,152,177,.12);}
 .stat-rank{font-size:22px;font-weight:900;color:var(--gold-deep);margin-right:8px;}
 .stat-name{font-size:14px;font-weight:700;color:var(--cream);}
-.stat-meta{font-size:11px;color:#555;margin-top:4px;line-height:1.6;}
+.stat-meta{font-size:11px;color:var(--gray);margin-top:4px;line-height:1.7;}
 .stat-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;background:rgba(178,146,87,.12);color:var(--gold-deep);margin-top:4px;}
 .stat-bar-wrap{height:3px;background:var(--border);border-radius:2px;margin-top:8px;}
-.stat-bar{height:3px;background:linear-gradient(90deg,var(--gold-deep),var(--gold));border-radius:2px;}
+.stat-bar{height:4px;background:linear-gradient(90deg,var(--pink),var(--gold));border-radius:2px;}
 @media(max-width:600px){.stats-grid{grid-template-columns:1fr;}}
 /* ── CONFIG BLOCKS ── */
 .cfg-block{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px 24px;margin-bottom:14px;}
@@ -2018,7 +2018,7 @@ function renderClientes(){
       <td><span class="badge bgo">${st.visitas}</span></td>
       <td><strong style="color:var(--gold)">${fmtM(st.total)}</strong></td>
       <td style="max-width:200px;font-size:11px">${st.ultimoSvc.length>45?st.ultimoSvc.substring(0,45)+'…':st.ultimoSvc}</td>
-      <td style="white-space:nowrap"><button class="wa-btn" onclick="openWAcliente(${c.id})" style="margin-right:4px">💬</button><button class="edit-btn" onclick="openFicha(${c.id})" style="margin-right:4px;background:var(--gold);color:#000;border-color:var(--gold)">📋 Ficha</button><button class="edit-btn" onclick="openEditCliente(${c.id})">✏️ Editar</button></td></tr>`;
+      <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:10px 4px"><button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn action-pdf" onclick="openFicha(${c.id})" title="Ficha técnica"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button><button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td></tr>`;
   }).join('');
 }
 function addCliente(){
@@ -2580,10 +2580,15 @@ function renderServicios(){
   document.getElementById('svc-tb').innerHTML=list.map(s=>{
     const nc=s.cat!==lastCat; lastCat=s.cat;
     return`<tr>
-      <td><span class="badge bgo" style="font-size:10px;padding:3px 10px">${s.cat}</span></td>
-      <td style="font-weight:500">${s.nombre}${s.custom?` <span style="font-size:9px;color:var(--pink);font-weight:700;margin-left:4px">✦ Custom</span>`:''}</td>
-      <td><strong style="color:var(--gold-deep);font-size:14px">${fmtM(s.precio)}</strong></td>
-      <td style="text-align:right">${s.custom?`<button class="action-icon-btn action-del" onclick="delCustomSvc(${s.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`:'&nbsp;'}</td></tr>`;
+      <td style="width:160px"><span style="font-size:10px;font-weight:700;color:var(--gold-deep);background:rgba(178,146,87,.1);padding:3px 10px;border-radius:20px;white-space:nowrap">${s.cat}</span></td>
+      <td style="font-weight:500;color:var(--cream)">${s.nombre}${s.custom?` <span style="font-size:9px;color:var(--pink);font-weight:700;margin-left:4px">Custom</span>`:''}</td>
+      <td style="width:130px">
+        ${s.custom
+          ? `<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--gray)">L.</span><input type="number" value="${s.precio}" min="0" style="width:70px;border:1px solid var(--border);border-radius:5px;padding:4px 7px;font-size:13px;font-weight:700;color:var(--gold-deep);background:var(--card);outline:none" onchange="editSvcPrecio(${s.id},+this.value)" onclick="this.select()"></div>`
+          : `<strong style="color:var(--gold-deep);font-size:14px">${fmtM(s.precio)}</strong>`
+        }
+      </td>
+      <td style="width:40px;text-align:right">${s.custom?`<button class="action-icon-btn action-del" onclick="delCustomSvc(${s.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`:'&nbsp;'}</td></tr>`;
   }).join('');
 }
 
@@ -2618,6 +2623,11 @@ function addCustomSvc(){
   saveAndSync(); renderServicios(); initSvcDropdown(); toggleForm('fsvc');
   document.getElementById('sv-nombre').value=''; document.getElementById('sv-precio').value='';
   toast('✅ Servicio agregado al catálogo');
+}
+function editSvcPrecio(id, precio){
+  if(!D.catalogoCustom) return;
+  const s = D.catalogoCustom.find(x=>x.id===id);
+  if(s){ s.precio = precio; saveAndSync(); }
 }
 function delCustomSvc(id){
   if(!confirm('¿Eliminar este servicio del catálogo?'))return;
@@ -3681,20 +3691,19 @@ function renderStats(tipo){
   document.getElementById('stats-grid').innerHTML = top.map((c,i)=>{
     const pct = Math.round((c.total/maxTotal)*100);
     const bdayThis = c.bday && new Date().getMonth()===new Date(c.bday+'T00:00').getMonth();
-    return `<div class="stat-card" onclick="openEditCliente(${c.id})">
-      <div style="display:flex;align-items:center;gap:6px">
+    return `<div class="stat-card">
+      <div style="display:flex;align-items:flex-start;gap:10px">
         <span class="stat-rank">#${i+1}</span>
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="stat-name">${c.nombre}${bdayThis?' 🎂':''}</div>
           <div class="stat-meta">
-            ${c.visitas} visita${c.visitas!==1?'s':''} · Ticket prom. <strong style="color:var(--gold)">L.${c.avgTicket.toLocaleString()}</strong><br>
-            Favorito: <em style="color:#888">${c.favSvc.length>30?c.favSvc.substring(0,30)+'…':c.favSvc}</em><br>
-            ${c.daysSince<9999?`Última visita hace <strong style="color:${c.daysSince>30?'var(--red)':'var(--green)'}">${c.daysSince}d</strong>`:'Sin visitas registradas'}
+            <span style="color:var(--gold-deep);font-weight:600">L. ${c.total.toLocaleString('es-HN')}</span> · ${c.visitas} visita${c.visitas!==1?'s':''}<br>
+            ${c.daysSince<9999?`Última: <strong style="color:${c.daysSince>30?'var(--pink)':'var(--green)'}">${c.daysSince}d atrás</strong>`:'<span style="color:var(--gray-dk)">Sin visitas</span>'}
           </div>
-          ${c.total>0?`<span class="stat-badge">L. ${c.total.toLocaleString('es-HN')}</span>`:''}
         </div>
+        <button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" title="Ver detalle" style="flex-shrink:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
       </div>
-      ${c.total>0?`<div class="stat-bar-wrap"><div class="stat-bar" style="width:${pct}%"></div></div>`:''}
+      ${c.total>0?`<div class="stat-bar-wrap" style="margin-top:10px"><div class="stat-bar" style="width:${pct}%"></div></div>`:''}
     </div>`;
   }).join('');
 }
@@ -3777,7 +3786,7 @@ function renderStatsTab(tipo){
     const pct = Math.round((c.total/maxTotal)*100);
     const bdayThis = c.bday && new Date().getMonth()===new Date(c.bday+'T00:00').getMonth();
     const waLink = c.tel ? `<a href="https://wa.me/504${c.tel.replace(/\D/g,'')}" target="_blank" style="font-size:10px;color:#075e54;text-decoration:none;margin-left:6px">WA</a>` : '';
-    return `<div class="stat-card" onclick="openEditCliente(${c.id})">
+    return `<div class="stat-card">
       <div style="display:flex;align-items:flex-start;gap:8px">
         <span class="stat-rank">#${i+1}</span>
         <div style="flex:1;min-width:0">
