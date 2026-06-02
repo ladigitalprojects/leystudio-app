@@ -350,6 +350,13 @@ footer span{color:var(--gold);}
 /* ── CLIENT STATS ── */
 .stats-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-top:18px;}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:14px;}
+.stat-pill{background:none;border:none;padding:5px 14px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;color:var(--gray-dk);transition:all .2s;white-space:nowrap;}
+.stat-pill.active,.stat-pill:hover{background:var(--card);color:var(--pink);box-shadow:0 1px 6px rgba(0,0,0,.08);}
+.stat-row{display:flex;align-items:center;gap:14px;padding:12px 4px;border-bottom:1px solid var(--border);}
+.stat-row:last-child{border-bottom:none;}
+.stat-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--gold));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;}
+.stat-row-rank{font-size:11px;font-weight:800;color:var(--border);width:22px;text-align:center;flex-shrink:0;}
+.stat-row-rank.top3{color:var(--gold-deep);}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:8px;}
 .stat-card:hover{border-color:var(--pink);box-shadow:0 2px 12px rgba(221,152,177,.12);}
 .stat-rank{font-size:22px;font-weight:900;color:var(--gold-deep);margin-right:8px;}
@@ -1330,27 +1337,23 @@ footer span{color:var(--gold);}
 
 <!-- ══ ESTADÍSTICAS ══ -->
 <div class="section" id="tab-estadisticas">
+  <!-- KPI row -->
+  <div id="stats-summary-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;"></div>
+
   <div class="table-card">
-    <div class="th">
-      <span class="tt">
-        <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17V10M7 17V7M11 17V4M15 17V10M19 17H1"/></svg>
-        Estadísticas de clientas
-      </span>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="hbtn hbtn-outline" onclick="renderStatsTab('gasto')" id="stt-gasto" style="font-size:11px;padding:6px 12px;border-color:var(--gold)">💰 Mayor gasto</button>
-        <button class="hbtn hbtn-outline" onclick="renderStatsTab('visitas')" id="stt-visitas" style="font-size:11px;padding:6px 12px">🔁 Más visitas</button>
-        <button class="hbtn hbtn-outline" onclick="renderStatsTab('reciente')" id="stt-reciente" style="font-size:11px;padding:6px 12px">🕐 Más recientes</button>
-        <button class="hbtn hbtn-outline" onclick="renderStatsTab('inactivas')" id="stt-inactivas" style="font-size:11px;padding:6px 12px">😴 Inactivas +30d</button>
+    <!-- Filter pills -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+      <span style="font-size:11px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:1px">Ranking de clientas</span>
+      <div style="display:flex;gap:6px;background:var(--champagne);border-radius:20px;padding:4px">
+        <button class="stat-pill active" onclick="renderStatsTab('gasto')" id="stt-gasto">Mayor gasto</button>
+        <button class="stat-pill" onclick="renderStatsTab('visitas')" id="stt-visitas">Más visitas</button>
+        <button class="stat-pill" onclick="renderStatsTab('reciente')" id="stt-reciente">Recientes</button>
+        <button class="stat-pill" onclick="renderStatsTab('inactivas')" id="stt-inactivas">Inactivas</button>
       </div>
     </div>
 
-    <!-- Summary KPIs -->
-    <div id="stats-summary-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;"></div>
-
-    <!-- Cards grid -->
-    <div class="stats-grid" id="stats-tab-grid" style="margin-top:0"></div>
-
-    <p class="tip" style="margin-top:16px">Haz clic en cualquier clienta para editar su perfil. Solo se cuentan citas con estado <strong>Completada</strong>.</p>
+    <!-- List -->
+    <div id="stats-tab-grid"></div>
   </div>
 </div>
 
@@ -3745,80 +3748,87 @@ function _buildClientData(){
 }
 
 function renderStatsTab(tipo){
-  // Highlight active tab button
+  // Pills active state
   ['gasto','visitas','reciente','inactivas'].forEach(k=>{
     const el=document.getElementById('stt-'+k);
-    if(el) el.style.borderColor = k===tipo ? 'var(--gold)' : '';
+    if(el){ el.classList.toggle('active', k===tipo); }
   });
 
   const clientData = _buildClientData();
   const withVisits = clientData.filter(c=>c.visitas>0);
 
-  // ── Summary KPIs ──
+  // KPIs
   const totalRev = withVisits.reduce((s,c)=>s+c.total,0);
   const totalVisits = withVisits.reduce((s,c)=>s+c.visitas,0);
   const inactiveCount = clientData.filter(c=>c.daysSince>30).length;
   const avgTicketAll = withVisits.length ? Math.round(totalRev/withVisits.length) : 0;
   const summaryEl = document.getElementById('stats-summary-row');
   if(summaryEl){
+    const kpiStyle='background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;';
+    const kpiLabel='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray);margin-bottom:6px';
+    const kpiVal=(color)=>`font-size:28px;font-weight:900;color:${color};line-height:1`;
+    const kpiSub='font-size:11px;color:var(--gray);margin-top:4px';
     summaryEl.innerHTML = `
-      <div class="kpi-card kpi-gold">
-        <div class="kpi-label">Total ingresos clientas</div>
-        <div class="kpi-value">L. ${totalRev.toLocaleString('es-HN')}</div>
-        <div class="kpi-sub">${withVisits.length} clientas con visitas</div>
+      <div style="${kpiStyle}border-top:3px solid var(--gold)">
+        <div style="${kpiLabel}">Ingresos totales</div>
+        <div style="${kpiVal('var(--gold-deep)')}">L. ${totalRev.toLocaleString('es-HN')}</div>
+        <div style="${kpiSub}">${withVisits.length} clientas activas</div>
       </div>
-      <div class="kpi-card kpi-blue">
-        <div class="kpi-label">Total visitas registradas</div>
-        <div class="kpi-value">${totalVisits}</div>
-        <div class="kpi-sub">Citas completadas</div>
+      <div style="${kpiStyle}border-top:3px solid var(--pink)">
+        <div style="${kpiLabel}">Visitas registradas</div>
+        <div style="${kpiVal('var(--cream)')}">  ${totalVisits}</div>
+        <div style="${kpiSub}">Citas completadas</div>
       </div>
-      <div class="kpi-card kpi-purple">
-        <div class="kpi-label">Ticket promedio</div>
-        <div class="kpi-value">L. ${avgTicketAll.toLocaleString('es-HN')}</div>
-        <div class="kpi-sub">Por clienta</div>
+      <div style="${kpiStyle}border-top:3px solid var(--gold-lt)">
+        <div style="${kpiLabel}">Ticket promedio</div>
+        <div style="${kpiVal('var(--gold-deep)')}">L. ${avgTicketAll.toLocaleString('es-HN')}</div>
+        <div style="${kpiSub}">Por clienta</div>
       </div>
-      <div class="kpi-card kpi-red">
-        <div class="kpi-label">Clientas inactivas +30d</div>
-        <div class="kpi-value">${inactiveCount}</div>
-        <div class="kpi-sub">Sin visita reciente</div>
+      <div style="${kpiStyle}border-top:3px solid var(--pink)">
+        <div style="${kpiLabel}">Inactivas +30d</div>
+        <div style="${kpiVal('var(--pink)')}">  ${inactiveCount}</div>
+        <div style="${kpiSub}">Sin visita reciente</div>
       </div>`;
   }
 
-  // ── Sorted list ──
+  // Sorted list
   let sorted;
   if(tipo==='gasto') sorted=[...clientData].sort((a,b)=>b.total-a.total);
   else if(tipo==='visitas') sorted=[...clientData].sort((a,b)=>b.visitas-a.visitas);
-  else if(tipo==='reciente') sorted=withVisits.sort((a,b)=>a.daysSince-b.daysSince);
+  else if(tipo==='reciente') sorted=[...withVisits].sort((a,b)=>a.daysSince-b.daysSince);
   else if(tipo==='inactivas') sorted=clientData.filter(c=>c.daysSince>30).sort((a,b)=>b.daysSince-a.daysSince);
 
   const grid = document.getElementById('stats-tab-grid');
   if(!grid) return;
   if(!sorted||!sorted.length){
-    grid.innerHTML='<p style="color:#666;font-size:13px;padding:8px">Sin datos suficientes. Registra citas completadas para ver estadísticas.</p>';
+    grid.innerHTML='<p style="color:var(--gray);font-size:13px;padding:16px 0">Sin datos suficientes aún.</p>';
     return;
   }
   const maxTotal = sorted[0]?.total||1;
   const top = sorted.slice(0,20);
   grid.innerHTML = top.map((c,i)=>{
     const pct = Math.round((c.total/maxTotal)*100);
+    const initials = c.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
     const bdayThis = c.bday && new Date().getMonth()===new Date(c.bday+'T00:00').getMonth();
-    const waLink = c.tel ? `<a href="https://wa.me/504${c.tel.replace(/\D/g,'')}" target="_blank" style="font-size:10px;color:#075e54;text-decoration:none;margin-left:6px">WA</a>` : '';
-    return `<div class="stat-card">
-      <div style="display:flex;align-items:flex-start;gap:8px">
-        <span class="stat-rank">#${i+1}</span>
-        <div style="flex:1;min-width:0">
-          <div class="stat-name">${c.nombre}${bdayThis?' 🎂':''}${waLink}</div>
-          <div class="stat-meta">
-            ${c.visitas} visita${c.visitas!==1?'s':''} · Ticket prom. <strong style="color:var(--gold)">L.${c.avgTicket.toLocaleString()}</strong><br>
-            Favorito: <em style="color:#888">${c.favSvc.length>32?c.favSvc.substring(0,32)+'…':c.favSvc}</em><br>
-            ${c.daysSince<9999
-              ? `Última visita: <strong style="color:${c.daysSince>30?'var(--red)':'var(--green)'}">${c.daysSince === 0 ? 'hoy' : c.daysSince+'d atrás'}</strong>`
-              : '<span style="color:#e74c3c">Sin visitas registradas</span>'}
-          </div>
-          ${c.total>0?`<span class="stat-badge">L. ${c.total.toLocaleString('es-HN')}</span>`:''}
-        </div>
+    const lastVisitTxt = c.daysSince<9999
+      ? (c.daysSince===0 ? '<span style="color:var(--green);font-weight:600">Hoy</span>'
+        : c.daysSince<=7 ? `<span style="color:var(--green);font-weight:600">${c.daysSince}d atrás</span>`
+        : c.daysSince<=30 ? `<span style="color:var(--gold-deep)">${c.daysSince}d atrás</span>`
+        : `<span style="color:var(--pink)">${c.daysSince}d atrás</span>`)
+      : '<span style="color:var(--gray)">Sin visitas</span>';
+    return `<div class="stat-row">
+      <span class="stat-row-rank ${i<3?'top3':''}">${i<3?['①','②','③'][i]:`${i+1}`}</span>
+      <div class="stat-avatar">${initials}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:13px;color:var(--cream)">${c.nombre}${bdayThis?' 🎂':''}</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:2px">${c.visitas} visita${c.visitas!==1?'s':''} · ${lastVisitTxt}</div>
+        ${c.total>0?`<div style="margin-top:5px;height:3px;background:var(--border);border-radius:2px"><div style="height:3px;width:${pct}%;background:linear-gradient(90deg,var(--pink),var(--gold));border-radius:2px"></div></div>`:''}
       </div>
-      ${c.total>0?`<div class="stat-bar-wrap" style="margin-top:10px"><div class="stat-bar" style="width:${pct}%"></div></div>`:''}
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:14px;font-weight:800;color:var(--gold-deep)">${c.total>0?`L. ${c.total.toLocaleString('es-HN')}`:'—'}</div>
+        ${c.avgTicket>0?`<div style="font-size:10px;color:var(--gray);margin-top:2px">prom. L.${c.avgTicket.toLocaleString()}</div>`:''}
+      </div>
+      <button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" title="Editar" style="flex-shrink:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
     </div>`;
   }).join('');
 }
