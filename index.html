@@ -462,9 +462,9 @@ footer span{color:var(--gold);}
 .svc-search-inp:focus{outline:none;border-color:var(--gold);}
 .svc-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:180px;overflow-y:auto;z-index:9999;display:none;margin:0;padding:0;list-style:none;}
 .svc-dropdown.open{display:block;}
-.svc-dropdown li{padding:7px 10px;cursor:pointer;font-size:12px;color:var(--gray-dk);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;}
+.svc-dropdown li{padding:8px 12px;cursor:pointer;font-size:13px;color:var(--cream);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
 .svc-dropdown li:hover,.svc-dropdown li.selected{background:rgba(178,146,87,.15);color:var(--gold);}
-.svc-dropdown li .svc-price{color:#777;font-size:11px;}
+.svc-dropdown li .svc-price{color:var(--gray);font-size:11px;}
 /* ── Tel wrap con código de área ── */
 .tel-wrap{display:flex;align-items:stretch;border:1px solid var(--border);border-radius:8px;background:#fff;overflow:hidden}
 .tel-wrap:focus-within{border-color:var(--gold)}
@@ -1247,7 +1247,7 @@ footer span{color:var(--gold);}
       <select id="f-svc-cat" onchange="renderServicios()"><option value="">Todas las categorías</option></select>
     </div>
     <div class="tbl-wrap">
-    <table><thead><tr><th>Categoría</th><th>Servicio</th><th>Precio (L.)</th><th>Nota</th><th>Acciones</th></tr></thead>
+    <table><thead><tr><th>Categoría</th><th>Servicio</th><th style="width:140px">Precio (L.)</th><th style="width:40px"></th></tr></thead>
     <tbody id="svc-tb"></tbody></table></div>
   </div>
 </div>
@@ -1852,7 +1852,7 @@ function addSvcRow(nombre='',precio=0){
       <ul class="svc-dropdown"></ul>
     </div>
     <input type="number" placeholder="Precio" value="${initPrecio}" oninput="recalcTotal()">
-    <button class="del-svc-btn" onclick="removeSvcRow(this)" style="background:#2a1a1a;border:1px solid #3a1a1a;color:#e74c3c;border-radius:6px;cursor:pointer;font-size:13px;padding:0 6px;height:34px">✕</button>`;
+    <button class="del-svc-btn" onclick="removeSvcRow(this)" style="background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);color:#c0392b;border-radius:6px;cursor:pointer;font-size:13px;padding:0 6px;height:34px;display:flex;align-items:center">✕</button>`;
   container.appendChild(row);
   buildSvcDropdown(row.querySelector('.svc-search-inp'), allSvcs, initNombre);
   recalcTotal();
@@ -2461,12 +2461,12 @@ function renderFinanzas(){
   document.getElementById('fin-tb').innerHTML=list.map(m=>`
     <tr>
       <td>${fmtD(m.fecha)}</td>
-      <td><span class="badge ${m.tipo==='Ingreso'?'bg':'br'}">${m.tipo==='Ingreso'?'↑ Ingreso':'↓ Gasto'}</span></td>
+      <td><span class="badge ${m.tipo==='Ingreso'?'bg':'br'}">${m.tipo==='Ingreso'?'Ingreso':'Gasto'}</span></td>
       <td>${m.cat}</td><td>${m.desc}</td>
-      <td><strong style="color:${m.tipo==='Ingreso'?'#2ecc71':'#e74c3c'}">${fmtM(m.monto)}</strong></td>
+      <td><strong style="color:${m.tipo==='Ingreso'?'var(--green)':'var(--red)'}">${fmtM(m.monto)}</strong></td>
       <td>${m.pago}</td><td>${m.ref||'—'}</td>
-      <td>${m.citaId?`<span class="badge bb" title="Cita #${m.citaId}">📅 Cita</span>`:'<span class="badge bgr">Manual</span>'}</td>
-      <td style="white-space:nowrap"><button class="edit-btn" onclick="openEditMov(${m.id})">✏️</button> <button class="ibtn" onclick="delMov(${m.id})">🗑</button></td></tr>`).join('');
+      <td>${m.citaId?`<span class="badge bb" title="Cita #${m.citaId}">Cita</span>`:'<span class="badge bgr">Manual</span>'}</td>
+      <td style="white-space:nowrap;display:flex;gap:4px;padding:10px 4px"><button class="action-icon-btn action-edit" onclick="openEditMov(${m.id})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-icon-btn action-del" onclick="delMov(${m.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></td></tr>`).join('');
 }
 function addMovimiento(){
   const m={id:nextId(D.movimientos),
@@ -2903,7 +2903,7 @@ function addSvcRowEdit(nombre='',precio=0){
       <ul class="svc-dropdown"></ul>
     </div>
     <input type="number" placeholder="Precio" value="${initPrecio}" oninput="recalcTotalEdit()">
-    <button class="del-svc-btn" onclick="removeSvcRow(this)" style="background:#2a1a1a;border:1px solid #3a1a1a;color:#e74c3c;border-radius:6px;cursor:pointer;font-size:13px;padding:0 6px;height:34px">✕</button>`;
+    <button class="del-svc-btn" onclick="removeSvcRow(this)" style="background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);color:#c0392b;border-radius:6px;cursor:pointer;font-size:13px;padding:0 6px;height:34px;display:flex;align-items:center">✕</button>`;
   container.appendChild(row);
   buildSvcDropdown(row.querySelector('.svc-search-inp'), allSvcs, initNombre);
   recalcTotalEdit();
