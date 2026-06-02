@@ -69,7 +69,7 @@ body.dark-mode .ac-empty{color:#999;}
 /* Stats */
 body.dark-mode .stats-panel{background:#fff;border-color:#e0d8cc;}
 body.dark-mode .stat-card{background:#111!important;border-color:#2a2a2a!important;}
-body.dark-mode .stat-card:hover{border-color:var(--gold-deep);}
+body.dark-mode .stat-card:hover{border-color:var(--pink);box-shadow:0 2px 12px rgba(221,152,177,.12);}
 body.dark-mode .stat-rank{color:#d0c8bc;}
 body.dark-mode .stat-name{color:#1a1410;}
 body.dark-mode .stat-meta{color:#777;}
@@ -350,8 +350,8 @@ footer span{color:var(--gold);}
 /* ── CLIENT STATS ── */
 .stats-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-top:18px;}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:14px;}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:border-color .2s;}
-.stat-card:hover{border-color:var(--gold-deep);}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:8px;}
+.stat-card:hover{border-color:var(--pink);box-shadow:0 2px 12px rgba(221,152,177,.12);}
 .stat-rank{font-size:22px;font-weight:900;color:var(--gold-deep);margin-right:8px;}
 .stat-name{font-size:14px;font-weight:700;color:var(--cream);}
 .stat-meta{font-size:11px;color:#555;margin-top:4px;line-height:1.6;}
@@ -426,21 +426,21 @@ footer span{color:var(--gold);}
 }
 
 /* ── CALENDAR ── */
-.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;background:linear-gradient(135deg,#2d1520,#1a0d14);border-radius:14px;padding:14px 20px;}
-#cal-title{font-size:20px;font-weight:700;color:#e8a0b0;letter-spacing:.5px;}
-.cal-nav-btn{background:rgba(210,95,130,.15);border:1px solid rgba(210,95,130,.3);color:#e8a0b0;padding:8px 18px;border-radius:20px;cursor:pointer;font-size:16px;font-weight:700;transition:all .2s;}
-.cal-nav-btn:hover{background:rgba(210,95,130,.3);border-color:#d25f82;color:#fff;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 20px;}
+#cal-title{font-size:20px;font-weight:700;color:var(--gold-deep);letter-spacing:.5px;}
+.cal-nav-btn{background:var(--champagne);border:1px solid var(--border);color:var(--gold-deep);padding:8px 18px;border-radius:20px;cursor:pointer;font-size:14px;font-weight:700;transition:all .2s;}
+.cal-nav-btn:hover{background:var(--pink);border-color:var(--pink);color:#fff;}
 .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px;}
 .cal-dow-cell{text-align:center;font-size:10px;font-weight:700;color:#c4849a;text-transform:uppercase;padding:8px 0;letter-spacing:.8px;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
 .cal-day{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:7px;min-height:80px;cursor:pointer;transition:all .2s;}
-.cal-day:hover:not(.cal-empty){border-color:#d25f82;background:#28101c;transform:translateY(-1px);box-shadow:0 4px 12px rgba(210,95,130,.15);}
+.cal-day:hover:not(.cal-empty){border-color:var(--pink);background:rgba(221,152,177,.06);transform:translateY(-1px);box-shadow:0 4px 12px rgba(221,152,177,.1);}
 .cal-empty{background:transparent!important;border:none!important;cursor:default!important;min-height:80px;}
-.cal-today{border-color:#d25f82!important;background:linear-gradient(135deg,#2d1020,#1e0a18)!important;box-shadow:0 0 0 2px rgba(210,95,130,.2)!important;}
+.cal-today{border-color:var(--pink)!important;background:rgba(221,152,177,.08)!important;box-shadow:0 0 0 2px rgba(221,152,177,.15)!important;}
 .cal-has-citas:not(.cal-today){border-color:var(--pink);}
-.cal-day-num{font-size:13px;font-weight:700;color:#7a4a5a;margin-bottom:4px;}
-.cal-today .cal-day-num{color:#e8a0b0!important;font-size:14px;}
-.cal-has-citas .cal-day-num{color:#c4849a;}
+.cal-day-num{font-size:13px;font-weight:700;color:var(--gray-dk);margin-bottom:4px;}
+.cal-today .cal-day-num{color:var(--pink)!important;font-size:14px;}
+.cal-has-citas .cal-day-num{color:var(--pink);}
 .cal-cita-dot{font-size:9px;border-radius:10px;padding:2px 6px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cd-comp{background:rgba(180,220,150,.12);color:#90d070;border:1px solid rgba(144,208,112,.2);}
 .cd-conf{background:rgba(210,95,130,.12);color:#e8a0b0;border:1px solid rgba(232,160,176,.2);}
@@ -453,9 +453,9 @@ footer span{color:var(--gold);}
 .svc-search-wrap{position:relative;}
 .svc-search-inp{width:100%;background:#fff;border:1px solid var(--border);color:var(--cream);padding:7px 10px;border-radius:6px;font-size:13px;box-sizing:border-box;}
 .svc-search-inp:focus{outline:none;border-color:var(--gold);}
-.svc-dropdown{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gold);border-radius:0 0 8px 8px;max-height:180px;overflow-y:auto;z-index:9999;display:none;margin:0;padding:0;list-style:none;}
+.svc-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:180px;overflow-y:auto;z-index:9999;display:none;margin:0;padding:0;list-style:none;}
 .svc-dropdown.open{display:block;}
-.svc-dropdown li{padding:7px 10px;cursor:pointer;font-size:12px;color:#ccc;border-bottom:1px solid #222;display:flex;justify-content:space-between;}
+.svc-dropdown li{padding:7px 10px;cursor:pointer;font-size:12px;color:var(--gray-dk);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;}
 .svc-dropdown li:hover,.svc-dropdown li.selected{background:rgba(178,146,87,.15);color:var(--gold);}
 .svc-dropdown li .svc-price{color:#777;font-size:11px;}
 /* ── Tel wrap con código de área ── */
@@ -1923,7 +1923,8 @@ function renderCitas(){
     })
     .sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.hora.localeCompare(a.hora));
   document.getElementById('citas-tb').innerHTML=list.map((c,i)=>{
-    const svcsHtml=(c.servicios||[]).map(s=>`<span style="font-size:11px;color:var(--gray-dk)">${s.nombre}</span> <span style="font-size:11px;color:var(--gold)">(L.${s.precio})</span>`).join('<br>');
+    const svcs=c.servicios||[];
+    const svcsHtml=svcs.slice(0,2).map(s=>`<span style="font-size:11px;color:var(--gray-dk);display:block">${s.nombre} <span style="color:var(--gold)">(L.${s.precio})</span></span>`).join('')+(svcs.length>2?`<span style="font-size:10px;color:var(--pink);font-weight:600">+${svcs.length-2} más</span>`:'');
     const accionBtn = c.estado==='Confirmada'
       ? `<button class="action-icon-btn action-check" onclick="completarCita(${c.id})" title="Marcar como completada"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>`
       : `<button class="action-icon-btn action-wa" onclick="generarFactura(${c.id})" title="Enviar por WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn action-pdf" onclick="descargarReciboPDF(${c.id})" title="Descargar PDF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button>`;
@@ -2578,12 +2579,11 @@ function renderServicios(){
   let lastCat='';
   document.getElementById('svc-tb').innerHTML=list.map(s=>{
     const nc=s.cat!==lastCat; lastCat=s.cat;
-    return`<tr style="${nc?'border-top:2px solid #2a2a2a':''}">
-      <td><span class="badge bgo">${s.cat}</span></td>
-      <td>${s.nombre}${s.custom?` <span class="badge borg" style="font-size:9px">Custom</span>`:''}</td>
-      <td><strong style="color:var(--gold)">${fmtM(s.precio)}</strong></td>
-      <td style="color:#666">${s.nota||'—'}</td>
-      <td>${s.custom?`<button class="ibtn" onclick="delCustomSvc(${s.id})">🗑</button>`:''}</td></tr>`;
+    return`<tr>
+      <td><span class="badge bgo" style="font-size:10px;padding:3px 10px">${s.cat}</span></td>
+      <td style="font-weight:500">${s.nombre}${s.custom?` <span style="font-size:9px;color:var(--pink);font-weight:700;margin-left:4px">✦ Custom</span>`:''}</td>
+      <td><strong style="color:var(--gold-deep);font-size:14px">${fmtM(s.precio)}</strong></td>
+      <td style="text-align:right">${s.custom?`<button class="action-icon-btn action-del" onclick="delCustomSvc(${s.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`:'&nbsp;'}</td></tr>`;
   }).join('');
 }
 
@@ -3689,7 +3689,7 @@ function renderStats(tipo){
           <div class="stat-meta">
             ${c.visitas} visita${c.visitas!==1?'s':''} · Ticket prom. <strong style="color:var(--gold)">L.${c.avgTicket.toLocaleString()}</strong><br>
             Favorito: <em style="color:#888">${c.favSvc.length>30?c.favSvc.substring(0,30)+'…':c.favSvc}</em><br>
-            ${c.daysSince<9999?`Última visita hace <strong style="color:${c.daysSince>30?'#e74c3c':'#2ecc71'}">${c.daysSince}d</strong>`:'Sin visitas registradas'}
+            ${c.daysSince<9999?`Última visita hace <strong style="color:${c.daysSince>30?'var(--red)':'var(--green)'}">${c.daysSince}d</strong>`:'Sin visitas registradas'}
           </div>
           ${c.total>0?`<span class="stat-badge">L. ${c.total.toLocaleString('es-HN')}</span>`:''}
         </div>
@@ -3786,7 +3786,7 @@ function renderStatsTab(tipo){
             ${c.visitas} visita${c.visitas!==1?'s':''} · Ticket prom. <strong style="color:var(--gold)">L.${c.avgTicket.toLocaleString()}</strong><br>
             Favorito: <em style="color:#888">${c.favSvc.length>32?c.favSvc.substring(0,32)+'…':c.favSvc}</em><br>
             ${c.daysSince<9999
-              ? `Última visita: <strong style="color:${c.daysSince>30?'#e74c3c':'#2ecc71'}">${c.daysSince === 0 ? 'hoy' : c.daysSince+'d atrás'}</strong>`
+              ? `Última visita: <strong style="color:${c.daysSince>30?'var(--red)':'var(--green)'}">${c.daysSince === 0 ? 'hoy' : c.daysSince+'d atrás'}</strong>`
               : '<span style="color:#e74c3c">Sin visitas registradas</span>'}
           </div>
           ${c.total>0?`<span class="stat-badge">L. ${c.total.toLocaleString('es-HN')}</span>`:''}
