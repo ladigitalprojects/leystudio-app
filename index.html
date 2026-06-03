@@ -1882,7 +1882,7 @@ function addSvcRow(nombre='',precio=0){
 }
 function buildSvcDropdown(inp, svcs, selected){
   const ul=inp.nextElementSibling;
-  ul.innerHTML=svcs.map(s=>`<li data-nombre="${s.nombre}" data-precio="${s.precio}" class="${s.nombre===selected?'selected':''}"><span>${s.nombre}</span><span class="svc-price">L.${s.precio}</span></li>`).join('');
+  ul.innerHTML=svcs.map(s=>`<li data-nombre="${s.nombre}" data-precio="${s.precio}" class="${s.nombre===selected?'selected':''}"><span>${s.nombre}</span><span class="svc-price" style="color:var(--pink)">L.${s.precio}</span></li>`).join('');
   ul.querySelectorAll('li').forEach(li=>{
     li.addEventListener('mousedown',e=>{
       e.preventDefault();
@@ -1962,7 +1962,7 @@ function renderCitas(){
       <td>${fmtD(c.fecha)}</td><td>${c.hora}</td>
       <td><strong>${c.clienta}</strong><br><small style="color:var(--gray);font-size:11px">${c.tel}</small></td>
       <td>${svcsHtml}</td>
-      <td style="font-weight:700;white-space:nowrap">${fmtM(c.precioTotal||0)}</td>
+      <td style="font-weight:700;white-space:nowrap;color:var(--pink)">${fmtM(c.precioTotal||0)}</td>
       <td>${c.pago}</td>
       <td>${estadoBadge(c.estado)}</td>
       <td style="color:var(--gray);font-size:12px">${c.notas||'—'}</td>
@@ -2045,7 +2045,7 @@ function renderClientes(){
       <td>${i+1}</td><td><strong>${c.nombre}</strong>${bdayBadge}</td>
       <td>${c.tel}</td><td>${c.ig||'—'}</td><td>${fmtD(c.fecha)}</td>
       <td><span class="badge bgo">${st.visitas}</span></td>
-      <td><strong style="color:var(--gold)">${fmtM(st.total)}</strong></td>
+      <td><strong style="color:var(--pink)">${fmtM(st.total)}</strong></td>
       <td style="max-width:200px;font-size:11px">${st.ultimoSvc.length>45?st.ultimoSvc.substring(0,45)+'…':st.ultimoSvc}</td>
       <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:10px 4px"><button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn action-pdf" onclick="openFicha(${c.id})" title="Ficha técnica"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button><button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td></tr>`;
   }).join('');
@@ -2564,7 +2564,7 @@ function renderInventario(){
     <tr>
       <td>${idx+1}</td><td><strong>${item.nombre}</strong></td><td>${item.cat}</td>
       <td><strong style="color:${item.stock===0?'var(--gold-deep)':item.stock<=item.min?'var(--gold-deep)':'var(--pink)'}">${item.stock}</strong></td>
-      <td>${item.min}</td><td>${item.unidad}</td><td>${fmtM(item.precio)}</td>
+      <td>${item.min}</td><td>${item.unidad}</td><td style="color:var(--pink);font-weight:600">${fmtM(item.precio)}</td>
       <td>${item.proveedor||'—'}</td><td>${fmtD(item.fecha)}</td>
       <td>${invSt(item)==='empty'?'<span class="s-empty">· Agotado</span>':invSt(item)==='low'?'<span class="s-low">· Poco Stock</span>':'<span class="s-ok">· OK</span>'}</td>
       <td style="white-space:nowrap">
@@ -2619,7 +2619,7 @@ function renderServicios(){
       <td style="width:130px">
         ${s.custom
           ? `<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--gray)">L.</span><input type="number" value="${s.precio}" min="0" style="width:70px;border:1px solid var(--border);border-radius:5px;padding:4px 7px;font-size:13px;font-weight:700;color:var(--gold-deep);background:var(--card);outline:none" onchange="editSvcPrecio(${s.id},+this.value)" onclick="this.select()"></div>`
-          : `<strong style="color:var(--gold-deep);font-size:14px">${fmtM(s.precio)}</strong>`
+          : `<strong style="color:var(--pink);font-size:14px">${fmtM(s.precio)}</strong>`
         }
       </td>
       <td style="width:60px;text-align:right;white-space:nowrap">${s.custom?`<button class="action-icon-btn action-del" onclick="delCustomSvc(${s.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`:'&nbsp;'}</td></tr>`;
@@ -2821,7 +2821,7 @@ function renderDashboard(){
     const svcs=(c.servicios||[]).map(s=>s.nombre).join(' + ');
     return`<tr><td>${fmtD(c.fecha)} ${c.hora}</td><td><strong>${c.clienta}</strong></td>
       <td style="font-size:12px">${svcs.length>50?svcs.substring(0,50)+'…':svcs}</td>
-      <td><strong style="color:var(--gold)">${fmtM(c.precioTotal||0)}</strong></td>
+      <td><strong style="color:var(--pink)">${fmtM(c.precioTotal||0)}</strong></td>
       <td>${estadoBadge(c.estado)}</td></tr>`;
   }).join('');
 
@@ -2835,7 +2835,7 @@ function renderDashboard(){
   const topList=Object.entries(topMap).sort((a,b)=>b[1].total-a[1].total).slice(0,5);
   document.getElementById('d-top-tb').innerHTML=topList.length
     ?topList.map(([n,s])=>`<tr><td><strong>${n}</strong></td><td><span class="badge bgo">${s.visitas}</span></td>
-      <td><strong style="color:var(--gold)">${fmtM(s.total)}</strong></td>
+      <td><strong style="color:var(--pink)">${fmtM(s.total)}</strong></td>
       <td style="font-size:11px">${s.ultimo.length>45?s.ultimo.substring(0,45)+'…':s.ultimo}</td></tr>`).join('')
     :'<tr><td colspan="4" style="text-align:center;color:#444;padding:20px">Sin citas completadas este mes</td></tr>';
 
@@ -3083,7 +3083,7 @@ function showDayCitas(ds){
           <div><div style="font-size:15px;font-weight:700">${c.hora} · ${c.clienta}</div>${svcs}${nota}</div>
           <div style="text-align:right;flex-shrink:0">
             ${estadoBadge(c.estado)}
-            <div style="color:var(--gold);font-weight:700;margin-top:5px">${fmtM(c.precioTotal||0)}</div>
+            <div style="color:var(--pink);font-weight:700;margin-top:5px">${fmtM(c.precioTotal||0)}</div>
             <div style="margin-top:8px;display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap">
               ${complBtn}
               <button class="edit-btn" onclick="openEditCita(${c.id})">✏️ Editar</button>
