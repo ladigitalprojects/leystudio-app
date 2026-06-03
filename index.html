@@ -1239,62 +1239,87 @@ footer span{color:var(--gold);}
 <!-- ══ SERVICIOS ══ -->
 <div class="section" id="tab-servicios">
 
-  <!-- Modal detalle servicio -->
-  <div class="modal-overlay" id="svc-modal-ov" style="display:none" onclick="closeSvcModal()"></div>
-  <div class="modal" id="svc-modal" style="display:none;max-width:560px;width:95%;max-height:90vh;overflow-y:auto">
-    <div class="modal-header">
-      <span id="svc-modal-codigo" style="font-size:10px;color:var(--gold);font-weight:700;letter-spacing:1px"></span>
-      <button onclick="closeSvcModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray);line-height:1;margin-left:auto">×</button>
-    </div>
-    <h3 id="svc-modal-nombre" style="font-size:15px;font-weight:700;color:var(--cream);margin:4px 0 14px"></h3>
-    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-      <div style="background:rgba(221,152,177,.12);border-radius:8px;padding:10px 14px;text-align:center;flex:1;min-width:90px">
-        <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Precio</div>
-        <div id="svc-modal-precio" style="font-size:18px;font-weight:800;color:var(--pink)"></div>
+  <!-- Ficha servicio -->
+  <div class="modal-overlay" id="modal-svc-ficha">
+    <div class="modal" style="max-width:580px;padding:0;overflow:hidden">
+      <!-- Header ficha -->
+      <div style="background:linear-gradient(135deg,rgba(221,152,177,.15),rgba(178,146,87,.1));padding:20px 24px 16px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span id="svc-ficha-codigo" style="font-size:10px;background:rgba(178,146,87,.15);color:var(--gold-deep);font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.5px"></span>
+              <span id="svc-ficha-cat" style="font-size:10px;background:rgba(221,152,177,.15);color:var(--pink);font-weight:600;padding:2px 8px;border-radius:10px"></span>
+            </div>
+            <div id="svc-ficha-nombre" style="font-size:15px;font-weight:800;color:var(--cream);line-height:1.3"></div>
+          </div>
+          <button class="modal-close" onclick="closeModal('modal-svc-ficha')" style="flex-shrink:0">✕</button>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:14px">
+          <div style="background:rgba(255,255,255,.6);border-radius:8px;padding:8px 14px;text-align:center;flex:1">
+            <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px">Precio</div>
+            <div id="svc-ficha-precio" style="font-size:17px;font-weight:800;color:var(--pink)"></div>
+          </div>
+          <div style="background:rgba(255,255,255,.6);border-radius:8px;padding:8px 14px;text-align:center;flex:1">
+            <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px">Duración</div>
+            <div id="svc-ficha-dur" style="font-size:17px;font-weight:800;color:var(--gold-deep)"></div>
+          </div>
+        </div>
       </div>
-      <div style="background:rgba(178,146,87,.1);border-radius:8px;padding:10px 14px;text-align:center;flex:1;min-width:90px">
-        <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Duración</div>
-        <div id="svc-modal-dur" style="font-size:18px;font-weight:800;color:var(--gold-deep)"></div>
+      <!-- Tabs -->
+      <div style="display:flex;border-bottom:1px solid var(--border)">
+        <button id="svc-tab-proc" onclick="switchSvcTab('proc')" style="flex:1;padding:12px;border:none;background:var(--card);font-size:12px;font-weight:700;color:var(--pink);border-bottom:2px solid var(--pink);cursor:pointer;letter-spacing:.3px">PROCEDIMIENTO</button>
+        <button id="svc-tab-insumos" onclick="switchSvcTab('insumos')" style="flex:1;padding:12px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--gray);border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.3px">INSUMOS</button>
       </div>
-      <div style="background:rgba(155,128,112,.08);border-radius:8px;padding:10px 14px;text-align:center;flex:1;min-width:90px">
-        <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Categoría</div>
-        <div id="svc-modal-cat" style="font-size:12px;font-weight:700;color:var(--cream)"></div>
+      <!-- Tab procedimiento -->
+      <div id="svc-panel-proc" style="padding:18px 24px">
+        <div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap">
+          <button onclick="svcFmt('bold')" title="Negrita" style="border:1px solid var(--border);background:var(--card);border-radius:5px;padding:3px 8px;cursor:pointer;font-weight:700;font-size:12px;color:var(--cream)">B</button>
+          <button onclick="svcFmt('italic')" title="Cursiva" style="border:1px solid var(--border);background:var(--card);border-radius:5px;padding:3px 8px;cursor:pointer;font-style:italic;font-size:12px;color:var(--cream)">I</button>
+          <button onclick="svcFmt('insertUnorderedList')" title="Lista" style="border:1px solid var(--border);background:var(--card);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:12px;color:var(--cream)">• Lista</button>
+          <button onclick="svcFmt('insertOrderedList')" title="Numerada" style="border:1px solid var(--border);background:var(--card);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:12px;color:var(--cream)">1. Pasos</button>
+          <button onclick="svcFmtHeader()" title="Título" style="border:1px solid var(--border);background:var(--card);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:11px;font-weight:700;color:var(--gold-deep)">Título</button>
+        </div>
+        <div id="svc-ficha-desc" contenteditable="true"
+          style="min-height:180px;border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--cream);line-height:1.7;outline:none;background:#fff;font-family:inherit"
+          data-placeholder="Describe el proceso paso a paso..."
+          onfocus="if(this.innerHTML===this.dataset.placeholder)this.innerHTML=''"
+          onblur="if(!this.innerHTML.trim())this.innerHTML=''"></div>
       </div>
-    </div>
-    <div class="fgrp" style="margin-bottom:12px">
-      <label>Descripción / Proceso</label>
-      <textarea id="svc-modal-desc" rows="5" placeholder="Describe los pasos del servicio, técnica, tips..." style="width:100%;resize:vertical;font-family:inherit;line-height:1.6;box-sizing:border-box"></textarea>
-    </div>
-    <div class="fgrp" style="margin-bottom:16px">
-      <label>Productos necesarios</label>
-      <div id="svc-modal-prods" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;margin-bottom:8px"></div>
-      <div style="display:flex;gap:6px">
-        <input type="text" id="svc-modal-prod-input" placeholder="Nombre del producto..." class="login-input" style="flex:1;padding:7px 10px;font-size:13px" onkeydown="if(event.key==='Enter'){addSvcProd();event.preventDefault()}">
-        <button class="btn-pri" style="padding:7px 14px;font-size:12px;white-space:nowrap" onclick="addSvcProd()">+ Agregar</button>
+      <!-- Tab insumos -->
+      <div id="svc-panel-insumos" style="padding:18px 24px;display:none">
+        <div id="svc-ficha-prods" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;min-height:40px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="svc-prod-input" placeholder="Producto o insumo..." style="flex:1;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--cream);background:#fff;outline:none;font-family:inherit" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter'){addSvcProd();event.preventDefault()}">
+          <button class="btn-pri" onclick="addSvcProd()" style="white-space:nowrap">+ Agregar</button>
+        </div>
       </div>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-pri" style="flex:1" onclick="saveSvcModal()">Guardar</button>
-      <button class="btn-sec" onclick="closeSvcModal()">Cancelar</button>
+      <!-- Footer -->
+      <div style="padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--row-alt)">
+        <button class="btn-pri" style="flex:1" onclick="saveSvcFicha()">Guardar ficha</button>
+        <button class="btn-sec" onclick="closeModal('modal-svc-ficha')">Cerrar</button>
+      </div>
     </div>
   </div>
 
   <!-- Modal gestionar categorías -->
-  <div class="modal-overlay" id="cat-modal-ov" style="display:none" onclick="closeCatModal()"></div>
-  <div class="modal" id="cat-modal" style="display:none;max-width:480px;width:95%">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:11px;color:var(--gold-deep);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Servicios</div>
-        <div style="font-size:16px;font-weight:800;color:var(--cream)">Gestionar Categorías</div>
+  <div class="modal-overlay" id="modal-cat-mgr">
+    <div class="modal" style="max-width:480px;width:95%;padding:0;overflow:hidden">
+      <div style="padding:20px 24px 16px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:10px;color:var(--gold-deep);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Servicios</div>
+            <div style="font-size:16px;font-weight:800;color:var(--cream)">Gestionar Categorías</div>
+          </div>
+          <button class="modal-close" onclick="closeModal('modal-cat-mgr')">✕</button>
+        </div>
       </div>
-      <button onclick="closeCatModal()" style="background:rgba(155,128,112,.1);border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;color:var(--gray);font-size:18px;display:flex;align-items:center;justify-content:center">×</button>
-    </div>
-    <div id="cat-list-modal" style="max-height:360px;overflow-y:auto;margin-bottom:16px"></div>
-    <div style="padding-top:14px;border-top:1px solid var(--border)">
-      <div style="font-size:10px;color:var(--gray-dk);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Agregar nueva categoría</div>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="new-cat-input" placeholder="Nombre de la categoría..." style="flex:1;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--cream);background:var(--card);outline:none;font-family:inherit" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')addNewCat()">
-        <button class="btn-pri" onclick="addNewCat()" style="white-space:nowrap">+ Agregar</button>
+      <div id="cat-list-modal" style="max-height:360px;overflow-y:auto;padding:0 24px"></div>
+      <div style="padding:16px 24px;border-top:1px solid var(--border);background:var(--row-alt)">
+        <div style="font-size:10px;color:var(--gray-dk);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Nueva categoría</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="new-cat-input" placeholder="Nombre de la categoría..." style="flex:1;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--cream);background:#fff;outline:none;font-family:inherit" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')addNewCat()">
+          <button class="btn-pri" onclick="addNewCat()" style="white-space:nowrap">+ Agregar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2710,8 +2735,7 @@ function renderSvcCatGrid(){
   grid.innerHTML=cats.map(cat=>{
     const n=svcs.filter(s=>s.cat===cat).length;
     const on=active===cat;
-    const pct=Math.round((n/svcs.length)*100);
-    return `<div onclick="filterByCat('${cat.replace(/'/g,"\'")}')"
+    return `<div onclick="filterByCat('${cat.replace(/'/g,"\\'")}')"
       style="cursor:pointer;position:relative;overflow:hidden;
         background:${on?'linear-gradient(135deg,rgba(221,152,177,.18),rgba(178,146,87,.1))':'var(--card)'};
         border:${on?'1.5px solid var(--pink)':'1px solid var(--border)'};
@@ -2725,26 +2749,38 @@ function renderSvcCatGrid(){
         <span style="font-size:10px;color:var(--gray)">svc</span>
       </div>
       <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden">
-        <div style="height:100%;width:${Math.min(pct*3,100)}%;background:${on?'var(--pink)':'linear-gradient(90deg,var(--gold-lt),var(--gold))'};border-radius:2px;transition:width .3s"></div>
+        <div style="height:100%;width:${Math.min(Math.round(n/svcs.length*100)*3,100)}%;background:${on?'var(--pink)':'linear-gradient(90deg,var(--gold-lt),var(--gold))'};border-radius:2px"></div>
       </div>
     </div>`;
   }).join('');
 }
+
 function filterByCat(cat){
   const sel=document.getElementById('f-svc-cat'); if(!sel)return;
   sel.value=(sel.value===cat)?'':cat;
   renderServiciosList(); renderSvcCatGrid();
 }
+
 function _initSvcSelects(){
   const cats=getCats();
   ['f-svc-cat','sv-cat'].forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
     const cur=el.value;
-    const isFilter=id==='f-svc-cat';
-    el.innerHTML=(isFilter?'<option value="">Todas las categorías</option>':'<option value="">Seleccionar...</option>')+
+    el.innerHTML=(id==='f-svc-cat'?'<option value="">Todas las categorías</option>':'<option value="">Seleccionar...</option>')+
       cats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
   });
 }
+
+function _autoCode(cat){
+  // Generate next code for category
+  const prefixes={'Acrílico':'ACR','Refill Acrílico':'RAC','Gel':'GEL','Refill Gel':'RGE','Nail Forms':'NFO','Efectos':'EFE','Art Nails':'ART','Design':'DES','Reparación':'REP','Retiro':'RET','Spa Manicure':'SPM','Spa Pedicure':'SPP','Depilación':'DEP'};
+  const prefix=prefixes[cat]||(cat.substring(0,3).toUpperCase().replace(/\s/g,''));
+  const existing=getAllSvcs().filter(s=>(s.codigo||'').startsWith(prefix));
+  const nums=existing.map(s=>parseInt((s.codigo||'').replace(prefix+'-',''))||0);
+  const next=Math.max(0,...nums)+1;
+  return `${prefix}-${String(next).padStart(3,'0')}`;
+}
+
 function renderServiciosList(){
   const q=(document.getElementById('s-svc')?.value||'').toLowerCase();
   const cf=document.getElementById('f-svc-cat')?.value||'';
@@ -2757,10 +2793,10 @@ function renderServiciosList(){
   if(!list.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:24px">Sin resultados</td></tr>';return;}
   let lastCat='';
   tb.innerHTML=list.map(s=>{
-    const sep=s.cat!==lastCat;lastCat=s.cat;
+    const sep=s.cat!==lastCat; lastCat=s.cat;
     const catRow=sep?`<tr><td colspan="5" style="background:rgba(178,146,87,.07);padding:5px 14px;font-size:9px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">${s.cat}</td></tr>`:'';
-    const key=_svcKey(s).replace(/'/g,"\'");
-    return catRow+`<tr style="cursor:pointer" onclick="openSvcModal('${key}')" title="Ver / editar detalle">
+    const key=_svcKey(s).replace(/'/g,"\\'");
+    return catRow+`<tr style="cursor:pointer" onclick="openSvcFicha('${key}')" title="Ver ficha del servicio">
       <td style="font-size:11px;color:var(--gold-deep);font-weight:700;white-space:nowrap">${s.codigo||'—'}</td>
       <td style="font-weight:500;color:var(--cream)">${s.nombre}</td>
       <td style="color:var(--gray);font-size:12px;white-space:nowrap">${_durFmt(s.duracion)}</td>
@@ -2769,66 +2805,82 @@ function renderServiciosList(){
     </tr>`;
   }).join('');
 }
-// ── Servicio modal ──
-let _svcModalKey=null;
-function openSvcModal(key){
+
+// ── Ficha de servicio ──
+let _fichaKey=null;
+function openSvcFicha(key){
   const svc=_findSvc(key); if(!svc)return;
-  _svcModalKey=key;
-  // Load saved extra data
+  _fichaKey=key;
   const extra=(D.svcExtra&&D.svcExtra[key])||{};
-  if(extra.descripcion!=null) svc.descripcion=extra.descripcion;
-  if(extra.productos!=null) svc.productos=extra.productos;
-  document.getElementById('svc-modal-codigo').textContent=svc.codigo||'';
-  document.getElementById('svc-modal-nombre').textContent=svc.nombre;
-  document.getElementById('svc-modal-precio').textContent=fmtM(svc.precio);
-  document.getElementById('svc-modal-dur').textContent=_durFmt(svc.duracion);
-  document.getElementById('svc-modal-cat').textContent=svc.cat;
-  document.getElementById('svc-modal-desc').value=svc.descripcion||'';
-  _renderSvcProds(svc.productos||[]);
-  document.getElementById('svc-modal-prod-input').value='';
-  document.getElementById('svc-modal-ov').style.display='flex';
-  document.getElementById('svc-modal').style.display='block';
+  if(extra.descripcion!=null)svc.descripcion=extra.descripcion;
+  if(extra.productos!=null)svc.productos=extra.productos;
+  document.getElementById('svc-ficha-codigo').textContent=svc.codigo||'—';
+  document.getElementById('svc-ficha-cat').textContent=svc.cat;
+  document.getElementById('svc-ficha-nombre').textContent=svc.nombre;
+  document.getElementById('svc-ficha-precio').textContent=fmtM(svc.precio);
+  document.getElementById('svc-ficha-dur').textContent=_durFmt(svc.duracion);
+  const desc=document.getElementById('svc-ficha-desc');
+  desc.innerHTML=svc.descripcion||'';
+  _renderFichaProds(svc.productos||[]);
+  document.getElementById('svc-prod-input').value='';
+  switchSvcTab('proc');
+  openModal('modal-svc-ficha');
 }
-function closeSvcModal(){
-  document.getElementById('svc-modal-ov').style.display='none';
-  document.getElementById('svc-modal').style.display='none';
-  _svcModalKey=null;
+function switchSvcTab(tab){
+  const proc=tab==='proc';
+  document.getElementById('svc-panel-proc').style.display=proc?'block':'none';
+  document.getElementById('svc-panel-insumos').style.display=proc?'none':'block';
+  const tProc=document.getElementById('svc-tab-proc');
+  const tIns=document.getElementById('svc-tab-insumos');
+  tProc.style.color=proc?'var(--pink)':'var(--gray)';
+  tProc.style.borderBottomColor=proc?'var(--pink)':'transparent';
+  tProc.style.background=proc?'var(--card)':'transparent';
+  tIns.style.color=proc?'var(--gray)':'var(--pink)';
+  tIns.style.borderBottomColor=proc?'transparent':'var(--pink)';
+  tIns.style.background=proc?'transparent':'var(--card)';
 }
-function _renderSvcProds(prods){
-  document.getElementById('svc-modal-prods').innerHTML=(prods||[]).map((p,i)=>
-    `<span style="background:rgba(221,152,177,.15);color:var(--cream);font-size:12px;padding:3px 10px;border-radius:14px;display:inline-flex;align-items:center;gap:5px">${p}<button onclick="removeSvcProd(${i})" style="background:none;border:none;cursor:pointer;color:var(--gray);font-size:15px;line-height:1;padding:0">×</button></span>`
-  ).join('');
+function svcFmt(cmd){ document.getElementById('svc-ficha-desc').focus(); document.execCommand(cmd,false,null); }
+function svcFmtHeader(){
+  document.getElementById('svc-ficha-desc').focus();
+  document.execCommand('formatBlock',false,'h4');
+}
+function _renderFichaProds(prods){
+  document.getElementById('svc-ficha-prods').innerHTML=(prods||[]).length?
+    (prods||[]).map((p,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px">
+      <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="10" cy="10" r="8"/><path d="M7 10l2 2 4-4"/></svg>
+      <span style="flex:1;font-size:13px;color:var(--cream)">${p}</span>
+      <button onclick="removeFichaProd(${i})" style="background:none;border:none;cursor:pointer;color:var(--gray);font-size:16px;line-height:1;padding:0">×</button>
+    </div>`).join('')
+    :'<div style="font-size:12px;color:var(--gray);padding:8px">Sin insumos registrados aún</div>';
 }
 function addSvcProd(){
-  const inp=document.getElementById('svc-modal-prod-input');
+  const inp=document.getElementById('svc-prod-input');
   const v=inp.value.trim(); if(!v)return;
-  const svc=_findSvc(_svcModalKey); if(!svc)return;
+  const svc=_findSvc(_fichaKey); if(!svc)return;
   if(!svc.productos)svc.productos=[];
-  svc.productos.push(v); _renderSvcProds(svc.productos); inp.value='';
+  svc.productos.push(v); _renderFichaProds(svc.productos); inp.value='';
 }
-function removeSvcProd(idx){
-  const svc=_findSvc(_svcModalKey); if(!svc||!svc.productos)return;
-  svc.productos.splice(idx,1); _renderSvcProds(svc.productos);
+function removeFichaProd(idx){
+  const svc=_findSvc(_fichaKey); if(!svc||!svc.productos)return;
+  svc.productos.splice(idx,1); _renderFichaProds(svc.productos);
 }
-function saveSvcModal(){
-  const svc=_findSvc(_svcModalKey); if(!svc)return;
-  const desc=document.getElementById('svc-modal-desc').value;
-  svc.descripcion=desc;
+function saveSvcFicha(){
+  const svc=_findSvc(_fichaKey); if(!svc)return;
+  svc.descripcion=document.getElementById('svc-ficha-desc').innerHTML;
   if(!D.svcExtra)D.svcExtra={};
-  D.svcExtra[_svcModalKey]={descripcion:desc,productos:svc.productos||[]};
-  if(svc.custom)saveAndSync();
-  else saveAndSync();
-  toast('Servicio guardado');
-  closeSvcModal();
+  D.svcExtra[_fichaKey]={descripcion:svc.descripcion,productos:svc.productos||[]};
+  saveAndSync(); toast('Ficha guardada'); closeModal('modal-svc-ficha');
 }
+
 // ── Nuevo servicio ──
 function openNewSvcForm(){ toggleForm('fsvc'); _initSvcSelects(); }
 function saveNewSvc(){
   const cat=document.getElementById('sv-cat').value;
   const nombre=document.getElementById('sv-nombre').value.trim();
   if(!cat||!nombre){toast('Completa categoría y nombre','warn');return;}
+  const codigo=document.getElementById('sv-cod').value.trim()||_autoCode(cat);
   if(!D.catalogoCustom)D.catalogoCustom=[];
-  D.catalogoCustom.push({id:Date.now(),codigo:document.getElementById('sv-cod').value.trim(),cat,nombre,precio:+document.getElementById('sv-precio').value||0,duracion:+document.getElementById('sv-dur').value||0,descripcion:'',productos:[],custom:true});
+  D.catalogoCustom.push({id:Date.now(),codigo,cat,nombre,precio:+document.getElementById('sv-precio').value||0,duracion:+document.getElementById('sv-dur').value||0,descripcion:'',productos:[],custom:true});
   saveAndSync();toggleForm('fsvc');renderServicios();toast('Servicio agregado');
 }
 function delCustomSvc(id){
@@ -2836,25 +2888,17 @@ function delCustomSvc(id){
   D.catalogoCustom=(D.catalogoCustom||[]).filter(s=>s.id!==id);
   saveAndSync();renderServicios();toast('Servicio eliminado');
 }
+
 // ── Gestionar categorías ──
-function openCatModal(){
-  _renderCatList();
-  document.getElementById('cat-modal-ov').style.display='flex';
-  document.getElementById('cat-modal').style.display='block';
-}
-function closeCatModal(){
-  document.getElementById('cat-modal-ov').style.display='none';
-  document.getElementById('cat-modal').style.display='none';
-}
+function openCatModal(){ _renderCatList(); openModal('modal-cat-mgr'); }
 function _renderCatList(){
   const cats=getCats();
   document.getElementById('cat-list-modal').innerHTML=cats.map(cat=>{
     const n=getAllSvcs().filter(s=>s.cat===cat).length;
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
       <input type="text" value="${cat}" data-orig="${cat}"
-        style="flex:1;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--cream);background:var(--card);outline:none;font-family:inherit;transition:border-color .2s"
-        onfocus="this.style.borderColor='var(--gold)'"
-        onblur="this.style.borderColor='var(--border)'"
+        style="flex:1;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--cream);background:var(--card);outline:none;font-family:inherit"
+        onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"
         onchange="renameCat(this)">
       <div style="text-align:center;min-width:44px">
         <div style="font-size:16px;font-weight:800;color:var(--pink)">${n}</div>
@@ -2868,14 +2912,13 @@ function renameCat(inp){
   if(!newN||newN===oldN)return;
   (D.catalogoCustom||[]).forEach(s=>{if(s.cat===oldN)s.cat=newN;});
   BASE_SVCS.forEach(s=>{if(s.cat===oldN)s.cat=newN;});
-  inp.dataset.orig=newN;
-  saveAndSync();renderServicios();toast('Categoría renombrada');
+  inp.dataset.orig=newN; saveAndSync(); renderServicios(); toast('Categoría renombrada');
 }
 function addNewCat(){
   const inp=document.getElementById('new-cat-input');
   const v=inp.value.trim();
   if(!v){toast('Escribe un nombre','warn');return;}
-  if(getCats().includes(v)){toast('Ya existe esa categoría','warn');return;}
+  if(getCats().includes(v)){toast('Ya existe','warn');return;}
   if(!D.catalogoCustom)D.catalogoCustom=[];
   D.catalogoCustom.push({id:Date.now(),codigo:'',cat:v,nombre:'(nuevo servicio)',precio:0,duracion:0,descripcion:'',productos:[],custom:true});
   saveAndSync();inp.value='';_renderCatList();renderServicios();toast('Categoría creada');
