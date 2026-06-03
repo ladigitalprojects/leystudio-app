@@ -292,7 +292,7 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.open{display:flex;}
 .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.modal{position:relative;z-index:1001;background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 16px 48px rgba(100,70,40,.18);}
+.modal{position:relative;z-index:1001;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(100,70,40,.2);}
 .modal-title{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center;letter-spacing:.5px;text-transform:uppercase;}
 .modal-close{background:none;border:none;color:var(--gray);font-size:20px;cursor:pointer;}
 
@@ -1281,15 +1281,21 @@ footer span{color:var(--gold);}
 
   <!-- Modal gestionar categorías -->
   <div class="modal-overlay" id="cat-modal-ov" style="display:none" onclick="closeCatModal()"></div>
-  <div class="modal" id="cat-modal" style="display:none;max-width:460px;width:95%">
-    <div class="modal-header">
-      <span style="font-weight:700;color:var(--cream);font-size:14px">Gestionar Categorías</span>
-      <button onclick="closeCatModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray);margin-left:auto">×</button>
+  <div class="modal" id="cat-modal" style="display:none;max-width:480px;width:95%">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:11px;color:var(--gold-deep);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Servicios</div>
+        <div style="font-size:16px;font-weight:800;color:var(--cream)">Gestionar Categorías</div>
+      </div>
+      <button onclick="closeCatModal()" style="background:rgba(155,128,112,.1);border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;color:var(--gray);font-size:18px;display:flex;align-items:center;justify-content:center">×</button>
     </div>
-    <div id="cat-list-modal" style="max-height:340px;overflow-y:auto;margin-bottom:14px"></div>
-    <div style="display:flex;gap:6px">
-      <input type="text" id="new-cat-input" placeholder="Nombre nueva categoría..." class="login-input" style="flex:1;padding:8px 10px;font-size:13px" onkeydown="if(event.key==='Enter')addNewCat()">
-      <button class="btn-pri" onclick="addNewCat()">+ Agregar</button>
+    <div id="cat-list-modal" style="max-height:360px;overflow-y:auto;margin-bottom:16px"></div>
+    <div style="padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--gray-dk);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Agregar nueva categoría</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="new-cat-input" placeholder="Nombre de la categoría..." style="flex:1;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--cream);background:var(--card);outline:none;font-family:inherit" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')addNewCat()">
+        <button class="btn-pri" onclick="addNewCat()" style="white-space:nowrap">+ Agregar</button>
+      </div>
     </div>
   </div>
 
@@ -1316,7 +1322,7 @@ footer span{color:var(--gold);}
     </div>
 
     <!-- Formulario nuevo servicio -->
-    <div class="form-box" id="fsvc" style="display:none;margin-bottom:16px">
+    <div class="form-box" id="fsvc" style="margin-bottom:16px">
       <div class="fg" style="grid-template-columns:1fr 1fr 1fr;">
         <div class="fgrp"><label>Categoría</label><select id="sv-cat"><option value="">Seleccionar...</option></select></div>
         <div class="fgrp"><label>Código</label><input type="text" id="sv-cod" placeholder="ACR-010"></div>
@@ -2844,9 +2850,16 @@ function _renderCatList(){
   const cats=getCats();
   document.getElementById('cat-list-modal').innerHTML=cats.map(cat=>{
     const n=getAllSvcs().filter(s=>s.cat===cat).length;
-    return `<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)">
-      <input type="text" value="${cat}" data-orig="${cat}" style="flex:1;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;color:var(--cream);background:#fff;outline:none" onchange="renameCat(this)">
-      <span style="font-size:10px;color:var(--gray);white-space:nowrap">${n} svc</span>
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <input type="text" value="${cat}" data-orig="${cat}"
+        style="flex:1;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--cream);background:var(--card);outline:none;font-family:inherit;transition:border-color .2s"
+        onfocus="this.style.borderColor='var(--gold)'"
+        onblur="this.style.borderColor='var(--border)'"
+        onchange="renameCat(this)">
+      <div style="text-align:center;min-width:44px">
+        <div style="font-size:16px;font-weight:800;color:var(--pink)">${n}</div>
+        <div style="font-size:9px;color:var(--gray)">svc</div>
+      </div>
     </div>`;
   }).join('');
 }
