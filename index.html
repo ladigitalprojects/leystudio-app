@@ -77,7 +77,7 @@ body.dark-mode .stat-badge{background:#f4eada;color:var(--gold-deep);}
 body.dark-mode .stat-bar-wrap{background:#e8e2da;}
 /* Misc */
 body.dark-mode .modal{background:#1c1c1c!important;border-color:#333!important;}
-body.dark-mode .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;}
+body.dark-mode 
 body.dark-mode .modal-title{border-bottom-color:#e8e2da;}
 body.dark-mode .modal-close{color:#aaa;}
 body.dark-mode #login-screen{background:#0a0a0a!important;}
@@ -238,7 +238,7 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 
 /* ── FORMS ── */
 .form-box{background:var(--champagne);border:1px solid var(--border);border-left:3px solid var(--pink);border-radius:10px;padding:20px;margin-bottom:18px;display:none;}
-.form-box.open{display:block;}
+.form-box.open{display:flex!important;}
 .fg{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
 .fgrp{display:flex;flex-direction:column;gap:4px;}
 .fgrp label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;}
@@ -289,10 +289,10 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 .add-btn:hover{background:var(--gold-lt);}
 
 /* ── MODAL ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.open{display:flex;}
 .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.modal{position:relative;z-index:1001;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(100,70,40,.2);}
+.modal{position:relative;z-index:501;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(100,70,40,.2);}
 .modal-title{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center;letter-spacing:.5px;text-transform:uppercase;}
 .modal-close{background:none;border:none;color:var(--gray);font-size:20px;cursor:pointer;}
 
@@ -336,7 +336,7 @@ footer span{color:var(--gold);}
   border-radius:10px;max-height:240px;overflow-y:auto;
   box-shadow:0 8px 24px rgba(100,70,40,.14);display:none;
 }
-.ac-dropdown.open{display:block;}
+.ac-dropdown.open{display:flex!important;}
 .ac-item{
   padding:11px 14px;cursor:pointer;font-size:13px;color:var(--cream);
   display:flex;justify-content:space-between;align-items:center;
@@ -468,7 +468,7 @@ footer span{color:var(--gold);}
 .svc-search-inp{width:100%;background:#fff;border:1px solid var(--border);color:var(--cream);padding:7px 10px;border-radius:6px;font-size:13px;box-sizing:border-box;}
 .svc-search-inp:focus{outline:none;border-color:var(--pink);box-shadow:0 0 0 2px rgba(221,152,177,.15);}
 .svc-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:180px;overflow-y:auto;z-index:9999;display:none;margin:0;padding:0;list-style:none;}
-.svc-dropdown.open{display:block;}
+.svc-dropdown.open{display:flex!important;}
 .svc-dropdown li{padding:8px 12px;cursor:pointer;font-size:13px;color:var(--cream);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
 .svc-dropdown li:hover,.svc-dropdown li.selected{background:rgba(178,146,87,.15);color:var(--gold);}
 .svc-dropdown li .svc-price{color:var(--gray);font-size:11px;}
@@ -572,7 +572,7 @@ footer span{color:var(--gold);}
 .forgot-link{color:var(--gold);font-size:12px;text-align:right;cursor:pointer;background:none;border:none;padding:0;margin-top:-2px;opacity:.8;}
 .forgot-link:hover{opacity:1;text-decoration:underline;}
 #reset-box{display:none;margin-top:12px;}
-#reset-box.open{display:block;}
+#reset-box.open{display:flex!important;}
 
 /* ── USERS MANAGEMENT ── */
 .user-row{display:flex;align-items:center;justify-content:space-between;background:var(--champagne);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;}
@@ -1349,7 +1349,7 @@ footer span{color:var(--gold);}
     <!-- Formulario nuevo servicio -->
     <div class="form-box" id="fsvc" style="margin-bottom:16px">
       <div class="fg" style="grid-template-columns:1fr 1fr 1fr;">
-        <div class="fgrp"><label>Categoría</label><select id="sv-cat"><option value="">Seleccionar...</option></select></div>
+        <div class="fgrp"><label>Categoría</label><select id="sv-cat" onchange="_updateAutoCode(this.value)"><option value="">Seleccionar...</option></select></div>
         <div class="fgrp"><label>Código</label><input type="text" id="sv-cod" placeholder="ACR-010"></div>
         <div class="fgrp"><label>Precio (L.)</label><input type="number" id="sv-precio" min="0" value="0"></div>
         <div class="fgrp" style="grid-column:span 2"><label>Nombre del servicio</label><input type="text" id="sv-nombre" placeholder="Nombre completo"></div>
@@ -2771,6 +2771,10 @@ function _initSvcSelects(){
   });
 }
 
+function _updateAutoCode(cat){
+  const inp=document.getElementById('sv-cod');
+  if(inp&&cat) inp.value=_autoCode(cat);
+}
 function _autoCode(cat){
   // Generate next code for category
   const prefixes={'Acrílico':'ACR','Refill Acrílico':'RAC','Gel':'GEL','Refill Gel':'RGE','Nail Forms':'NFO','Efectos':'EFE','Art Nails':'ART','Design':'DES','Reparación':'REP','Retiro':'RET','Spa Manicure':'SPM','Spa Pedicure':'SPP','Depilación':'DEP'};
