@@ -875,8 +875,8 @@ footer span{color:var(--gold);}
         <input class="login-input" type="text" id="login-user" placeholder="Usuario" autocomplete="username" style="padding-left:38px">
       </div>
       <div style="position:relative;margin-bottom:6px">
-        <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%)"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="#A9884D" stroke-width="1.8"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="M7 9V6a3 3 0 016 0v3"/></svg></span>
         <div class="pass-wrap">
+          <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);z-index:1;pointer-events:none"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="#A9884D" stroke-width="1.8"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="M7 9V6a3 3 0 016 0v3"/></svg></span>
           <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-left:38px">
           <button class="pass-eye" type="button" onclick="togglePassVis('login-pass',this)" title="Mostrar/ocultar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
         </div>
