@@ -1237,45 +1237,113 @@ footer span{color:var(--gold);}
 
 <!-- ══ SERVICIOS ══ -->
 <div class="section" id="tab-servicios">
-  <!-- Agregar servicio personalizado -->
+
+  <!-- Modal detalle servicio -->
+  <div class="modal-overlay" id="svc-modal-ov" style="display:none" onclick="closeSvcModal()"></div>
+  <div class="modal" id="svc-modal" style="display:none;max-width:560px;width:95%;max-height:90vh;overflow-y:auto">
+    <div class="modal-header">
+      <span id="svc-modal-codigo" style="font-size:10px;color:var(--gold);font-weight:700;letter-spacing:1px"></span>
+      <button onclick="closeSvcModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray);line-height:1;margin-left:auto">×</button>
+    </div>
+    <h3 id="svc-modal-nombre" style="font-size:15px;font-weight:700;color:var(--cream);margin:4px 0 14px"></h3>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="background:rgba(221,152,177,.12);border-radius:8px;padding:10px 14px;text-align:center;flex:1;min-width:90px">
+        <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Precio</div>
+        <div id="svc-modal-precio" style="font-size:18px;font-weight:800;color:var(--pink)"></div>
+      </div>
+      <div style="background:rgba(178,146,87,.1);border-radius:8px;padding:10px 14px;text-align:center;flex:1;min-width:90px">
+        <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Duración</div>
+        <div id="svc-modal-dur" style="font-size:18px;font-weight:800;color:var(--gold-deep)"></div>
+      </div>
+      <div style="background:rgba(155,128,112,.08);border-radius:8px;padding:10px 14px;text-align:center;flex:1;min-width:90px">
+        <div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Categoría</div>
+        <div id="svc-modal-cat" style="font-size:12px;font-weight:700;color:var(--cream)"></div>
+      </div>
+    </div>
+    <div class="fgrp" style="margin-bottom:12px">
+      <label>Descripción / Proceso</label>
+      <textarea id="svc-modal-desc" rows="5" placeholder="Describe los pasos del servicio, técnica, tips..." style="width:100%;resize:vertical;font-family:inherit;line-height:1.6;box-sizing:border-box"></textarea>
+    </div>
+    <div class="fgrp" style="margin-bottom:16px">
+      <label>Productos necesarios</label>
+      <div id="svc-modal-prods" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="svc-modal-prod-input" placeholder="Nombre del producto..." class="login-input" style="flex:1;padding:7px 10px;font-size:13px" onkeydown="if(event.key==='Enter'){addSvcProd();event.preventDefault()}">
+        <button class="btn-pri" style="padding:7px 14px;font-size:12px;white-space:nowrap" onclick="addSvcProd()">+ Agregar</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-pri" style="flex:1" onclick="saveSvcModal()">Guardar</button>
+      <button class="btn-sec" onclick="closeSvcModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal gestionar categorías -->
+  <div class="modal-overlay" id="cat-modal-ov" style="display:none" onclick="closeCatModal()"></div>
+  <div class="modal" id="cat-modal" style="display:none;max-width:460px;width:95%">
+    <div class="modal-header">
+      <span style="font-weight:700;color:var(--cream);font-size:14px">Gestionar Categorías</span>
+      <button onclick="closeCatModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray);margin-left:auto">×</button>
+    </div>
+    <div id="cat-list-modal" style="max-height:340px;overflow-y:auto;margin-bottom:14px"></div>
+    <div style="display:flex;gap:6px">
+      <input type="text" id="new-cat-input" placeholder="Nombre nueva categoría..." class="login-input" style="flex:1;padding:8px 10px;font-size:13px" onkeydown="if(event.key==='Enter')addNewCat()">
+      <button class="btn-pri" onclick="addNewCat()">+ Agregar</button>
+    </div>
+  </div>
+
   <div class="table-card">
-    <div class="th"><div class="tt">➕ Agregar servicio al catálogo</div>
-      <button class="add-btn" onclick="toggleForm('fsvc'); setTimeout(initSvCatSelect,50)">+ Nuevo servicio</button></div>
-    <div class="form-box" id="fsvc">
+    <div class="th">
+      <div class="tt">Catálogo de Servicios</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="hbtn hbtn-outline" onclick="openCatModal()" style="font-size:11px;display:flex;align-items:center;gap:5px">
+          <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h14M3 10h14M3 14h8"/></svg>Categorías
+        </button>
+        <button class="add-btn" onclick="openNewSvcForm()">+ Nuevo servicio</button>
+      </div>
+    </div>
+
+    <!-- Resumen categorías -->
+    <div id="svc-cat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:18px"></div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+      <input type="text" id="s-svc" placeholder="Buscar servicio o código..." oninput="renderServiciosList()" style="flex:1;min-width:160px;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;background:#fff;color:var(--cream)">
+      <select id="f-svc-cat" onchange="filterByCat(this.value)" style="border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;background:#fff;color:var(--cream)">
+        <option value="">Todas las categorías</option>
+      </select>
+    </div>
+
+    <!-- Formulario nuevo servicio -->
+    <div class="form-box" id="fsvc" style="display:none;margin-bottom:16px">
       <div class="fg" style="grid-template-columns:1fr 1fr 1fr;">
-        <div class="fgrp"><label>Categoría</label>
-          <select id="sv-cat" onchange="onSvCatChange(this)">
-            <option>Uñas Acrílicas</option><option>Baños de Acrílico</option><option>Tech Gel</option>
-            <option>Refill Acrílico</option><option>Esmaltados</option><option>Nail Art / Efectos</option>
-            <option>Refill Esmaltado</option><option value="__nueva__">+ Nueva categoría...</option>
-          </select></div>
-        <div class="fgrp" id="sv-cat-custom-grp" style="display:none"><label>Nueva categoría</label><input type="text" id="sv-cat-custom" placeholder="Ej: Pedicura, Diseño especial..."></div>
-        <div class="fgrp"><label>Nombre del servicio</label><input type="text" id="sv-nombre" placeholder="Descripción del servicio..."></div>
-        <div class="fgrp"><label>Precio (L.)</label><input type="number" id="sv-precio" placeholder="0"></div>
-        <div class="fgrp"><label>Nota (opcional)</label><input type="text" id="sv-nota" placeholder="Ej: precio adicional..."></div>
+        <div class="fgrp"><label>Categoría</label><select id="sv-cat"><option value="">Seleccionar...</option></select></div>
+        <div class="fgrp"><label>Código</label><input type="text" id="sv-cod" placeholder="ACR-010"></div>
+        <div class="fgrp"><label>Precio (L.)</label><input type="number" id="sv-precio" min="0" value="0"></div>
+        <div class="fgrp" style="grid-column:span 2"><label>Nombre del servicio</label><input type="text" id="sv-nombre" placeholder="Nombre completo"></div>
+        <div class="fgrp"><label>Duración (min)</label><input type="number" id="sv-dur" min="0" value="60"></div>
       </div>
       <div class="factions">
-        <button class="btn-pri" onclick="addCustomSvc()">Guardar servicio</button>
+        <button class="btn-pri" onclick="saveNewSvc()">Guardar</button>
         <button class="btn-sec" onclick="toggleForm('fsvc')">Cancelar</button>
       </div>
     </div>
-    <p class="tip">Los servicios que agregues aquí aparecerán en el dropdown al registrar una cita.</p>
-  </div>
 
-  <!-- Catálogo completo -->
-  <div class="table-card">
-    <div class="th"><div class="tt">Catálogo completo</div></div>
-    <div class="search-bar">
-      <input type="text" id="s-svc" placeholder="Buscar servicio..." oninput="renderServicios()">
-      <select id="f-svc-cat" onchange="renderServicios()"><option value="">Todas las categorías</option></select>
-    </div>
     <div class="tbl-wrap">
-    <table><thead><tr><th>Categoría</th><th>Servicio</th><th style="width:140px">Precio (L.)</th><th style="width:40px"></th></tr></thead>
-    <tbody id="svc-tb"></tbody></table></div>
+      <table>
+        <thead><tr>
+          <th style="width:88px">Código</th>
+          <th>Servicio</th>
+          <th style="width:80px">Duración</th>
+          <th style="width:90px">Precio</th>
+          <th style="width:44px"></th>
+        </tr></thead>
+        <tbody id="svc-tb"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
-<!-- ══ CONFIG / GOOGLE SHEETS ══ -->
 <div class="section" id="tab-calendario">
   <div class="card">
     <div class="cal-header">
@@ -1459,52 +1527,70 @@ footer span{color:var(--gold);}
 // CATÁLOGO BASE (inmutable)
 // ═══════════════════════════════════════════════════
 const BASE_SVCS=[
-  {cat:'Uñas Acrílicas',nombre:'Acrílicas clear + permanente - Cofin/Almond/Stiletto (S/M)',precio:500,nota:'',custom:false},
-  {cat:'Uñas Acrílicas',nombre:'Acrílicas clear + permanente - Cofin/Almond/Stiletto (L)',precio:500,nota:'',custom:false},
-  {cat:'Uñas Acrílicas',nombre:'Acrílicas clear + permanente - Square (S/M)',precio:500,nota:'',custom:false},
-  {cat:'Uñas Acrílicas',nombre:'Acrílicas clear + permanente - Square (L)',precio:500,nota:'',custom:false},
-  {cat:'Uñas Acrílicas',nombre:'Acrílicas cover - Cofin/Almond/Stiletto (S/M)',precio:520,nota:'',custom:false},
-  {cat:'Uñas Acrílicas',nombre:'Acrílicas cover - Cofin/Almond/Stiletto (L)',precio:550,nota:'',custom:false},
-  {cat:'Uñas Acrílicas',nombre:'Acrílicas cover + permanente - Square (S/M)',precio:500,nota:'',custom:false},
-  {cat:'Uñas Acrílicas',nombre:'Acrílicas cover + permanente - Square (L)',precio:550,nota:'',custom:false},
-  {cat:'Baños de Acrílico',nombre:'Baño acrílico clear + esmalte normal',precio:350,nota:'',custom:false},
-  {cat:'Baños de Acrílico',nombre:'Baño acrílico clear + permanente',precio:450,nota:'',custom:false},
-  {cat:'Baños de Acrílico',nombre:'Baño acrílico cover',precio:400,nota:'',custom:false},
-  {cat:'Tech Gel',nombre:'Baño Tech Gel',precio:500,nota:'',custom:false},
-  {cat:'Tech Gel',nombre:'Tech Gel Tips',precio:620,nota:'',custom:false},
-  {cat:'Tech Gel',nombre:'Uñas esculturales',precio:100,nota:'precio adicional',custom:false},
-  {cat:'Refill Acrílico',nombre:'Refill Acrílico Natural',precio:340,nota:'',custom:false},
-  {cat:'Refill Acrílico',nombre:'Refill Acrílico Cover',precio:400,nota:'',custom:false},
-  {cat:'Refill Acrílico',nombre:'Refill Tech Gel',precio:400,nota:'',custom:false},
-  {cat:'Esmaltados',nombre:'Esmaltado Normal',precio:100,nota:'',custom:false},
-  {cat:'Esmaltados',nombre:'Esmaltado Manos y Pies',precio:190,nota:'',custom:false},
-  {cat:'Esmaltados',nombre:'Esmaltado Permanente',precio:250,nota:'',custom:false},
-  {cat:'Esmaltados',nombre:'Esmaltado Permanente Manos y Pies',precio:490,nota:'',custom:false},
-  {cat:'Esmaltados',nombre:'Milky Top',precio:115,nota:'',custom:false},
-  {cat:'Esmaltados',nombre:'Vitamina',precio:100,nota:'',custom:false},
-  {cat:'Esmaltados',nombre:'Calcio',precio:200,nota:'',custom:false},
-  {cat:'Esmaltados',nombre:'Bloom',precio:100,nota:'',custom:false},
-  {cat:'Esmaltados',nombre:'Top Coat',precio:90,nota:'',custom:false},
-  {cat:'Esmaltados',nombre:'Rubber Gel',precio:250,nota:'',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Tipo A – 2 uñas',precio:100,nota:'',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Tipo B – 4 uñas',precio:148,nota:'',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Tipo C – 6 uñas',precio:246,nota:'',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Tipo D – 10 uñas (elaborado)',precio:297,nota:'',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Efecto Aurora',precio:100,nota:'',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Cat Eye',precio:150,nota:'',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Hoja de Oro',precio:100,nota:'',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Cristales S',precio:10,nota:'por cristal',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Cristales M',precio:20,nota:'por cristal',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Cristales L',precio:30,nota:'por cristal',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Efecto Espejo',precio:200,nota:'',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Francés Sonrisa',precio:100,nota:'Línea es gratis',custom:false},
-  {cat:'Nail Art / Efectos',nombre:'Añadir Diseño',precio:100,nota:'desde',custom:false},
-  {cat:'Refill Esmaltado',nombre:'Refill Acrílico',precio:200,nota:'',custom:false},
-  {cat:'Refill Esmaltado',nombre:'Refill Gel',precio:100,nota:'',custom:false},
-  {cat:'Refill Esmaltado',nombre:'Refill Gel con Drill',precio:50,nota:'adicional',custom:false},
-  {cat:'Refill Esmaltado',nombre:'Reparación uña c/u',precio:25,nota:'por uña',custom:false},
+  {codigo:'ACR-001',cat:'Acrílico',nombre:'Uñas acrílicas clear + Semi Permanente (Coffin/Almond/Stiletto) S o M',duracion:120,precio:550,descripcion:'',productos:[],custom:false},
+  {codigo:'ACR-002',cat:'Acrílico',nombre:'Uñas acrílicas clear + Semi Permanente (Coffin/Almond/Stiletto) L',duracion:135,precio:600,descripcion:'',productos:[],custom:false},
+  {codigo:'ACR-003',cat:'Acrílico',nombre:'Uñas acrílicas clear + Semi Permanente (Square)',duracion:120,precio:500,descripcion:'',productos:[],custom:false},
+  {codigo:'ACR-004',cat:'Acrílico',nombre:'Uñas acrílicas cover + Semi Permanente (Coffin/Almond/Stiletto) S o M',duracion:120,precio:570,descripcion:'',productos:[],custom:false},
+  {codigo:'ACR-005',cat:'Acrílico',nombre:'Uñas acrílicas cover + Semi Permanente (Coffin/Almond/Stiletto) L',duracion:135,precio:620,descripcion:'',productos:[],custom:false},
+  {codigo:'ACR-006',cat:'Acrílico',nombre:'Uñas acrílicas cover + Semi Permanente (Square)',duracion:120,precio:520,descripcion:'',productos:[],custom:false},
+  {codigo:'ACR-007',cat:'Acrílico',nombre:'Baño acrílico clear + esmalte normal',duracion:60,precio:350,descripcion:'',productos:[],custom:false},
+  {codigo:'ACR-008',cat:'Acrílico',nombre:'Baño acrílico clear + Semi Permanente',duracion:75,precio:400,descripcion:'',productos:[],custom:false},
+  {codigo:'ACR-009',cat:'Acrílico',nombre:'Baño acrílico cover',duracion:60,precio:400,descripcion:'',productos:[],custom:false},
+  {codigo:'RAC-001',cat:'Refill Acrílico',nombre:'Refill uñas acrilicas clear + Semi Permanente',duracion:90,precio:450,descripcion:'',productos:[],custom:false},
+  {codigo:'RAC-002',cat:'Refill Acrílico',nombre:'Refill uñas acrilicas cover + Semi Permanente',duracion:105,precio:500,descripcion:'',productos:[],custom:false},
+  {codigo:'RAC-003',cat:'Refill Acrílico',nombre:'Refill Baño',duracion:75,precio:350,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-001',cat:'Gel',nombre:'Baño Tech Gel Cover/Natural',duracion:75,precio:600,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-002',cat:'Gel',nombre:'Baño Tech Gel Cover+ Semi Permanente',duracion:90,precio:695,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-003',cat:'Gel',nombre:'Tech Gel Tips',duracion:120,precio:650,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-004',cat:'Gel',nombre:'Soft Gel + Permanente',duracion:90,precio:550,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-005',cat:'Gel',nombre:'Esmaltado Semi Permanente',duracion:45,precio:250,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-006',cat:'Gel',nombre:'Esmaltado Semi Permanente Manos y Pies',duracion:90,precio:490,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-007',cat:'Gel',nombre:'Rubber Gel',duracion:60,precio:300,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-008',cat:'Gel',nombre:'Calcio Clear solo o Refill',duracion:60,precio:350,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-009',cat:'Gel',nombre:'Calcio Clear + Esmaltado Semi Permanente',duracion:75,precio:420,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-010',cat:'Gel',nombre:'Hard Gel Unitono',duracion:75,precio:400,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-011',cat:'Gel',nombre:'Vitamina Vita 2 Care',duracion:15,precio:150,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-012',cat:'Gel',nombre:'Bloom Top Coat Clear',duracion:15,precio:100,descripcion:'',productos:[],custom:false},
+  {codigo:'GEL-013',cat:'Gel',nombre:'Milly Top Coat Tono',duracion:15,precio:150,descripcion:'',productos:[],custom:false},
+  {codigo:'RGE-001',cat:'Refill Gel',nombre:'Refill Tech Gel Cover/Natural',duracion:75,precio:500,descripcion:'',productos:[],custom:false},
+  {codigo:'RGE-002',cat:'Refill Gel',nombre:'Refill Tech Gel Cover/Natural + Semi Permanente',duracion:90,precio:595,descripcion:'',productos:[],custom:false},
+  {codigo:'RGE-003',cat:'Refill Gel',nombre:'Refill Tech Gel Tips',duracion:90,precio:550,descripcion:'',productos:[],custom:false},
+  {codigo:'NFO-001',cat:'Nail Forms',nombre:'Añadir Diseño Escultural',duracion:30,precio:150,descripcion:'',productos:[],custom:false},
+  {codigo:'EFE-001',cat:'Efectos',nombre:'Cat Eye',duracion:20,precio:150,descripcion:'',productos:[],custom:false},
+  {codigo:'EFE-002',cat:'Efectos',nombre:'Cat Eye + Semi Permanente',duracion:60,precio:350,descripcion:'',productos:[],custom:false},
+  {codigo:'EFE-003',cat:'Efectos',nombre:'Efecto Aurora',duracion:20,precio:180,descripcion:'',productos:[],custom:false},
+  {codigo:'EFE-004',cat:'Efectos',nombre:'Efecto Espejo',duracion:20,precio:150,descripcion:'',productos:[],custom:false},
+  {codigo:'EFE-005',cat:'Efectos',nombre:'Aerógrafo',duracion:45,precio:250,descripcion:'',productos:[],custom:false},
+  {codigo:'EFE-006',cat:'Efectos',nombre:'Difuminado dos uñas',duracion:25,precio:150,descripcion:'',productos:[],custom:false},
+  {codigo:'ART-001',cat:'Art Nails',nombre:'Tipo A (2 uñas)',duracion:15,precio:100,descripcion:'',productos:[],custom:false},
+  {codigo:'ART-002',cat:'Art Nails',nombre:'Tipo B (4 uñas)',duracion:25,precio:148,descripcion:'',productos:[],custom:false},
+  {codigo:'ART-003',cat:'Art Nails',nombre:'Tipo C (6 uñas)',duracion:40,precio:246,descripcion:'',productos:[],custom:false},
+  {codigo:'ART-004',cat:'Art Nails',nombre:'Tipo D (10 uñas) Elaborado',duracion:60,precio:297,descripcion:'',productos:[],custom:false},
+  {codigo:'DES-001',cat:'Design',nombre:'Hoja de Oro',duracion:15,precio:100,descripcion:'',productos:[],custom:false},
+  {codigo:'DES-002',cat:'Design',nombre:'Cristales "S"',duracion:10,precio:10,descripcion:'',productos:[],custom:false},
+  {codigo:'DES-003',cat:'Design',nombre:'Cristales "M"',duracion:10,precio:20,descripcion:'',productos:[],custom:false},
+  {codigo:'DES-004',cat:'Design',nombre:'Cristales L',duracion:10,precio:30,descripcion:'',productos:[],custom:false},
+  {codigo:'DES-005',cat:'Design',nombre:'Francés en Línea Gratis',duracion:15,precio:0,descripcion:'',productos:[],custom:false},
+  {codigo:'DES-006',cat:'Design',nombre:'Francés Diseño Sonrisa',duracion:35,precio:150,descripcion:'',productos:[],custom:false},
+  {codigo:'REP-001',cat:'Reparación',nombre:'Reparación de uña nueva c/u',duracion:20,precio:45,descripcion:'',productos:[],custom:false},
+  {codigo:'REP-002',cat:'Reparación',nombre:'Reparación de uña natural c/u',duracion:15,precio:27,descripcion:'',productos:[],custom:false},
+  {codigo:'RET-001',cat:'Retiro',nombre:'Retiro Acrílico',duracion:45,precio:200,descripcion:'',productos:[],custom:false},
+  {codigo:'RET-002',cat:'Retiro',nombre:'Retiro Ley Studio',duracion:20,precio:0,descripcion:'',productos:[],custom:false},
+  {codigo:'RET-003',cat:'Retiro',nombre:'Retiro Gel',duracion:30,precio:100,descripcion:'',productos:[],custom:false},
+  {codigo:'RET-004',cat:'Retiro',nombre:'Retiro Gel con Drill',duracion:20,precio:60,descripcion:'',productos:[],custom:false},
+  {codigo:'SPM-001',cat:'Spa Manicure',nombre:'Luxury Hand Spa (Russian Manicure + Manicura Rusa + Semi Permanente)',duracion:120,precio:600,descripcion:'',productos:[],custom:false},
+  {codigo:'SPM-002',cat:'Spa Manicure',nombre:'Spa Manicure Estándar + Semi Permanente',duracion:90,precio:500,descripcion:'',productos:[],custom:false},
+  {codigo:'SPM-003',cat:'Spa Manicure',nombre:'Spa Manicure Estándar',duracion:60,precio:250,descripcion:'',productos:[],custom:false},
+  {codigo:'SPM-004',cat:'Spa Manicure',nombre:'Manicura Express',duracion:30,precio:100,descripcion:'',productos:[],custom:false},
+  {codigo:'SPM-005',cat:'Spa Manicure',nombre:'Manicura Rusa (Profunda)',duracion:60,precio:250,descripcion:'',productos:[],custom:false},
+  {codigo:'SPP-001',cat:'Spa Pedicure',nombre:'Pedicure Standard + Semi Permanente',duracion:90,precio:600,descripcion:'',productos:[],custom:false},
+  {codigo:'SPP-002',cat:'Spa Pedicure',nombre:'Pedicure Standard',duracion:60,precio:300,descripcion:'',productos:[],custom:false},
+  {codigo:'SPP-003',cat:'Spa Pedicure',nombre:'Jelly Spa',duracion:60,precio:390,descripcion:'',productos:[],custom:false},
+  {codigo:'SPP-004',cat:'Spa Pedicure',nombre:'Luxury Pedi Spa (Russian Pedi + Pedi Rusa + Semi Permanente)',duracion:120,precio:700,descripcion:'',productos:[],custom:false},
+  {codigo:'DEP-001',cat:'Depilación',nombre:'Depilación',duracion:15,precio:50,descripcion:'',productos:[],custom:false}
 ];
 function getAllSvcs(){ return [...BASE_SVCS,...(D.catalogoCustom||[])]; }
+function getCats(){ return [...new Set(getAllSvcs().map(s=>s.cat))]; }
 
 // ═══════════════════════════════════════════════════
 // DATA STORE
@@ -2601,49 +2687,175 @@ function delInv(id){
 // SERVICIOS + CATÁLOGO CUSTOM
 // ═══════════════════════════════════════════════════
 function renderServicios(){
-  const q=(document.getElementById('s-svc').value||'').toLowerCase();
-  const cf=document.getElementById('f-svc-cat').value;
-  const allSvcs=getAllSvcs();
-  const list=allSvcs.filter(s=>(!q||s.nombre.toLowerCase().includes(q))&&(!cf||s.cat===cf));
-  let lastCat='';
-  document.getElementById('svc-tb').innerHTML=list.map(s=>{
-    const nc=s.cat!==lastCat; lastCat=s.cat;
-    return`<tr>
-      <td style="width:160px"><span style="font-size:10px;font-weight:700;color:var(--gold-deep);background:rgba(178,146,87,.1);padding:3px 10px;border-radius:20px;white-space:nowrap">${s.cat}</span></td>
-      <td style="font-weight:500;color:var(--cream)">
-        ${s.custom
-          ? `<input type="text" value="${s.nombre}" style="border:none;border-bottom:1px solid var(--border);background:transparent;color:var(--cream);font-size:13px;font-weight:500;outline:none;width:100%;padding:2px 0" onchange="editSvcNombre(${s.id},this.value)" onclick="this.select()" title="Haz clic para editar el nombre">`
-          : s.nombre
-        }
-      </td>
-      <td style="width:130px">
-        ${s.custom
-          ? `<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--gray)">L.</span><input type="number" value="${s.precio}" min="0" style="width:70px;border:1px solid var(--border);border-radius:5px;padding:4px 7px;font-size:13px;font-weight:700;color:var(--gold-deep);background:var(--card);outline:none" onchange="editSvcPrecio(${s.id},+this.value)" onclick="this.select()"></div>`
-          : `<strong style="color:var(--pink);font-size:14px">${fmtM(s.precio)}</strong>`
-        }
-      </td>
-      <td style="width:60px;text-align:right;white-space:nowrap">${s.custom?`<button class="action-icon-btn action-del" onclick="delCustomSvc(${s.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`:'&nbsp;'}</td></tr>`;
+  renderSvcCatGrid();
+  renderServiciosList();
+  _initSvcSelects();
+}
+function _durFmt(d){ return d?(d>=60?Math.floor(d/60)+'h'+(d%60?' '+d%60+'min':''):d+'min'):'—'; }
+function _svcKey(s){ return s.codigo||String(s.id)||s.nombre; }
+function _findSvc(key){ return getAllSvcs().find(s=>_svcKey(s)===key); }
+
+function renderSvcCatGrid(){
+  const svcs=getAllSvcs();
+  const cats=[...new Set(svcs.map(s=>s.cat))];
+  const grid=document.getElementById('svc-cat-grid'); if(!grid)return;
+  const active=document.getElementById('f-svc-cat')?.value||'';
+  grid.innerHTML=cats.map(cat=>{
+    const n=svcs.filter(s=>s.cat===cat).length;
+    const on=active===cat;
+    return `<div onclick="filterByCat('${cat.replace(/'/g,"\'")}')" style="cursor:pointer;background:${on?'rgba(221,152,177,.15)':'var(--card)'};border:${on?'1.5px solid var(--pink)':'1px solid var(--border)'};border-radius:10px;padding:12px;transition:all .2s">
+      <div style="font-size:9px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${cat}</div>
+      <div style="font-size:20px;font-weight:800;color:${on?'var(--pink)':'var(--cream)'}">${n}</div>
+      <div style="font-size:10px;color:var(--gray)">servicio${n!==1?'s':''}</div>
+    </div>`;
   }).join('');
 }
-
-function onSvCatChange(sel){
-  const grp=document.getElementById('sv-cat-custom-grp');
-  grp.style.display=sel.value==='__nueva__'?'block':'none';
+function filterByCat(cat){
+  const sel=document.getElementById('f-svc-cat'); if(!sel)return;
+  sel.value=(sel.value===cat)?'':cat;
+  renderServiciosList(); renderSvcCatGrid();
 }
-function initSvCatSelect(){
-  const sel=document.getElementById('sv-cat');
-  if(!sel) return;
-  // Añadir categorías custom existentes
-  const existing=[...sel.options].map(o=>o.value);
-  const cats=[...new Set((D.catalogoCustom||[]).map(s=>s.cat))];
-  cats.forEach(cat=>{
-    if(!existing.includes(cat)){
-      const o=document.createElement('option');
-      o.value=o.textContent=cat;
-      sel.insertBefore(o, sel.options[sel.options.length-1]);
-    }
+function _initSvcSelects(){
+  const cats=getCats();
+  ['f-svc-cat','sv-cat'].forEach(id=>{
+    const el=document.getElementById(id); if(!el)return;
+    const cur=el.value;
+    const isFilter=id==='f-svc-cat';
+    el.innerHTML=(isFilter?'<option value="">Todas las categorías</option>':'<option value="">Seleccionar...</option>')+
+      cats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
   });
 }
+function renderServiciosList(){
+  const q=(document.getElementById('s-svc')?.value||'').toLowerCase();
+  const cf=document.getElementById('f-svc-cat')?.value||'';
+  _initSvcSelects();
+  const list=getAllSvcs().filter(s=>
+    (!q||(s.nombre||'').toLowerCase().includes(q)||(s.codigo||'').toLowerCase().includes(q))&&
+    (!cf||s.cat===cf)
+  );
+  const tb=document.getElementById('svc-tb'); if(!tb)return;
+  if(!list.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:24px">Sin resultados</td></tr>';return;}
+  let lastCat='';
+  tb.innerHTML=list.map(s=>{
+    const sep=s.cat!==lastCat;lastCat=s.cat;
+    const catRow=sep?`<tr><td colspan="5" style="background:rgba(178,146,87,.07);padding:5px 14px;font-size:9px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">${s.cat}</td></tr>`:'';
+    const key=_svcKey(s).replace(/'/g,"\'");
+    return catRow+`<tr style="cursor:pointer" onclick="openSvcModal('${key}')" title="Ver / editar detalle">
+      <td style="font-size:11px;color:var(--gold-deep);font-weight:700;white-space:nowrap">${s.codigo||'—'}</td>
+      <td style="font-weight:500;color:var(--cream)">${s.nombre}</td>
+      <td style="color:var(--gray);font-size:12px;white-space:nowrap">${_durFmt(s.duracion)}</td>
+      <td style="color:var(--pink);font-weight:700;white-space:nowrap">${fmtM(s.precio)}</td>
+      <td style="white-space:nowrap" onclick="event.stopPropagation()">${s.custom?`<button class="action-icon-btn action-del" onclick="delCustomSvc(${s.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/></svg></button>`:'&nbsp;'}</td>
+    </tr>`;
+  }).join('');
+}
+// ── Servicio modal ──
+let _svcModalKey=null;
+function openSvcModal(key){
+  const svc=_findSvc(key); if(!svc)return;
+  _svcModalKey=key;
+  // Load saved extra data
+  const extra=(D.svcExtra&&D.svcExtra[key])||{};
+  if(extra.descripcion!=null) svc.descripcion=extra.descripcion;
+  if(extra.productos!=null) svc.productos=extra.productos;
+  document.getElementById('svc-modal-codigo').textContent=svc.codigo||'';
+  document.getElementById('svc-modal-nombre').textContent=svc.nombre;
+  document.getElementById('svc-modal-precio').textContent=fmtM(svc.precio);
+  document.getElementById('svc-modal-dur').textContent=_durFmt(svc.duracion);
+  document.getElementById('svc-modal-cat').textContent=svc.cat;
+  document.getElementById('svc-modal-desc').value=svc.descripcion||'';
+  _renderSvcProds(svc.productos||[]);
+  document.getElementById('svc-modal-prod-input').value='';
+  document.getElementById('svc-modal-ov').style.display='flex';
+  document.getElementById('svc-modal').style.display='block';
+}
+function closeSvcModal(){
+  document.getElementById('svc-modal-ov').style.display='none';
+  document.getElementById('svc-modal').style.display='none';
+  _svcModalKey=null;
+}
+function _renderSvcProds(prods){
+  document.getElementById('svc-modal-prods').innerHTML=(prods||[]).map((p,i)=>
+    `<span style="background:rgba(221,152,177,.15);color:var(--cream);font-size:12px;padding:3px 10px;border-radius:14px;display:inline-flex;align-items:center;gap:5px">${p}<button onclick="removeSvcProd(${i})" style="background:none;border:none;cursor:pointer;color:var(--gray);font-size:15px;line-height:1;padding:0">×</button></span>`
+  ).join('');
+}
+function addSvcProd(){
+  const inp=document.getElementById('svc-modal-prod-input');
+  const v=inp.value.trim(); if(!v)return;
+  const svc=_findSvc(_svcModalKey); if(!svc)return;
+  if(!svc.productos)svc.productos=[];
+  svc.productos.push(v); _renderSvcProds(svc.productos); inp.value='';
+}
+function removeSvcProd(idx){
+  const svc=_findSvc(_svcModalKey); if(!svc||!svc.productos)return;
+  svc.productos.splice(idx,1); _renderSvcProds(svc.productos);
+}
+function saveSvcModal(){
+  const svc=_findSvc(_svcModalKey); if(!svc)return;
+  const desc=document.getElementById('svc-modal-desc').value;
+  svc.descripcion=desc;
+  if(!D.svcExtra)D.svcExtra={};
+  D.svcExtra[_svcModalKey]={descripcion:desc,productos:svc.productos||[]};
+  if(svc.custom)saveAndSync();
+  else saveAndSync();
+  toast('Servicio guardado');
+  closeSvcModal();
+}
+// ── Nuevo servicio ──
+function openNewSvcForm(){ toggleForm('fsvc'); _initSvcSelects(); }
+function saveNewSvc(){
+  const cat=document.getElementById('sv-cat').value;
+  const nombre=document.getElementById('sv-nombre').value.trim();
+  if(!cat||!nombre){toast('Completa categoría y nombre','warn');return;}
+  if(!D.catalogoCustom)D.catalogoCustom=[];
+  D.catalogoCustom.push({id:Date.now(),codigo:document.getElementById('sv-cod').value.trim(),cat,nombre,precio:+document.getElementById('sv-precio').value||0,duracion:+document.getElementById('sv-dur').value||0,descripcion:'',productos:[],custom:true});
+  saveAndSync();toggleForm('fsvc');renderServicios();toast('Servicio agregado');
+}
+function delCustomSvc(id){
+  if(!confirm('¿Eliminar este servicio?'))return;
+  D.catalogoCustom=(D.catalogoCustom||[]).filter(s=>s.id!==id);
+  saveAndSync();renderServicios();toast('Servicio eliminado');
+}
+// ── Gestionar categorías ──
+function openCatModal(){
+  _renderCatList();
+  document.getElementById('cat-modal-ov').style.display='flex';
+  document.getElementById('cat-modal').style.display='block';
+}
+function closeCatModal(){
+  document.getElementById('cat-modal-ov').style.display='none';
+  document.getElementById('cat-modal').style.display='none';
+}
+function _renderCatList(){
+  const cats=getCats();
+  document.getElementById('cat-list-modal').innerHTML=cats.map(cat=>{
+    const n=getAllSvcs().filter(s=>s.cat===cat).length;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <input type="text" value="${cat}" data-orig="${cat}" style="flex:1;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;color:var(--cream);background:#fff;outline:none" onchange="renameCat(this)">
+      <span style="font-size:10px;color:var(--gray);white-space:nowrap">${n} svc</span>
+    </div>`;
+  }).join('');
+}
+function renameCat(inp){
+  const oldN=inp.dataset.orig,newN=inp.value.trim();
+  if(!newN||newN===oldN)return;
+  (D.catalogoCustom||[]).forEach(s=>{if(s.cat===oldN)s.cat=newN;});
+  BASE_SVCS.forEach(s=>{if(s.cat===oldN)s.cat=newN;});
+  inp.dataset.orig=newN;
+  saveAndSync();renderServicios();toast('Categoría renombrada');
+}
+function addNewCat(){
+  const inp=document.getElementById('new-cat-input');
+  const v=inp.value.trim();
+  if(!v){toast('Escribe un nombre','warn');return;}
+  if(getCats().includes(v)){toast('Ya existe esa categoría','warn');return;}
+  if(!D.catalogoCustom)D.catalogoCustom=[];
+  D.catalogoCustom.push({id:Date.now(),codigo:'',cat:v,nombre:'(nuevo servicio)',precio:0,duracion:0,descripcion:'',productos:[],custom:true});
+  saveAndSync();inp.value='';_renderCatList();renderServicios();toast('Categoría creada');
+}
+
+
+
 function addCustomSvc(){
   const catSel=document.getElementById('sv-cat').value;
   const catCustom=document.getElementById('sv-cat-custom').value.trim();
@@ -2658,16 +2870,8 @@ function addCustomSvc(){
   document.getElementById('sv-nombre').value=''; document.getElementById('sv-precio').value='';
   toast('✅ Servicio agregado al catálogo');
 }
-function editSvcNombre(id, nombre){
-  if(!D.catalogoCustom) return;
-  const s = D.catalogoCustom.find(x=>x.id===id);
-  if(s && nombre.trim()){ s.nombre = nombre.trim(); saveAndSync(); initSvcDropdown(); }
-}
-function editSvcPrecio(id, precio){
-  if(!D.catalogoCustom) return;
-  const s = D.catalogoCustom.find(x=>x.id===id);
-  if(s){ s.precio = precio; saveAndSync(); }
-}
+
+
 function delCustomSvc(id){
   if(!confirm('¿Eliminar este servicio del catálogo?'))return;
   D.catalogoCustom=D.catalogoCustom.filter(s=>s.id!==id);
