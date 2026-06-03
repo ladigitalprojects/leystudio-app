@@ -16,13 +16,13 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: 195.179.236.12
-          username: u449988667
+          username: u449988667.leystudiohn.com
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           protocol: ftp
           timeout: 120000
           local-dir: ./
-          server-dir: /domains/ladigitalhn.com/public_html/leystudio/
+          server-dir: /public_html/
           exclude: |
             **/.*
             **/.git/**

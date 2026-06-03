@@ -396,9 +396,13 @@ footer span{color:var(--gold);}
   /* Ocultar botones secundarios en mobile */
   #btn-export-hdr{display:none!important;}
   #btn-import-hdr{display:none!important;}
-  /* Nav — solo iconos, sin texto */
-  nav .tab{padding:0 12px;height:44px;font-size:0;gap:0;}
-  nav .tab svg{width:18px;height:18px;}
+  /* Nav — solo iconos cuando está cerrado; texto completo cuando está abierto */
+  nav:not(.nav-open) .tab{padding:0 12px;height:44px;font-size:0;gap:0;}
+  nav:not(.nav-open) .tab svg{width:18px;height:18px;}
+  nav.nav-open .tab{font-size:13px;gap:10px;padding:0 20px;color:var(--cream);}
+  nav.nav-open .tab svg{width:16px;height:16px;stroke:var(--gray);}
+  nav.nav-open .tab.active{color:var(--pink);}
+  nav.nav-open .tab.active svg{stroke:var(--pink);}
   /* Main */
   main{padding:10px 10px 80px;}
   .table-card{padding:14px 12px;}
@@ -1366,7 +1370,7 @@ footer span{color:var(--gold);}
     <div class="cfg-block-title">
       <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 10.5A4.5 4.5 0 0012 6h-.5A5 5 0 003 10.5"/><path d="M3 10.5A3.5 3.5 0 006.5 14H16a3 3 0 000-6"/></svg>
       Sincronización en la Nube
-      <span id="cloud-status-badge" class="cfg-status-dot">● Conectado · JSONBin</span>
+      <span id="cloud-status-badge" class="cfg-status-dot">● Conectado</span>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
       <button class="hbtn hbtn-gold" onclick="syncNow()">Sincronizar ahora</button>
@@ -3929,7 +3933,7 @@ document.addEventListener('input', function(e){
   // Pull from cloud and update badge
   pullFromCloud().then(()=>{
     const b=document.getElementById('cloud-status-badge');
-    if(b) b.textContent='Conectado · JSONBin.io';
+    if(b) b.textContent='● Conectado';
     // Si sigue vacío después de sync, mostrar aviso
     if(!D.citas.length && !D.clientes.length){
       showEmptyState();
