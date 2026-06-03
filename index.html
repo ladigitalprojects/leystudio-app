@@ -85,14 +85,14 @@ body.dark-mode #login-screen > div:first-child{background:radial-gradient(ellips
 body.dark-mode .login-box{background:rgba(20,20,20,0.95);border-color:#333;box-shadow:0 32px 80px rgba(0,0,0,.8);}
 body.dark-mode .login-input{background:#0d0d0d;border-color:#2a2a2a;color:#fdfbf7;}
 body.dark-mode .wa-panel{background:#f0faf7;border-color:#a0d4c0;}
-body.dark-mode .wa-template{background:#e8f7f2;border-color:#b0dccf;}
+body.dark-mode .wa-template{background:var(--card);border-color:var(--border);}
 body.dark-mode .cfg-danger{background:#fff5f5;border-color:#f0c0c0;}
 body.dark-mode .cfg-note{color:#777;}
 body.dark-mode .tip{background:#f8f5f0;border-left-color:var(--gold);color:#666;}
 body.dark-mode footer{color:#aaa;border-top-color:#e8e2da;}
 body.dark-mode .sheets-bar{background:#f0f4ff;border-color:#b0c4de;}
 body.dark-mode .sheets-bar input{background:#e8eef8;border-color:#b0c4de;color:#1a1410;}
-body.dark-mode .alert{background:#fff8ee;border-color:#e67e22;color:#9a5000;}
+body.dark-mode .alert{background:rgba(178,146,87,.1);border-color:rgba(178,146,87,.4);color:var(--gold-deep);}
 body.dark-mode #toast{background:#f0faf5;color:#1a7a45;border-color:#2ecc71;}
 /* ── Nuclear override: all inputs/selects not caught by parent rules ── */
 body.dark-mode input,body.dark-mode select,body.dark-mode textarea{
@@ -107,7 +107,7 @@ body.dark-mode input[type="time"]::-webkit-calendar-picker-indicator{filter:inve
 /* Stat rank number readable on light */
 body.dark-mode .stat-rank{color:#d8d0c8!important;}
 /* hbtn-green in light mode */
-body.dark-mode .hbtn-green{background:#e6f9f0;color:#1a7a45;}
+body.dark-mode .hbtn-green{background:rgba(221,152,177,.15);color:var(--pink);}
 /* Complete/edit buttons */
 body.dark-mode .complete-btn{background:#e6f9f0;color:#1a7a45;}
 body.dark-mode .edit-btn{background:#e6f2fb;color:#1a5c9a;}
@@ -118,9 +118,9 @@ body.dark-mode #fr-mes,body.dark-mode #fr-sem,body.dark-mode #fr-todo{
 /* nav background fallback */
 
 /* Badge colours keep working on light bg */
-body.dark-mode .bg{background:#d4f2e5;color:#1a7a45;}
-body.dark-mode .bb{background:#d4e9f7;color:#1a5c9a;}
-body.dark-mode .br{background:#fde8e8;color:#a93226;}
+body.dark-mode .bg{background:rgba(221,152,177,.25);color:#c0607a;}
+body.dark-mode .bb{background:rgba(178,146,87,.2);color:#b29257;}
+body.dark-mode .br{background:rgba(178,146,87,.15);color:#a88840;}
 body.dark-mode .bgr{background:#eee;color:#666;}
 body.dark-mode .bgo{background:#fdf1dc;color:#8a6520;}
 body.dark-mode .borg{background:#fdebd4;color:#9a5200;}
@@ -151,7 +151,7 @@ header{background:var(--card);border-bottom:2px solid var(--gold);padding:0 24px
 .hbtn:hover{opacity:.85;}
 .hbtn-gold{background:var(--gold);color:var(--black);}
 .hbtn-outline{background:transparent;border:1px solid var(--border);color:var(--gray-dk);}
-.hbtn-green{background:#e6f9f0;color:#1a7a45;}
+.hbtn-green{background:rgba(221,152,177,.15);color:var(--pink);}
 
 /* ── NAV ── */
 nav{background:var(--card);border-bottom:1px solid var(--border);box-shadow:0 1px 8px rgba(100,70,40,.07);display:flex;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;position:sticky;top:64px;z-index:40;}
@@ -203,12 +203,12 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 /* ── UTIL ROW ── */
 .util-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
 .util-card{background:var(--card);border-radius:10px;padding:14px 18px;border-left:4px solid;}
-.u-pos{border-color:var(--green);} .u-neg{border-color:var(--red);}
-.u-neu{border-color:var(--gold);} .u-warn{border-color:#e67e22;}
+.u-pos{border-color:var(--pink);} .u-neg{border-color:var(--gold-deep);}
+.u-neu{border-color:var(--gold);} .u-warn{border-color:var(--gold-deep);}
 .util-label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;}
 .util-value{font-size:20px;font-weight:800;margin-top:4px;}
-.u-pos .util-value{color:#2ecc71;} .u-neg .util-value{color:#e74c3c;}
-.u-neu .util-value{color:var(--gold);} .u-warn .util-value{color:#e67e22;}
+.u-pos .util-value{color:var(--pink);} .u-neg .util-value{color:var(--gold-deep);}
+.u-neu .util-value{color:var(--gold);} .u-warn .util-value{color:var(--gold-deep);}
 
 /* ── CHARTS ── */
 .charts-row{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:20px;}
@@ -232,8 +232,8 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 
 /* ── BADGES ── */
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
-.bg{background:#e6f9f0;color:#1a7a45;} .bb{background:#e8f0fb;color:#1a5c9a;}
-.br{background:#fde8e8;color:#a93226;} .bgr{background:#eee;color:#666;}
+.bg{background:rgba(221,152,177,.18);color:#9a3a60;} .bb{background:rgba(178,146,87,.15);color:#8a6015;}
+.br{background:rgba(178,146,87,.12);color:var(--gray-dk);} .bgr{background:rgba(155,128,112,.12);color:var(--gray);}
 .bgo{background:#fdf1dc;color:#8a6520;} .bb-pink{background:rgba(221,152,177,.2);color:#9a3a60;border:1px solid rgba(221,152,177,.3);}
 
 /* ── FORMS ── */
@@ -301,11 +301,11 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 .sheets-status{font-size:12px;font-weight:600;}
 .sheets-bar input{background:#fff;border:1px solid var(--border);color:var(--cream);padding:7px 11px;border-radius:6px;font-size:12px;outline:none;flex:1;min-width:200px;}
 .sync-indicator{width:8px;height:8px;border-radius:50%;background:#888;display:inline-block;margin-right:6px;}
-.sync-ok{background:#2ecc71;} .sync-err{background:#e74c3c;} .sync-busy{background:#f39c12;animation:pulse 1s infinite;}
+.sync-ok{background:var(--pink);} .sync-err{background:var(--gold-deep);} .sync-busy{background:var(--gold);animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 
 /* ── ALERT ── */
-.alert{background:#fff8ee;border:1px solid #e6a817;border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#e67e22;display:none;align-items:center;gap:8px;}
+.alert{background:rgba(178,146,87,.08);border:1px solid rgba(178,146,87,.3);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--gold-deep);display:none;align-items:center;gap:8px;}
 .alert.show{display:flex;}
 
 /* ── TOAST ── */
@@ -313,7 +313,7 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 #toast.show{opacity:1;}
 
 /* ── INV STATUS ── */
-.s-ok{color:#2ecc71;font-weight:700;} .s-low{color:#e67e22;font-weight:700;} .s-empty{color:#e74c3c;font-weight:700;}
+.s-ok{color:var(--pink);font-weight:700;} .s-low{color:var(--gold-deep);font-weight:700;} .s-empty{color:var(--gold-deep);font-weight:700;}
 
 /* ── SECTION TITLE TIP ── */
 .tip{font-size:11px;color:var(--gray-dk);margin-top:10px;padding:8px 12px;background:var(--champagne);border-radius:6px;border-left:3px solid var(--gold);}
@@ -520,14 +520,14 @@ footer span{color:var(--gold);}
 .wa-template-preview{font-size:12px;color:#aaa;line-height:1.5;}
 .wa-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px;}
 .wa-panel-title{color:var(--gold-deep);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.notif-badge{background:#25d366;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;}
+.notif-badge{background:rgba(221,152,177,.25);color:var(--pink);font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;border:1px solid rgba(221,152,177,.4);}
 #modal-wa .modal{max-width:540px;}
 .wa-msg-area{width:100%;background:var(--card);border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:10px;font-size:13px;line-height:1.6;resize:vertical;min-height:100px;font-family:inherit;}
 .wa-msg-area:focus{outline:none;border-color:var(--gold);}
 .inactive-row{background:var(--champagne);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--border);}
 
 /* ── LOGIN SCREEN ── */
-#login-screen{position:fixed;inset:0;background:#F5EFE6;z-index:9999;display:flex;align-items:center;justify-content:center;}
+#login-screen{position:fixed;inset:0;background:#F5EFE6;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;}
 #login-screen.hidden{display:none;}
 .login-box{
   background:#fff;
@@ -535,7 +535,9 @@ footer span{color:var(--gold);}
   border-radius:16px;
   padding:40px 36px;
   width:100%;max-width:380px;
+  box-sizing:border-box;
   position:relative;
+  overflow:hidden;
   z-index:1;
   box-shadow:0 8px 40px rgba(100,70,40,.12);
 }
@@ -560,7 +562,7 @@ footer span{color:var(--gold);}
 .login-btn:hover{opacity:.9;}
 .login-btn:active{transform:scale(.98);}
 .login-btn:disabled{opacity:.5;cursor:not-allowed;}
-.login-error{color:#e74c3c;font-size:12px;margin-top:8px;min-height:16px;text-align:center;}
+.login-error{color:var(--gold-deep);font-size:12px;margin-top:8px;min-height:16px;text-align:center;}
 .pass-wrap{position:relative;}
 .pass-wrap .login-input{padding-right:40px;}
 .pass-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#888;cursor:pointer;padding:0;font-size:16px;line-height:1;}
@@ -894,7 +896,7 @@ footer span{color:var(--gold);}
     </div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">ENTRAR</button>
     <div id="login-hint" style="display:none"></div>
-    <div style="text-align:center;margin-top:24px;font-size:9px;color:var(--gray);letter-spacing:2px">SISTEMA DE GESTIÓN PRIVADO</div>
+    
   </div>
 </div>
 
@@ -1834,7 +1836,7 @@ function toast(msg,type='ok'){
   const el=document.getElementById('toast');
   el.textContent=msg;
   el.style.background=type==='ok'?'#1a3d2b':'#3d1a00';
-  el.style.color=type==='ok'?'#2ecc71':'#e67e22';
+  el.style.color=type==='ok'?'var(--pink)':'var(--gold-deep)';
   el.style.borderColor=type==='ok'?'#2ecc71':'#e67e22';
   el.classList.add('show'); clearTimeout(toastT);
   toastT=setTimeout(()=>el.classList.remove('show'),3200);
@@ -2466,7 +2468,7 @@ function renderFinanzas(){
   document.getElementById('fin-tb').innerHTML=list.map(m=>`
     <tr>
       <td>${fmtD(m.fecha)}</td>
-      <td><span class="badge ${m.tipo==='Ingreso'?'bg':'br'}">${m.tipo==='Ingreso'?'Ingreso':'Gasto'}</span></td>
+      <td><span class="badge ${m.tipo==='Ingreso'?'bb-pink':'bgo'}">${m.tipo==='Ingreso'?'Ingreso':'Gasto'}</span></td>
       <td>${m.cat}</td><td>${m.desc}</td>
       <td><strong style="color:${m.tipo==='Ingreso'?'var(--green)':'var(--red)'}">${fmtM(m.monto)}</strong></td>
       <td>${m.pago}</td><td>${m.ref||'—'}</td>
@@ -2545,10 +2547,10 @@ function renderInventario(){
   document.getElementById('inv-tb').innerHTML=list.map((item,idx)=>`
     <tr>
       <td>${idx+1}</td><td><strong>${item.nombre}</strong></td><td>${item.cat}</td>
-      <td><strong style="color:${item.stock===0?'#e74c3c':item.stock<=item.min?'#e67e22':'#2ecc71'}">${item.stock}</strong></td>
+      <td><strong style="color:${item.stock===0?'var(--gold-deep)':item.stock<=item.min?'var(--gold-deep)':'var(--pink)'}">${item.stock}</strong></td>
       <td>${item.min}</td><td>${item.unidad}</td><td>${fmtM(item.precio)}</td>
       <td>${item.proveedor||'—'}</td><td>${fmtD(item.fecha)}</td>
-      <td>${invSt(item)==='empty'?'<span class="s-empty">🚨 Agotado</span>':invSt(item)==='low'?'<span class="s-low">⚠ Poco Stock</span>':'<span class="s-ok">✅ OK</span>'}</td>
+      <td>${invSt(item)==='empty'?'<span class="s-empty">· Agotado</span>':invSt(item)==='low'?'<span class="s-low">· Poco Stock</span>':'<span class="s-ok">· OK</span>'}</td>
       <td style="white-space:nowrap">
         <button onclick="adjStock(${item.id},1)" style="background:var(--gold);border:none;color:var(--black);border-radius:4px;padding:2px 8px;cursor:pointer;font-weight:700">+</button>
         <button onclick="adjStock(${item.id},-1)" style="background:var(--border);border:none;color:var(--cream);border-radius:4px;padding:2px 7px;cursor:pointer;margin:0 3px">−</button>
@@ -3397,43 +3399,43 @@ ${linea}`;
 const WA_TEMPLATES = [
   {
     id: 'recordatorio',
-    label: '📅 Recordatorio de Cita',
+    label: 'Recordatorio de Cita',
     color: '#B29257',
     build: (nombre, fecha, hora, servicio) =>
       `Hola ${nombre} 💅✨\n\nTe recordamos que mañana tienes tu cita en *Ley Studio*:\n\n📅 *Fecha:* ${fecha}\n⏰ *Hora:* ${hora}\n💅 *Servicio:* ${servicio}\n\n📍 Tegucigalpa\n\nSi necesitas reprogramar, escríbenos con anticipación. ¡Te esperamos! 🖤`
   },
   {
     id: 'confirmacion',
-    label: '✅ Confirmación de Cita',
-    color: '#2980B9',
+    label: 'Confirmación de Cita',
+    color: 'var(--gold-deep)',
     build: (nombre, fecha, hora, servicio) =>
       `Hola ${nombre} 💅\n\n¡Tu cita en *Ley Studio* está confirmada!\n\n📅 *Fecha:* ${fecha}\n⏰ *Hora:* ${hora}\n💅 *Servicio:* ${servicio}\n\nRecuerda llegar puntual. Cualquier cambio avísanos. ¡Nos vemos pronto! 🖤✨`
   },
   {
     id: 'gracias',
-    label: '🌟 Gracias Post-Servicio',
-    color: '#27AE60',
+    label: 'Gracias Post-Servicio',
+    color: 'var(--pink)',
     build: (nombre, servicio) =>
       `Hola ${nombre} 🌟\n\n¡Gracias por visitarnos hoy en *Ley Studio*! Esperamos que hayas amado tu resultado 💅✨\n\nSi te gustó el servicio, nos ayudarías mucho compartiendo una foto y etiquetándonos en Instagram *@ley_studiohn* 📸\n\n¡Hasta la próxima! 🖤`
   },
   {
     id: 'reactivacion',
-    label: '💤 Reactivación de Clienta',
-    color: '#8E44AD',
+    label: 'Reactivación de Clienta',
+    color: 'var(--gray-dk)',
     build: (nombre) =>
       `Hola ${nombre} 💅\n\n¡Te extrañamos en *Ley Studio*! Ha pasado un tiempo desde tu última visita y queremos verte pronto ✨\n\nEscríbenos para agendar tu próxima cita y cuídate esas uñas como te mereces 🖤\n\n📲 Reserva por aquí mismo.`
   },
   {
     id: 'promo',
-    label: '🎁 Mensaje de Promoción',
-    color: '#C0392B',
+    label: 'Mensaje de Promoción',
+    color: 'var(--gold-deep)',
     build: (nombre) =>
       `Hola ${nombre} 💅✨\n\n¡Tenemos algo especial para ti en *Ley Studio*!\n\n[Describe tu promoción aquí]\n\nContáctanos para agendar tu cita 📲 ¡Cupos limitados! 🖤`
   },
   {
     id: 'cumple',
     label: '🎂 Cumpleaños',
-    color: '#E67E22',
+    color: 'var(--pink)',
     build: (nombre) =>
       `Hola ${nombre} 🎂🎉\n\n¡*Ley Studio* te desea un feliz cumpleaños! 🌟\n\nEn tu día especial queremos consentirte. Escríbenos para coordinar tu regalo de cumpleaños 🎁💅\n\n¡Que lo disfrutes mucho! 🖤✨`
   }
