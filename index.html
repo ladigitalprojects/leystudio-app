@@ -93,7 +93,7 @@ body.dark-mode footer{color:#aaa;border-top-color:#e8e2da;}
 body.dark-mode .sheets-bar{background:#f0f4ff;border-color:#b0c4de;}
 body.dark-mode .sheets-bar input{background:#e8eef8;border-color:#b0c4de;color:#1a1410;}
 body.dark-mode .alert{background:rgba(178,146,87,.1);border-color:rgba(178,146,87,.4);color:var(--gold-deep);}
-body.dark-mode #toast{background:#f0faf5;color:#1a7a45;border-color:#2ecc71;}
+body.dark-mode #toast{background:var(--card);color:var(--cream);border-color:var(--border);}
 /* ── Nuclear override: all inputs/selects not caught by parent rules ── */
 body.dark-mode input,body.dark-mode select,body.dark-mode textarea{
   background:#141414!important;border-color:#2a2a2a!important;color:#fdfbf7!important;
@@ -1962,7 +1962,7 @@ function renderCitas(){
       <td>${fmtD(c.fecha)}</td><td>${c.hora}</td>
       <td><strong>${c.clienta}</strong><br><small style="color:var(--gray);font-size:11px">${c.tel}</small></td>
       <td>${svcsHtml}</td>
-      <td style="font-weight:700">${fmtM(c.precioTotal||0)}</td>
+      <td style="font-weight:700;white-space:nowrap">${fmtM(c.precioTotal||0)}</td>
       <td>${c.pago}</td>
       <td>${estadoBadge(c.estado)}</td>
       <td style="color:var(--gray);font-size:12px">${c.notas||'—'}</td>
