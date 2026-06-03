@@ -1304,7 +1304,7 @@ footer span{color:var(--gold);}
     </div>
 
     <!-- Resumen categorías -->
-    <div id="svc-cat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:18px"></div>
+    <div id="svc-cat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px"></div>
 
     <!-- Filtros -->
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
@@ -2703,10 +2703,23 @@ function renderSvcCatGrid(){
   grid.innerHTML=cats.map(cat=>{
     const n=svcs.filter(s=>s.cat===cat).length;
     const on=active===cat;
-    return `<div onclick="filterByCat('${cat.replace(/'/g,"\'")}')" style="cursor:pointer;background:${on?'rgba(221,152,177,.15)':'var(--card)'};border:${on?'1.5px solid var(--pink)':'1px solid var(--border)'};border-radius:10px;padding:12px;transition:all .2s">
-      <div style="font-size:9px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${cat}</div>
-      <div style="font-size:20px;font-weight:800;color:${on?'var(--pink)':'var(--cream)'}">${n}</div>
-      <div style="font-size:10px;color:var(--gray)">servicio${n!==1?'s':''}</div>
+    const pct=Math.round((n/svcs.length)*100);
+    return `<div onclick="filterByCat('${cat.replace(/'/g,"\'")}')"
+      style="cursor:pointer;position:relative;overflow:hidden;
+        background:${on?'linear-gradient(135deg,rgba(221,152,177,.18),rgba(178,146,87,.1))':'var(--card)'};
+        border:${on?'1.5px solid var(--pink)':'1px solid var(--border)'};
+        border-radius:12px;padding:14px 16px 12px;transition:all .22s;
+        box-shadow:${on?'0 4px 16px rgba(221,152,177,.2)':'0 1px 4px rgba(100,70,40,.05)'}"
+      onmouseover="this.style.borderColor='var(--pink)';this.style.boxShadow='0 4px 16px rgba(221,152,177,.15)'"
+      onmouseout="this.style.borderColor='${on?'var(--pink)':'var(--border)'}';this.style.boxShadow='${on?'0 4px 16px rgba(221,152,177,.2)':'0 1px 4px rgba(100,70,40,.05)'}'">
+      <div style="font-size:8.5px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cat}</div>
+      <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:6px">
+        <span style="font-size:26px;font-weight:800;color:${on?'var(--pink)':'var(--cream)'};line-height:1">${n}</span>
+        <span style="font-size:10px;color:var(--gray)">svc</span>
+      </div>
+      <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:${Math.min(pct*3,100)}%;background:${on?'var(--pink)':'linear-gradient(90deg,var(--gold-lt),var(--gold))'};border-radius:2px;transition:width .3s"></div>
+      </div>
     </div>`;
   }).join('');
 }
