@@ -77,7 +77,7 @@ body.dark-mode .stat-badge{background:#f4eada;color:var(--gold-deep);}
 body.dark-mode .stat-bar-wrap{background:#e8e2da;}
 /* Misc */
 body.dark-mode .modal{background:#1c1c1c!important;border-color:#333!important;}
-body.dark-mode .modal-overlay{background:rgba(0,0,0,.35);}
+body.dark-mode .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;}
 body.dark-mode .modal-title{border-bottom-color:#e8e2da;}
 body.dark-mode .modal-close{color:#aaa;}
 body.dark-mode #login-screen{background:#0a0a0a!important;}
@@ -291,7 +291,8 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 /* ── MODAL ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.open{display:flex;}
-.modal{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.modal{position:relative;z-index:1001;background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 16px 48px rgba(100,70,40,.18);}
 .modal-title{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center;letter-spacing:.5px;text-transform:uppercase;}
 .modal-close{background:none;border:none;color:var(--gray);font-size:20px;cursor:pointer;}
 
