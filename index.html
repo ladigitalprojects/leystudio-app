@@ -238,7 +238,7 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 
 /* ── FORMS ── */
 .form-box{background:var(--champagne);border:1px solid var(--border);border-left:3px solid var(--pink);border-radius:10px;padding:20px;margin-bottom:18px;display:none;}
-.form-box.open{display:flex!important;}
+.form-box.open{display:block;}.modal-overlay.open{display:flex!important;}
 .fg{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
 .fgrp{display:flex;flex-direction:column;gap:4px;}
 .fgrp label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;}
@@ -336,7 +336,7 @@ footer span{color:var(--gold);}
   border-radius:10px;max-height:240px;overflow-y:auto;
   box-shadow:0 8px 24px rgba(100,70,40,.14);display:none;
 }
-.ac-dropdown.open{display:flex!important;}
+.ac-dropdown.open{display:block;}.modal-overlay.open{display:flex!important;}
 .ac-item{
   padding:11px 14px;cursor:pointer;font-size:13px;color:var(--cream);
   display:flex;justify-content:space-between;align-items:center;
@@ -468,7 +468,7 @@ footer span{color:var(--gold);}
 .svc-search-inp{width:100%;background:#fff;border:1px solid var(--border);color:var(--cream);padding:7px 10px;border-radius:6px;font-size:13px;box-sizing:border-box;}
 .svc-search-inp:focus{outline:none;border-color:var(--pink);box-shadow:0 0 0 2px rgba(221,152,177,.15);}
 .svc-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:180px;overflow-y:auto;z-index:9999;display:none;margin:0;padding:0;list-style:none;}
-.svc-dropdown.open{display:flex!important;}
+.svc-dropdown.open{display:block;}.modal-overlay.open{display:flex!important;}
 .svc-dropdown li{padding:8px 12px;cursor:pointer;font-size:13px;color:var(--cream);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
 .svc-dropdown li:hover,.svc-dropdown li.selected{background:rgba(178,146,87,.15);color:var(--gold);}
 .svc-dropdown li .svc-price{color:var(--gray);font-size:11px;}
@@ -572,7 +572,7 @@ footer span{color:var(--gold);}
 .forgot-link{color:var(--gold);font-size:12px;text-align:right;cursor:pointer;background:none;border:none;padding:0;margin-top:-2px;opacity:.8;}
 .forgot-link:hover{opacity:1;text-decoration:underline;}
 #reset-box{display:none;margin-top:12px;}
-#reset-box.open{display:flex!important;}
+#reset-box.open{display:block;}.modal-overlay.open{display:flex!important;}
 
 /* ── USERS MANAGEMENT ── */
 .user-row{display:flex;align-items:center;justify-content:space-between;background:var(--champagne);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;}
