@@ -1553,8 +1553,8 @@ footer span{color:var(--gold);}
       Zona de peligro
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-      <p class="cfg-note" style="margin:0;color:#555">Borra todos los datos locales. Asegúrate de tener un backup.</p>
-      <button class="btn-red" onclick="if(confirm('¿Borrar TODOS los datos? Esta acción no se puede deshacer.')){{localStorage.clear();location.reload();}}">Borrar todos los datos</button>
+      <p class="cfg-note" style="margin:0;color:#555">Borra todos los datos (citas, clientes, finanzas, inventario) tanto en local como en la nube. Los usuarios se mantienen.</p>
+      <button class="btn-red" onclick="resetAllData()">Limpiar datos de prueba</button>
     </div>
   </div>
 
@@ -1870,6 +1870,38 @@ function loadLocal(){
   // No seed automático — la nube es la fuente de verdad
 }
 function saveLocal(){ try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){} }
+
+async function resetAllData(){
+  if(!confirm('⚠️ ¿Borrar TODOS los datos de prueba?\n\nSe eliminarán todas las citas, clientes, finanzas e inventario tanto en local como en la nube.\n\nEsta acción no se puede deshacer.')) return;
+  // Conservar solo los usuarios actuales
+  const usersBackup = D.usuarios ? [...D.usuarios] : [];
+  // Resetear datos
+  D.citas = [];
+  D.clientes = [];
+  D.movimientos = [];
+  D.inventario = [];
+  D.catalogoCustom = [];
+  D.svcExtra = {};
+  D.usuarios = usersBackup;
+  // Guardar local
+  saveLocal();
+  // Borrar en Firebase
+  try {
+    const r = await fetch(FIREBASE_URL, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(D)
+    });
+    if(r.ok){
+      toast('✅ Datos eliminados correctamente (local + nube)');
+    } else {
+      toast('⚠️ Local limpio, pero error en nube: HTTP ' + r.status, 'warn');
+    }
+  } catch(e) {
+    toast('⚠️ Local limpio, sin conexión a nube', 'warn');
+  }
+  renderAll();
+}
 
 // ═══════════════════════════════════════════════════
 // SEED DATA
