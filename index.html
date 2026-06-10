@@ -734,6 +734,13 @@ footer span{color:var(--gold);}
       <button class="btn-red" onclick="deleteCliente()"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-right:4px;vertical-align:middle"><path d="M4 6h12M8 6V4h4v2M15 6l-1 10H6L5 6"/></svg>Eliminar clienta</button>
       <button class="btn-sec" onclick="closeModal('modal-cl')">Cancelar</button>
     </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div id="e-cl-ficha-status" style="font-size:12px;margin-bottom:8px;padding:7px 10px;background:rgba(178,146,87,.06);border-radius:7px;border:1px solid var(--border)"></div>
+      <button onclick="copiarEnlaceCliente(+document.getElementById('e-cl-id').value)" style="width:100%;background:transparent;border:1.5px dashed var(--gold);color:var(--gold);border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 007.07 7.07l1.71-1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        Copiar enlace de ficha para clienta
+      </button>
+    </div>
   </div>
 </div>
 
@@ -817,6 +824,12 @@ footer span{color:var(--gold);}
       <button class="btn-pri" onclick="guardarFicha()">Guardar ficha</button>
       <button class="hbtn hbtn-outline" onclick="exportarFichaPDF()">Exportar PDF</button>
       <button class="btn-sec" onclick="closeModal('modal-ficha')">Cancelar</button>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <button onclick="copiarEnlaceCliente(+document.getElementById('ficha-cl-id').value)" style="width:100%;background:transparent;border:1.5px dashed var(--gold);color:var(--gold);border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        Copiar enlace de ficha para clienta
+      </button>
     </div>
   </div>
 </div>
@@ -2461,6 +2474,19 @@ function openEditCliente(id){
   document.getElementById('e-cl-f').value=c.fecha||'';
   const eNotas=document.getElementById('e-cl-notas'); if(eNotas) eNotas.value=c.notas||'';
   document.getElementById('e-cl-bday').value=c.bday||'';
+  // Mostrar estado de ficha
+  const fichaStatusEl=document.getElementById('e-cl-ficha-status');
+  if(fichaStatusEl){
+    const f=c.ficha||{};
+    const upd=f.fechaActualizacion;
+    if(upd){
+      const d=new Date(upd);
+      const fmt=d.toLocaleDateString('es-HN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      fichaStatusEl.innerHTML=`<span style="color:#27ae60;font-weight:700">✅ Ficha completada</span> · <span style="color:var(--gray);font-size:11px">Última actualización: ${fmt}</span>`;
+    } else {
+      fichaStatusEl.innerHTML=`<span style="color:var(--gray)">⏳ Ficha pendiente de completar</span>`;
+    }
+  }
   openModal('modal-cl');
 }
 function saveEditCliente(){
