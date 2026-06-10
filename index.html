@@ -177,7 +177,10 @@ nav::-webkit-scrollbar{display:none;}
 @media(max-width:600px){
   .mob-list{display:flex}
   .desk-table{display:none!important}
+  #svc-cat-chips{display:block!important}
 }
+.svc-chip{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);font-size:12px;font-weight:700;color:var(--gray);cursor:pointer;white-space:nowrap;margin-right:6px;transition:all .18s}
+.svc-chip.active{background:linear-gradient(135deg,rgba(221,152,177,.18),rgba(178,146,87,.1));border-color:var(--pink);color:var(--pink)}
 @media(max-width:900px){
   .ham-btn{display:flex;align-items:center;justify-content:center;}
   nav{flex-direction:column;padding:0;overflow:hidden;max-height:0;transition:max-height .35s ease;top:64px;position:sticky;z-index:40;}
@@ -1401,8 +1404,10 @@ footer span{color:var(--gold);}
       </div>
     </div>
 
-    <!-- Resumen categorías -->
-    <div id="svc-cat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px"></div>
+    <!-- Resumen categorías (desktop) -->
+    <div id="svc-cat-grid" class="desk-table" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px"></div>
+    <!-- Categorías móvil: chips horizontales -->
+    <div id="svc-cat-chips" style="display:none;overflow-x:auto;white-space:nowrap;margin-bottom:14px;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
     <!-- Catalog view -->
     <div id="svc-catalog-view" style="display:none">
       <div class="svc-catalog-grid" id="svc-catalog-grid"></div>
@@ -1432,7 +1437,7 @@ footer span{color:var(--gold);}
     </div>
     </div>
 
-    <div class="tbl-wrap">
+    <div class="tbl-wrap desk-table">
       <table>
         <thead><tr>
           <th style="width:88px">Código</th>
@@ -1444,6 +1449,7 @@ footer span{color:var(--gold);}
         <tbody id="svc-tb"></tbody>
       </table>
     </div>
+    <div class="mob-list" id="svc-mob"></div>
   </div>
 </div>
 
@@ -2929,6 +2935,15 @@ function renderSvcCatGrid(){
   const cats=[...new Set(svcs.map(s=>s.cat))];
   const grid=document.getElementById('svc-cat-grid'); if(!grid)return;
   const active=document.getElementById('f-svc-cat')?.value||'';
+  // ── Mobile chips ──
+  const chips=document.getElementById('svc-cat-chips');
+  if(chips) chips.innerHTML=`<span class="svc-chip${!active?' active':''}" onclick="filterByCat('')">Todas</span>`+
+    cats.map(cat=>{
+      const n=svcs.filter(s=>s.cat===cat).length;
+      const on=active===cat;
+      return`<span class="svc-chip${on?' active':''}" onclick="filterByCat('${cat.replace(/'/g,"\\'")}')">
+        ${cat} <span style="font-size:10px;opacity:.7">${n}</span></span>`;
+    }).join('');
   grid.innerHTML=cats.map(cat=>{
     const n=svcs.filter(s=>s.cat===cat).length;
     const on=active===cat;
@@ -2991,7 +3006,11 @@ function renderServiciosList(){
     (!cf||s.cat===cf)
   );
   const tb=document.getElementById('svc-tb'); if(!tb)return;
-  if(!list.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:24px">Sin resultados</td></tr>';return;}
+  if(!list.length){
+    tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:24px">Sin resultados</td></tr>';
+    const _sm=document.getElementById('svc-mob'); if(_sm) _sm.innerHTML='';
+    return;
+  }
   let lastCat='';
   tb.innerHTML=list.map(s=>{
     const sep=s.cat!==lastCat; lastCat=s.cat;
@@ -3004,6 +3023,29 @@ function renderServiciosList(){
       <td style="color:var(--pink);font-weight:700;white-space:nowrap">${fmtM(s.precio)}</td>
       <td style="white-space:nowrap" onclick="event.stopPropagation()">${s.custom?`<button class="action-icon-btn action-del" onclick="delCustomSvc(${s.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/></svg></button>`:'&nbsp;'}</td>
     </tr>`;
+  }).join('');
+  // ── Mobile cards ──
+  let lastCatMob='';
+  const _svcMob=document.getElementById('svc-mob');
+  if(_svcMob) _svcMob.innerHTML=list.map(s=>{
+    const key=_svcKey(s).replace(/'/g,"\\'");
+    const catHeader=s.cat!==lastCatMob?(lastCatMob=s.cat,
+      `<div style="font-size:9px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:1px;padding:4px 2px 8px">${s.cat}</div>`)
+      :'';
+    return catHeader+`<div class="mob-card" onclick="openSvcFicha('${key}')" style="cursor:pointer">
+      <div class="mob-card-top">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(221,152,177,.18),rgba(178,146,87,.08));border:1px solid rgba(221,152,177,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:800;color:var(--gold-deep)">${s.codigo||'—'}</div>
+        <div style="flex:1;min-width:0">
+          <div class="mob-card-name">${s.nombre}</div>
+          <div class="mob-card-sub">${s.cat} · ${_durFmt(s.duracion)}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:18px;font-weight:800;color:var(--pink)">${fmtM(s.precio)}</div>
+          <div style="font-size:10px;color:var(--gray)">precio</div>
+        </div>
+      </div>
+      ${s.custom?`<hr class="mob-card-divider"><div style="display:flex;justify-content:flex-end"><button class="action-icon-btn action-del" onclick="event.stopPropagation();delCustomSvc(${s.id})" style="height:34px;width:34px" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`:''}
+    </div>`;
   }).join('');
 }
 
