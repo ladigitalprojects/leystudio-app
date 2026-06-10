@@ -1098,7 +1098,9 @@ footer span{color:var(--gold);}
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:12px;color:var(--gray)">Descuento:</span>
             <input type="number" id="c-descuento" placeholder="0" min="0" oninput="recalcTotal()"
-              style="width:80px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--cream);font-size:13px;">
+              style="width:72px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--cream);font-size:13px;">
+            <button id="c-desc-tipo-btn" onclick="toggleDescTipo()" title="Cambiar entre L. y %"
+              style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--gold-deep);font-size:12px;font-weight:700;cursor:pointer;min-width:36px;transition:all .15s">L.</button>
           </div>
           <div>Total: <span class="total-display" id="cita-total">L. 0</span></div>
         </div>
@@ -1283,6 +1285,20 @@ footer span{color:var(--gold);}
             <div id="svc-ficha-dur" style="font-size:17px;font-weight:800;color:var(--gold-deep)"></div>
           </div>
         </div>
+      </div>
+      <!-- Fotos carousel -->
+      <div id="svc-photos-wrap" style="display:none;background:#111;position:relative;overflow:hidden">
+        <div id="svc-carousel" style="display:flex;transition:transform .3s ease;height:210px"></div>
+        <button onclick="svcCarouselNav(-1)" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.55);border:none;color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:20px;line-height:1">‹</button>
+        <button onclick="svcCarouselNav(1)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.55);border:none;color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:20px;line-height:1">›</button>
+        <div id="svc-carousel-counter" style="position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;border-radius:10px;padding:1px 7px"></div>
+      </div>
+      <div id="svc-photo-actions" style="display:none;padding:8px 16px;background:var(--row-alt);border-bottom:1px solid var(--border);display:none;gap:8px;flex-wrap:wrap;align-items:center">
+        <div id="svc-photo-thumbs" style="display:flex;gap:5px;flex:1;overflow-x:auto"></div>
+        <label style="cursor:pointer;padding:5px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-weight:700;color:var(--gold-deep);background:var(--card)">
+          📷 Agregar<input type="file" accept="image/*" style="display:none" onchange="svcFotoFromInput(event)">
+        </label>
+        <button onclick="deleteSvcCurrentPhoto()" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--gray);background:var(--card);cursor:pointer">🗑️</button>
       </div>
       <!-- Tabs -->
       <div style="display:flex;border-bottom:1px solid var(--border)">
@@ -2126,14 +2142,22 @@ function onSvcSelect(sel){
   if(price) sel.closest('.svc-row').querySelector('input').value=price;
   recalcTotal();
 }
+let _descTipo='L';
+function toggleDescTipo(){
+  _descTipo=_descTipo==='L'?'%':'L';
+  const btn=document.getElementById('c-desc-tipo-btn');
+  if(btn){btn.textContent=_descTipo;btn.style.color=_descTipo==='%'?'var(--pink)':'var(--gold-deep)';}
+  recalcTotal();
+}
 function recalcTotal(){
-  let total=0;
+  let subtotal=0;
   document.querySelectorAll('#svc-rows .svc-row').forEach(row=>{
     const inp=row.querySelector('input[type=number]');
-    total+=parseFloat(inp?.value)||0;
+    subtotal+=parseFloat(inp?.value)||0;
   });
-  const disc=parseFloat(document.getElementById('c-descuento')?.value)||0;
-  total=Math.max(0,total-disc);
+  const discVal=parseFloat(document.getElementById('c-descuento')?.value)||0;
+  const disc=_descTipo==='%'?subtotal*discVal/100:discVal;
+  const total=Math.max(0,subtotal-disc);
   document.getElementById('cita-total').textContent=fmtM(total);
 }
 function getSvcRowsData(){
@@ -2191,7 +2215,8 @@ function addCita(){
   const clienta=document.getElementById('c-cl').value.trim();
   if(!clienta){toast('Ingresa el nombre de la clienta','warn');return;}
   const subtotal=servicios.reduce((s,x)=>s+x.precio,0);
-  const descuento=parseFloat(document.getElementById('c-descuento')?.value)||0;
+  const _dv=parseFloat(document.getElementById('c-descuento')?.value)||0;
+  const descuento=_descTipo==='%'?Math.round(subtotal*_dv/100):_dv;
   const precioTotal=Math.max(0,subtotal-descuento);
   const c={
     id:nextId(D.citas),
@@ -2336,15 +2361,26 @@ function openFicha(id){
   document.getElementById('f-snack').value=f.snack||'';
   document.getElementById('f-obs').value=f.obs||c.notas||'';
   document.getElementById('f-obs-clinicas').value=f.obsClinicas||'';
-  document.querySelectorAll('.f-clinica').forEach(cb=>{cb.checked=(f.clinica||[]).includes(cb.value);});
-  document.querySelectorAll('.f-alt').forEach(cb=>{cb.checked=(f.alteraciones||[]).includes(cb.value);});
-  document.querySelectorAll('.f-capa').forEach(cb=>{cb.checked=(f.capas||[]).includes(cb.value);});
-  document.querySelectorAll('.f-piel-cb').forEach(cb=>{cb.checked=(f.piel||[]).includes(cb.value);});
-  document.querySelectorAll('.f-tipo-una').forEach(cb=>{cb.checked=(f.tiposUna||[]).includes(cb.value);});
-  document.querySelectorAll('.f-anatomia').forEach(cb=>{cb.checked=(f.anatomia||[]).includes(cb.value);});
+  // Backward compat: map old 'enfermedades' → new 'clinica'
+  const oldEnfMap={'Hongos o bacterias':'Hongos o Bacterias','Descamación de uña':'Descamación de Uña','Toma algún medicamento':'Tratamiento Médico','Ninguna':null};
+  const clinicaArr=f.clinica||(f.enfermedades||[]).map(e=>oldEnfMap[e]!==undefined?oldEnfMap[e]:e).filter(Boolean);
+  // Old 'tipoUna' maps to 'alteraciones' + 'tiposUna'; old 'formaUna' → 'anatomia'
+  const altArr=f.alteraciones||(f.tipoUna||[]).filter(v=>['Sana','Micosis','Onicomicosis','Onicofágicas','Amarillas','Estriada','Paroniquia','Otras'].includes(v)).map(v=>v==='Micosis'?'Onicomicosis':v);
+  const tiposUnaArr=f.tiposUna||[];
+  const anatomiaArr=f.anatomia||(f.formaUna||[]);
+  const pielArr=f.piel||(f.piel&&typeof f.piel==='string'?[f.piel]:[]);
+  const capasArr=f.capas||[];
+  document.querySelectorAll('.f-clinica').forEach(cb=>{cb.checked=clinicaArr.includes(cb.value);});
+  document.querySelectorAll('.f-alt').forEach(cb=>{cb.checked=altArr.includes(cb.value);});
+  document.querySelectorAll('.f-capa').forEach(cb=>{cb.checked=capasArr.includes(cb.value);});
+  document.querySelectorAll('.f-piel-cb').forEach(cb=>{cb.checked=pielArr.includes(cb.value);});
+  document.querySelectorAll('.f-tipo-una').forEach(cb=>{cb.checked=tiposUnaArr.includes(cb.value);});
+  document.querySelectorAll('.f-anatomia').forEach(cb=>{cb.checked=anatomiaArr.includes(cb.value);});
+  // Medidas backward compat: old services (softgel,tips,extensiones) → new (tips,softgel,acrilico,polygel,gelConstructor,manicuraRusa)
+  const oldMeds=f.medidas||{};
   const svcs=['tips','softgel','acrilico','polygel','gelConstructor','manicuraRusa'];
   const dedos=['pulgar','indice','medio','anular','menique'];
-  svcs.forEach(s=>dedos.forEach(d=>{const el=document.getElementById('f-med-'+s+'-'+d);if(el)el.value=(f.medidas||{})[s]?.[d]||'';}));
+  svcs.forEach(s=>dedos.forEach(d=>{const el=document.getElementById('f-med-'+s+'-'+d);if(el)el.value=oldMeds[s]?.[d]||'';}));
   document.querySelectorAll('[name="f-forma"]').forEach(r=>{r.checked=r.value===(f.forma||'');});
   document.querySelectorAll('[name="f-largo"]').forEach(r=>{r.checked=r.value===(f.largo||'');});
   document.querySelectorAll('[name="f-tipo-visita"]').forEach(r=>{r.checked=r.value===(f.tipoVisita||'');});
@@ -2435,8 +2471,8 @@ function buildFichaPage(c,f,logoSrc){
 <style>
 @page{size:A4 portrait;margin:0}
 *{box-sizing:border-box;margin:0;padding:0}
-body{width:210mm;min-height:297mm;font-family:Arial,sans-serif;background:white;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.page{width:210mm;min-height:297mm;padding:7mm 10mm 10mm;background:white;position:relative}
+body{width:210mm;min-height:297mm;font-family:Arial,sans-serif;background:#F5EFE8;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{width:210mm;min-height:297mm;padding:7mm 10mm 10mm;background:#F5EFE8;position:relative}
 @media print{.no-print{display:none!important}}
 </style></head><body>
 <div class="page">
@@ -2786,9 +2822,10 @@ function renderServiciosList(){
 
 // ── Ficha de servicio ──
 let _fichaKey=null;
+let _svcCarouselIdx=0;
 function openSvcFicha(key){
   const svc=_findSvc(key); if(!svc)return;
-  _fichaKey=key;
+  _fichaKey=key; _svcCarouselIdx=0;
   const extra=(D.svcExtra&&D.svcExtra[key])||{};
   if(extra.descripcion!=null)svc.descripcion=extra.descripcion;
   if(extra.productos!=null)svc.productos=extra.productos;
@@ -2801,8 +2838,67 @@ function openSvcFicha(key){
   desc.innerHTML=svc.descripcion||'';
   _renderFichaProds(svc.productos||[]);
   document.getElementById('svc-prod-input').value='';
+  // Photos: support both old single foto and new fotos array
+  const fotos=extra.fotos||(extra.foto?[extra.foto]:[]);
+  renderSvcCarousel(fotos);
   switchSvcTab('proc');
   openModal('modal-svc-ficha');
+}
+function getSvcFotos(key){
+  const extra=(D.svcExtra&&D.svcExtra[key])||{};
+  return extra.fotos||(extra.foto?[extra.foto]:[]);
+}
+function renderSvcCarousel(fotos){
+  const wrap=document.getElementById('svc-photos-wrap');
+  const acts=document.getElementById('svc-photo-actions');
+  const car=document.getElementById('svc-carousel');
+  const counter=document.getElementById('svc-carousel-counter');
+  const thumbs=document.getElementById('svc-photo-thumbs');
+  if(!wrap)return;
+  if(!fotos||!fotos.length){
+    wrap.style.display='none'; if(acts)acts.style.display='none'; return;
+  }
+  wrap.style.display='block'; if(acts){acts.style.display='flex';}
+  car.innerHTML=fotos.map(src=>`<img src="${src}" style="width:100%;height:210px;object-fit:cover;flex-shrink:0">`).join('');
+  car.style.transform=`translateX(-${_svcCarouselIdx*100}%)`;
+  counter.textContent=`${_svcCarouselIdx+1}/${fotos.length}`;
+  if(thumbs) thumbs.innerHTML=fotos.map((src,i)=>`<img src="${src}" onclick="_svcGoTo(${i})" style="width:44px;height:44px;object-fit:cover;border-radius:5px;cursor:pointer;border:2px solid ${i===_svcCarouselIdx?'var(--pink)':'transparent'};flex-shrink:0">`).join('');
+}
+function _svcGoTo(i){
+  const fotos=getSvcFotos(_fichaKey);
+  _svcCarouselIdx=Math.max(0,Math.min(i,fotos.length-1));
+  renderSvcCarousel(fotos);
+}
+function svcCarouselNav(dir){
+  const fotos=getSvcFotos(_fichaKey);
+  if(!fotos.length)return;
+  _svcCarouselIdx=(_svcCarouselIdx+dir+fotos.length)%fotos.length;
+  renderSvcCarousel(fotos);
+}
+function svcFotoFromInput(evt){
+  const file=evt.target.files[0]; if(!file)return;
+  compressImage(file,900,0.8).then(b64=>{
+    if(!D.svcExtra)D.svcExtra={};
+    if(!D.svcExtra[_fichaKey])D.svcExtra[_fichaKey]={};
+    const extra=D.svcExtra[_fichaKey];
+    const fotos=extra.fotos||(extra.foto?[extra.foto]:[]);
+    fotos.push(b64);
+    extra.fotos=fotos;
+    delete extra.foto; // migrate to array
+    _svcCarouselIdx=fotos.length-1;
+    saveAndSync(); renderSvcCarousel(fotos); renderSvcCatGrid(); toast('✅ Foto agregada');
+  });
+}
+function deleteSvcCurrentPhoto(){
+  if(!D.svcExtra||!D.svcExtra[_fichaKey])return;
+  const extra=D.svcExtra[_fichaKey];
+  const fotos=extra.fotos||(extra.foto?[extra.foto]:[]);
+  if(!fotos.length)return;
+  if(!confirm('¿Eliminar esta foto?'))return;
+  fotos.splice(_svcCarouselIdx,1);
+  extra.fotos=fotos; delete extra.foto;
+  _svcCarouselIdx=Math.max(0,_svcCarouselIdx-1);
+  saveAndSync(); renderSvcCarousel(fotos); renderSvcCatGrid(); toast('Foto eliminada');
 }
 function switchSvcTab(tab){
   const proc=tab==='proc';
@@ -4005,6 +4101,7 @@ function showTab(name){
   if(name==='config') renderUsuarios();
   if(name==='notificaciones') renderNotificaciones();
   if(name==='estadisticas') renderStatsTab('gasto');
+  if(name==='servicios') renderServicios();
   try{ localStorage.setItem('ls_last_tab', name); }catch(e){}
 }
 function toggleForm(id){
@@ -4035,6 +4132,7 @@ function toggleForm(id){
       document.getElementById('c-tel').value='';
       document.getElementById('c-notas').value='';
       const disc=document.getElementById('c-descuento'); if(disc) disc.value='';
+      _descTipo='L'; const dtBtn=document.getElementById('c-desc-tipo-btn'); if(dtBtn){dtBtn.textContent='L.';dtBtn.style.color='var(--gold-deep)';}
       document.getElementById('svc-rows').innerHTML='';
       recalcTotal(); addSvcRow(); checkEstado();
     }
@@ -4411,6 +4509,7 @@ function setSvcView(view){
   const catalogView=document.getElementById('svc-catalog-view');
   if(catalogView) catalogView.style.display=view==='catalogo'?'':'none';
   if(view==='catalogo') renderServiciosCatalogo();
+  if(view==='tabla') renderServiciosList();
   // Button styles
   const bt=document.getElementById('btn-view-tabla'),bc=document.getElementById('btn-view-catalogo');
   if(bt){bt.style.background=view==='tabla'?'var(--gold)':'var(--card)';bt.style.color=view==='tabla'?'#fff':'var(--gray)';}
@@ -4428,7 +4527,8 @@ function renderServiciosCatalogo(){
   if(!filtered.length){grid.innerHTML='<p style="color:var(--gray);padding:20px 0">Sin servicios en esta categoría.</p>';return;}
   grid.innerHTML=filtered.map(s=>{
     const key=_svcKey(s);
-    const foto=(extra[key]?.foto)||'';
+    const _fts=(extra[key]?.fotos)||(extra[key]?.foto?[extra[key].foto]:[]);
+    const foto=_fts[0]||'';
     const imgHTML=foto
       ? `<img src="${foto}" class="svc-card-img" alt="${s.nombre}">`
       : `<div class="svc-card-img-placeholder"><span style="font-size:36px">${_catEmoji(s.cat)}</span><button class="svc-card-img-upload" onclick="event.stopPropagation();uploadSvcFoto('${key}')">📷 Agregar foto</button></div>`;
@@ -4459,7 +4559,9 @@ function uploadSvcFoto(key){
     const b64=await compressImage(inp.files[0]);
     if(!D.svcExtra) D.svcExtra={};
     if(!D.svcExtra[key]) D.svcExtra[key]={};
-    D.svcExtra[key].foto=b64;
+    const _ex=D.svcExtra[key];
+    const _fotos=_ex.fotos||(_ex.foto?[_ex.foto]:[]);
+    _fotos.push(b64); _ex.fotos=_fotos; delete _ex.foto;
     saveAndSync(); renderServiciosCatalogo();
     toast('✅ Foto del servicio guardada');
   };
