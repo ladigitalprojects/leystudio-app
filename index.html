@@ -237,8 +237,8 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 .bgo{background:#fdf1dc;color:#8a6520;} .bb-pink{background:rgba(221,152,177,.2);color:#9a3a60;border:1px solid rgba(221,152,177,.3);}
 
 /* ── FORMS ── */
-.form-box{background:var(--champagne);border:1px solid var(--border);border-left:3px solid var(--pink);border-radius:10px;padding:20px;margin-bottom:18px;display:none;}
-.form-box.open{display:block;}.modal-overlay.open{display:flex!important;}
+.form-box{display:none;}
+.form-box.open{display:flex!important;position:fixed;inset:0;z-index:550;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px;}.form-box-inner{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(100,70,40,.25);}.modal-overlay.open{display:flex!important;}
 .fg{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
 .fgrp{display:flex;flex-direction:column;gap:4px;}
 .fgrp label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;}
@@ -681,8 +681,8 @@ footer span{color:var(--gold);}
       </div>
       <input type="file" id="e-cl-photo-input" accept="image/*" style="display:none" onchange="handleClientePhoto(this)">
     </div>
+    <input type="hidden" id="e-cl-id">
     <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px;">
-      <input type="hidden" id="e-cl-id">
       <div class="fgrp"><label>Nombre</label><input type="text" id="e-cl-n"></div>
       <div class="fgrp"><label>Teléfono</label><div class="tel-wrap"><select class="tel-code" id="e-cl-telcode"><option value="+504">+504</option><option value="+1">+1</option><option value="+502">+502</option><option value="+503">+503</option><option value="+506">+506</option></select><input type="tel" class="tel-num" id="e-cl-tel" placeholder="9999-9999" maxlength="9"></div></div>
       <div class="fgrp"><label>Instagram</label><input type="text" id="e-cl-ig"></div>
@@ -711,7 +711,6 @@ footer span{color:var(--gold);}
       <div class="fgrp"><label>Correo</label><input type="email" id="f-correo" placeholder="correo@ejemplo.com"></div>
       <div class="fgrp"><label>Tel. emergencia</label><div class="tel-wrap"><select class="tel-code" id="f-telcode"><option value="+504">+504</option><option value="+1">+1</option></select><input type="tel" class="tel-num" id="f-tel-emg" placeholder="9999-9999" maxlength="9"></div></div>
       <div class="fgrp"><label>Instagram</label><input type="text" id="f-ig2" placeholder="@usuario"></div>
-      <div class="fgrp"><label>TikTok</label><input type="text" id="f-tiktok" placeholder="@usuario"></div>
       <div class="fgrp"><label>Música favorita</label><input type="text" id="f-musica" placeholder="Pop, reggaeton..."></div>
       <div class="fgrp"><label>Snack favorito</label><input type="text" id="f-snack" placeholder="Palomitas, fruta..."></div>
     </div>
@@ -1111,10 +1110,10 @@ footer span{color:var(--gold);}
       <div class="tt">Agenda de Citas</div>
       <button class="add-btn" onclick="toggleForm('fc')">+ Nueva cita</button></div>
 
-    <div class="form-box" id="fc">
+    <div class="form-box" id="fc"><div class="form-box-inner"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)"><span style="font-size:15px;font-weight:800;color:var(--cream)">Nueva Cita</span><button onclick="toggleForm('fc')" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&#x2715;</button></div>
       <div class="fg">
         <div class="fgrp"><label>Fecha</label><input type="text" class="fpdate" id="c-f"></div>
-        <div class="fgrp"><label>Hora</label><input type="time" id="c-h"></div>
+        <div class="fgrp"><label>Hora</label><input type="text" class="fptime" id="c-h" placeholder="09:00" autocomplete="off" style="cursor:pointer"></div>
         <div class="fgrp">
           <label>Clienta</label>
           <div class="ac-wrap">
@@ -1149,7 +1148,7 @@ footer span{color:var(--gold);}
         <button class="btn-pri" onclick="addCita()">Guardar cita</button>
         <button class="btn-sec" onclick="toggleForm('fc')">Cancelar</button>
       </div>
-    </div>
+    </div></div>
 
     <div class="search-bar">
       <input type="text" id="s-citas" placeholder="Buscar clienta o servicio..." oninput="renderCitas()">
@@ -1174,7 +1173,7 @@ footer span{color:var(--gold);}
         <button class="add-btn" onclick="toggleForm('fcl')">+ Nueva clienta</button>
       </div></div>
 
-    <div class="form-box" id="fcl">
+    <div class="form-box" id="fcl"><div class="form-box-inner"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)"><span style="font-size:15px;font-weight:800;color:var(--cream)">Nueva Clienta</span><button onclick="toggleForm('fcl')" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&#x2715;</button></div>
       <div class="fg">
         <div class="fgrp"><label>Nombre completo</label><input type="text" id="cl-n" placeholder="Nombre y apellido"></div>
         <div class="fgrp"><label>Teléfono</label><div class="tel-wrap"><select class="tel-code" id="cl-telcode"><option value="+504">+504</option><option value="+1">+1</option></select><input type="tel" class="tel-num" id="cl-tel" placeholder="9999-9999" maxlength="9"></div></div>
@@ -1187,13 +1186,13 @@ footer span{color:var(--gold);}
         <button class="btn-pri" onclick="addCliente()">Guardar</button>
         <button class="btn-sec" onclick="toggleForm('fcl')">Cancelar</button>
       </div>
-    </div>
+    </div></div>
 
     <div class="search-bar">
       <input type="text" id="s-cl" placeholder="Buscar clienta..." oninput="renderClientes()">
     </div>
     <div class="tbl-wrap">
-    <table><thead><tr><th>#</th><th onclick="clSortBy('nombre')" style="cursor:pointer" title="Ordenar">Nombre ⇅</th><th>Teléfono</th><th>Instagram</th><th onclick="clSortBy('fecha')" style="cursor:pointer" title="Ordenar">1ra Visita ⇅</th><th onclick="clSortBy('visitas')" style="cursor:pointer" title="Ordenar">Visitas ⇅</th><th onclick="clSortBy('total')" style="cursor:pointer" title="Ordenar">Total gastado ⇅</th><th>Último servicio</th><th>Acciones</th></tr></thead>
+    <table><thead><tr><th>#</th><th onclick="clSortBy('nombre')" style="cursor:pointer" title="Ordenar">Nombre ⇅</th><th>Teléfono</th><th onclick="clSortBy('fecha')" style="cursor:pointer" title="Ordenar">1ra Visita ⇅</th><th onclick="clSortBy('visitas')" style="cursor:pointer" title="Ordenar">Visitas ⇅</th><th onclick="clSortBy('total')" style="cursor:pointer" title="Ordenar">Total gastado ⇅</th><th>Último servicio</th><th>Acciones</th></tr></thead>
     <tbody id="cl-tb"></tbody></table></div>
     <p class="tip">Visitas y total calculados automáticamente desde citas completadas. Toca Editar para modificar datos de la clienta.</p>
 
@@ -1220,7 +1219,7 @@ footer span{color:var(--gold);}
       <div class="tt">Ingresos y Gastos</div>
       <button class="add-btn" onclick="toggleForm('fm')">+ Nuevo movimiento</button></div>
 
-    <div class="form-box" id="fm">
+    <div class="form-box" id="fm"><div class="form-box-inner"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)"><span style="font-size:15px;font-weight:800;color:var(--cream)">Nuevo Movimiento</span><button onclick="toggleForm('fm')" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&#x2715;</button></div>
       <div class="fg">
         <div class="fgrp"><label>Fecha</label><input type="text" class="fpdate" id="m-f"></div>
         <div class="fgrp"><label>Tipo</label><select id="m-tipo"><option>Ingreso</option><option>Gasto</option></select></div>
@@ -1235,7 +1234,7 @@ footer span{color:var(--gold);}
         <button class="btn-pri" onclick="addMovimiento()">Guardar</button>
         <button class="btn-sec" onclick="toggleForm('fm')">Cancelar</button>
       </div>
-    </div>
+    </div></div>
 
     <div class="search-bar">
       <input type="text" id="s-fin" placeholder="Buscar..." oninput="renderFinanzas()" style="flex:1;min-width:140px">
@@ -1264,7 +1263,7 @@ footer span{color:var(--gold);}
       <div class="tt">Inventario</div>
       <button class="add-btn" onclick="toggleForm('fi')">+ Nuevo producto</button></div>
 
-    <div class="form-box" id="fi">
+    <div class="form-box" id="fi"><div class="form-box-inner"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)"><span style="font-size:15px;font-weight:800;color:var(--cream)">Nuevo Producto</span><button onclick="toggleForm('fi')" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&#x2715;</button></div>
       <div class="fg">
         <div class="fgrp span2" style="grid-column:span 2"><label>Producto / Insumo</label><input type="text" id="i-n" placeholder="Nombre..."></div>
         <div class="fgrp"><label>Categoría</label>
@@ -1280,7 +1279,7 @@ footer span{color:var(--gold);}
         <button class="btn-pri" onclick="addInventario()">Guardar</button>
         <button class="btn-sec" onclick="toggleForm('fi')">Cancelar</button>
       </div>
-    </div>
+    </div></div>
 
     <div class="search-bar">
       <input type="text" id="s-inv" placeholder="Buscar producto..." oninput="renderInventario()">
@@ -1391,7 +1390,11 @@ footer span{color:var(--gold);}
   <div class="table-card">
     <div class="th">
       <div class="tt">Catálogo de Servicios</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+          <button id="btn-view-tabla" onclick="setSvcView('tabla')" style="padding:6px 12px;border:none;background:var(--gold);color:#fff;font-size:11px;font-weight:700;cursor:pointer">☰ Tabla</button>
+          <button id="btn-view-catalogo" onclick="setSvcView('catalogo')" style="padding:6px 12px;border:none;background:var(--card);color:var(--gray);font-size:11px;font-weight:700;cursor:pointer;border-left:1px solid var(--border)">⊞ Catálogo</button>
+        </div>
         <button class="hbtn hbtn-outline" onclick="openCatModal()" style="font-size:11px;display:flex;align-items:center;gap:5px">
           <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h14M3 10h14M3 14h8"/></svg>Categorías
         </button>
@@ -1415,7 +1418,7 @@ footer span{color:var(--gold);}
     </div>
 
     <!-- Formulario nuevo servicio -->
-    <div class="form-box" id="fsvc" style="margin-bottom:16px">
+    <div class="form-box" id="fsvc" style="margin-bottom:16px"><div class="form-box-inner"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)"><span style="font-size:15px;font-weight:800;color:var(--cream)">Nuevo Servicio</span><button onclick="toggleForm('fsvc')" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&#x2715;</button></div>
       <div class="fg" style="grid-template-columns:1fr 1fr 1fr;">
         <div class="fgrp"><label>Categoría</label><select id="sv-cat" onchange="_updateAutoCode(this.value)"><option value="">Seleccionar...</option></select></div>
         <div class="fgrp"><label>Código</label><input type="text" id="sv-cod" placeholder="ACR-010"></div>
@@ -2298,7 +2301,7 @@ function renderClientes(){
     })();
     return`<tr>
       <td>${_renderAvatar(c,34)}</td><td>${i+1}</td><td><strong>${c.nombre}</strong>${bdayBadge}</td>
-      <td>${c.tel}</td><td>${c.ig||'—'}</td><td>${fmtD(c.fecha)}</td>
+      <td>${c.tel}</td><td>${fmtD(c.fecha)}</td>
       <td><span class="badge bgo">${st.visitas}</span></td>
       <td><strong style="color:var(--pink)">${fmtM(st.total)}</strong></td>
       <td style="max-width:200px;font-size:11px">${st.ultimoSvc.length>45?st.ultimoSvc.substring(0,45)+'…':st.ultimoSvc}</td>
@@ -2340,7 +2343,9 @@ function saveEditCliente(){
   const id=+document.getElementById('e-cl-id').value;
   const c=D.clientes.find(x=>x.id===id); if(!c) return;
   c.nombre=document.getElementById('e-cl-n').value.trim()||c.nombre;
-  c.tel=document.getElementById('e-cl-tel').value.trim();
+  const telCode=document.getElementById('e-cl-telcode')?.value||'+504';
+  const telNum=document.getElementById('e-cl-tel').value.trim();
+  c.tel=telNum?(telCode+' '+telNum):'';
   c.ig=document.getElementById('e-cl-ig').value.trim();
   c.fecha=document.getElementById('e-cl-f').value;
   c.notas=(document.getElementById('e-cl-notas')?.value||'').trim();
@@ -2367,7 +2372,6 @@ function openFicha(id){
   document.getElementById('f-correo').value=f.correo||'';
   document.getElementById('f-tel-emg').value=f.telEmg||'';
   document.getElementById('f-ig2').value=f.ig||c.ig||'';
-  document.getElementById('f-tiktok').value=f.tiktok||'';
   document.getElementById('f-musica').value=f.musica||'';
   document.getElementById('f-snack').value=f.snack||'';
   document.getElementById('f-obs').value=f.obs||c.notas||'';
@@ -2397,7 +2401,6 @@ function guardarFicha(){
     correo: document.getElementById('f-correo').value.trim(),
     telEmg: document.getElementById('f-tel-emg').value.trim(),
     ig: document.getElementById('f-ig2').value.trim(),
-    tiktok: document.getElementById('f-tiktok').value.trim(),
     musica: document.getElementById('f-musica').value.trim(),
     snack: document.getElementById('f-snack').value.trim(),
     obs: document.getElementById('f-obs').value.trim(),
@@ -2497,7 +2500,7 @@ function exportarFichaPDF(){
   fldBar('CORREO',f.correo,L,y,FW);
   fldBar('TELEFONO',c.tel,R,y,FW); y+=11;
 
-  // Redes sociales — fila con IG + TikTok
+  // Redes sociales
   doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(...rose);
   doc.text('REDES SOCIALES',L,y);
   doc.setFillColor(...cream); doc.roundedRect(L+28,y+1.2,FW-28,5.2,1.2,1.2,'F');
@@ -2505,12 +2508,7 @@ function exportarFichaPDF(){
   doc.text('IG:  '+(f.ig||c.ig||''),L+30,y+5.2);
   fldBar('TELEFONO DE EMERGENCIA',f.telEmg,R,y,FW); y+=11;
 
-  // TikTok + Gustos
-  doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(...rose);
-  doc.text('TikTok',L,y);
-  doc.setFillColor(...cream); doc.roundedRect(L+11,y+1.2,40,5.2,1.2,1.2,'F');
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...dkg);
-  doc.text(f.tiktok||'',L+13,y+5.2);
+  // Gustos
   doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(...rose);
   doc.text('GUSTOS : musica',R,y);
   doc.setFillColor(...cream); doc.roundedRect(R+26,y+1.2,27,5.2,1.2,1.2,'F');
@@ -4209,7 +4207,7 @@ function toggleForm(id){
       ['cl-n','cl-tel','cl-ig','cl-bday','cl-notas'].forEach(fid=>{const e=document.getElementById(fid);if(e)e.value='';});
       document.getElementById('cl-f').value=todayStr();
     }
-    setTimeout(()=>reinitFlatpickr(el),80);
+    setTimeout(()=>{ reinitFlatpickr(el); if(window.reinitFlatpickrTime) reinitFlatpickrTime(el); },80);
   }
 }
 function renderAll(){
@@ -4460,7 +4458,17 @@ function init(){
       if(el.value) fp.setDate(el.value,false,'Y-m-d');
     });
   };
+  // Time picker
+  window.reinitFlatpickrTime=function(ctx){
+    if(typeof flatpickr==='undefined') return;
+    const scope=ctx||document;
+    scope.querySelectorAll('.fptime').forEach(el=>{
+      if(el._flatpickr) el._flatpickr.destroy();
+      flatpickr(el,{enableTime:true,noCalendar:true,dateFormat:'H:i',time_24hr:true,minuteIncrement:15,allowInput:true,disableMobile:true});
+    });
+  };
   reinitFlatpickr();
+  reinitFlatpickrTime();
 
 // Formato automático teléfono XXXX-XXXX
 document.addEventListener('input', function(e){
@@ -4554,19 +4562,28 @@ function setSvcView(view){
   document.getElementById('btn-view-tabla').classList.toggle('active',view==='tabla');
   document.getElementById('btn-view-catalogo').classList.toggle('active',view==='catalogo');
   // Show/hide filter row and table
-  const filterRow=document.getElementById('svc-filter-row');
-  const tableWrap=document.getElementById('svc-table-wrap');
+  // Show/hide filter row and table
+  const svcSection=document.getElementById('tab-servicios');
+  if(svcSection){
+    const filterDivs=svcSection.querySelectorAll('.search-bar,.tbl-wrap');
+    filterDivs.forEach(el=>el.style.display=view==='tabla'?''+'':'none');
+    // Also hide the filter flex row (s-svc parent)
+    const ssvc=document.getElementById('s-svc');
+    if(ssvc) ssvc.closest('div').style.display=view==='tabla'?'flex':'none';
+  }
   const catalogView=document.getElementById('svc-catalog-view');
-  if(filterRow) filterRow.style.display=view==='tabla'?'':'none';
-  if(tableWrap) tableWrap.style.display=view==='tabla'?'':'none';
   if(catalogView) catalogView.style.display=view==='catalogo'?'':'none';
   if(view==='catalogo') renderServiciosCatalogo();
+  // Button styles
+  const bt=document.getElementById('btn-view-tabla'),bc=document.getElementById('btn-view-catalogo');
+  if(bt){bt.style.background=view==='tabla'?'var(--gold)':'var(--card)';bt.style.color=view==='tabla'?'#fff':'var(--gray)';}
+  if(bc){bc.style.background=view==='catalogo'?'var(--gold)':'var(--card)';bc.style.color=view==='catalogo'?'#fff':'var(--gray)';}
 }
 
 function renderServiciosCatalogo(){
   const svcs=getAllSvcs();
-  const catFilter=document.getElementById('svc-cat-filter')?.value||'';
-  const q=(document.getElementById('svc-search')?.value||'').toLowerCase();
+  const catFilter=document.getElementById('f-svc-cat')?.value||'';
+  const q=(document.getElementById('s-svc')?.value||'').toLowerCase();
   const filtered=svcs.filter(s=>(!catFilter||s.cat===catFilter)&&(!q||s.nombre.toLowerCase().includes(q)||s.cat.toLowerCase().includes(q)));
   const extra=D.svcExtra||{};
   const grid=document.getElementById('svc-catalog-grid');
