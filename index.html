@@ -47,7 +47,7 @@ body.dark-mode .chart-card{background:#1c1c1c!important;border-color:#2a2a2a!imp
 body.dark-mode .util-card{background:#f8f5f0;}
 body.dark-mode .kpi-sub{color:#888;}
 /* Forms */
-body.dark-mode .form-box{background:#0a0a0a!important;border-color:#2a2a2a!important;}
+body.dark-mode .form-box.open{background:#1a1210!important;border-color:#3a2a20!important;}
 body.dark-mode .fgrp label{color:#888;}
 body.dark-mode .fgrp input,body.dark-mode .fgrp select,body.dark-mode .fgrp textarea{background:#141414!important;border-color:#2a2a2a!important;color:#fdfbf7!important;}
 body.dark-mode .fgrp select option{background:#f0ebe2;color:#1a1410;}
@@ -237,8 +237,8 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 .bgo{background:#fdf1dc;color:#8a6520;} .bb-pink{background:rgba(221,152,177,.2);color:#9a3a60;border:1px solid rgba(221,152,177,.3);}
 
 /* ── FORMS ── */
-.form-box{display:none;}
-.form-box.open{display:flex!important;position:fixed;inset:0;z-index:550;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px;}.form-box-inner{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(100,70,40,.25);}.modal-overlay.open{display:flex!important;}
+.form-box{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9001;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:calc(100% - 32px);max-width:700px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(100,70,40,.25);}
+.form-box.open{display:block;}.form-box-inner{/* structural only */}#form-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;}.modal-overlay.open{display:flex!important;}
 .fg{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
 .fgrp{display:flex;flex-direction:column;gap:4px;}
 .fgrp label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;}
@@ -1418,7 +1418,7 @@ footer span{color:var(--gold);}
     </div>
 
     <!-- Formulario nuevo servicio -->
-    <div class="form-box" id="fsvc" style="margin-bottom:16px"><div class="form-box-inner"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)"><span style="font-size:15px;font-weight:800;color:var(--cream)">Nuevo Servicio</span><button onclick="toggleForm('fsvc')" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&#x2715;</button></div>
+    <div class="form-box" id="fsvc"><div class="form-box-inner"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)"><span style="font-size:15px;font-weight:800;color:var(--cream)">Nuevo Servicio</span><button onclick="toggleForm('fsvc')" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&#x2715;</button></div>
       <div class="fg" style="grid-template-columns:1fr 1fr 1fr;">
         <div class="fgrp"><label>Categoría</label><select id="sv-cat" onchange="_updateAutoCode(this.value)"><option value="">Seleccionar...</option></select></div>
         <div class="fgrp"><label>Código</label><input type="text" id="sv-cod" placeholder="ACR-010"></div>
@@ -4180,15 +4180,23 @@ function showTab(name){
 function toggleForm(id){
   const el=document.getElementById(id);
   const opening=!el.classList.contains('open');
+  // Close any other open forms
+  document.querySelectorAll('.form-box.open').forEach(f=>{ if(f.id!==id) f.classList.remove('open'); });
   el.classList.toggle('open');
+  // Manage backdrop
+  let bd=document.getElementById('form-backdrop');
   if(opening){
-    // Limpiar campos de texto al abrir
-    el.querySelectorAll('input[type=text]:not(.fpdate),input[type=tel],textarea').forEach(inp=>{
+    if(!bd){
+      bd=document.createElement('div'); bd.id='form-backdrop';
+      bd.onclick=()=>{ document.querySelectorAll('.form-box.open').forEach(f=>f.classList.remove('open')); bd.remove(); };
+      document.body.appendChild(bd);
+    }
+    // Reset campos al abrir
+    el.querySelectorAll('input[type=text]:not(.fpdate):not(.fptime),input[type=tel],textarea').forEach(inp=>{
       if(inp.id!=='c-f'&&inp.id!=='m-f'&&inp.id!=='i-f'&&inp.id!=='cl-f') inp.value='';
     });
     el.querySelectorAll('input[type=number]').forEach(inp=>inp.value='');
     el.querySelectorAll('select').forEach(sel=>sel.selectedIndex=0);
-    // Reset específico citas
     if(id==='fc'){
       document.getElementById('c-f').value=todayStr();
       document.getElementById('c-estado').value='Confirmada';
@@ -4198,16 +4206,15 @@ function toggleForm(id){
       document.getElementById('c-notas').value='';
       const disc=document.getElementById('c-descuento'); if(disc) disc.value='';
       document.getElementById('svc-rows').innerHTML='';
-      recalcTotal();
-      addSvcRow();
-      checkEstado();
+      recalcTotal(); addSvcRow(); checkEstado();
     }
-    // Reset específico clientes
     if(id==='fcl'){
       ['cl-n','cl-tel','cl-ig','cl-bday','cl-notas'].forEach(fid=>{const e=document.getElementById(fid);if(e)e.value='';});
       document.getElementById('cl-f').value=todayStr();
     }
     setTimeout(()=>{ reinitFlatpickr(el); if(window.reinitFlatpickrTime) reinitFlatpickrTime(el); },80);
+  } else {
+    if(bd && !document.querySelector('.form-box.open')) bd.remove();
   }
 }
 function renderAll(){
