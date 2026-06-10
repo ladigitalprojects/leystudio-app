@@ -181,6 +181,20 @@ nav::-webkit-scrollbar{display:none;}
 }
 .svc-chip{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);font-size:12px;font-weight:700;color:var(--gray);cursor:pointer;white-space:nowrap;margin-right:6px;transition:all .18s}
 .svc-chip.active{background:linear-gradient(135deg,rgba(221,152,177,.18),rgba(178,146,87,.1));border-color:var(--pink);color:var(--pink)}
+/* ── Notificaciones ── */
+#notif-panel{position:fixed;top:64px;right:16px;width:340px;max-height:80vh;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-radius:16px;z-index:400;box-shadow:0 12px 40px rgba(100,70,40,.18);display:none}
+.notif-group-hdr{font-size:9px;font-weight:800;color:var(--gold-deep);text-transform:uppercase;letter-spacing:1px;padding:10px 16px 6px;background:rgba(178,146,87,.06);border-bottom:1px solid var(--border)}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(0,0,0,.04);transition:background .15s}
+.notif-item:last-child{border-bottom:none}
+.notif-item:hover{background:rgba(178,146,87,.05)}
+.notif-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.notif-cita .notif-icon{background:rgba(221,152,177,.15)}
+.notif-bday .notif-icon{background:rgba(241,196,15,.12)}
+.notif-inv  .notif-icon{background:rgba(230,126,34,.12)}
+.notif-text{flex:1}
+.notif-title{font-size:13px;font-weight:600;color:var(--cream);line-height:1.3}
+.notif-sub{font-size:11px;color:var(--gray);margin-top:2px}
+#notif-badge{position:absolute;top:-4px;right:-4px;background:#e74c3c;color:#fff;border-radius:50%;min-width:17px;height:17px;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--card)}
 @media(max-width:900px){
   .ham-btn{display:flex;align-items:center;justify-content:center;}
   nav{flex-direction:column;padding:0;overflow:hidden;max-height:0;transition:max-height .35s ease;top:64px;position:sticky;z-index:40;}
@@ -416,9 +430,13 @@ footer span{color:var(--gold);}
   .brand-name span:first-child{font-size:13px;letter-spacing:2px;}
   .brand-name span:last-child{display:none;}
   .logo-img{width:36px;height:36px;}
+  /* Ocultar nombre usuario en móvil (evita asimetría) */
+  #header-user{display:none!important;}
   /* Ocultar botones secundarios en mobile */
   #btn-export-hdr{display:none!important;}
   #btn-import-hdr{display:none!important;}
+  /* Panel notificaciones */
+  #notif-panel{right:0!important;left:0!important;width:100%!important;border-radius:0 0 16px 16px!important;top:54px!important;}
   /* Nav — solo iconos cuando está cerrado; texto completo cuando está abierto */
   nav:not(.nav-open) .tab{padding:0 12px;height:44px;font-size:0;gap:0;}
   nav:not(.nav-open) .tab svg{width:18px;height:18px;}
@@ -963,6 +981,11 @@ footer span{color:var(--gold);}
     <span id="h-breadcrumb" style="font-size:10px;color:var(--gold-deep);font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;padding:3px 10px;background:rgba(178,146,87,.08);border-radius:10px;border:1px solid rgba(178,146,87,.2);display:none"></span>
     <span class="sync-indicator" id="sync-dot" style="display:none"></span>
     <span id="header-user" style="font-size:12px;font-weight:600;color:var(--gold-deep);"></span>
+    <!-- Botón notificaciones -->
+    <button onclick="toggleNotifPanel()" title="Notificaciones" style="position:relative;background:none;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;color:var(--gray-dk)">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span id="notif-badge" style="display:none"></span>
+    </button>
     <button class="hbtn hbtn-outline" onclick="logout()" title="Cerrar sesión" style="color:#a93226;border-color:#e8c0c0;padding:7px 10px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;">
       <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 3h4v14h-4M9 14l4-4-4-4M13 10H3"/></svg>
       <span class="hide-mobile">Salir</span>
@@ -974,6 +997,15 @@ footer span{color:var(--gold);}
   </button>
 </div>
 </header>
+
+<!-- Panel de notificaciones -->
+<div id="notif-panel">
+  <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--card);z-index:1">
+    <span style="font-size:13px;font-weight:800;color:var(--cream)">Notificaciones</span>
+    <button onclick="document.getElementById('notif-panel').style.display='none'" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:20px;line-height:1;padding:0 4px">✕</button>
+  </div>
+  <div id="notif-content"><div style="padding:28px 16px;text-align:center;color:var(--gray);font-size:13px">Cargando...</div></div>
+</div>
 
 <nav>
   <div class="tab active" onclick="showTab('dashboard')">
@@ -4381,6 +4413,7 @@ function renderAll(){
   renderDashboard();renderCitas();renderClientes();
   renderFinanzas();renderInventario();renderServicios();
   initSvcCatFilter();renderUsuarios();
+  _updateNotifBadge();
 }
 
 
@@ -4823,6 +4856,119 @@ function lightboxNav(dir){
   if(!fotos.length)return;
   _svcCarouselIdx=(_svcCarouselIdx+dir+fotos.length)%fotos.length;
   document.getElementById('img-lightbox-img').src=fotos[_svcCarouselIdx];
+}
+
+// ══════════════════════════════════════════════════
+// NOTIFICACIONES
+// ══════════════════════════════════════════════════
+function buildNotifications(){
+  const now=new Date();
+  const today=todayStr();
+  const next7=new Date(now); next7.setDate(next7.getDate()+7);
+  const next7Str=next7.toISOString().split('T')[0];
+  const notifs=[];
+
+  // Citas confirmadas próximas 7 días
+  (D.citas||[]).filter(c=>c.estado==='Confirmada'&&c.fecha>=today&&c.fecha<=next7Str)
+    .sort((a,b)=>a.fecha.localeCompare(b.fecha)||a.hora.localeCompare(b.hora))
+    .forEach(c=>{
+      const ms=new Date(c.fecha+'T12:00:00')-new Date(today+'T12:00:00');
+      const dias=Math.round(ms/86400000);
+      const cuandoLabel=dias===0?'Hoy':dias===1?'Mañana':`En ${dias} días`;
+      const svcs=(c.servicios||[]).slice(0,2).map(s=>s.nombre).join(', ');
+      notifs.push({tipo:'cita',titulo:`${cuandoLabel} · ${c.hora}`,sub:`${c.clienta}${svcs?' — '+svcs:''}`,orden:c.fecha+'T'+c.hora});
+    });
+
+  // Cumpleaños del mes
+  const curMes=String(now.getMonth()+1).padStart(2,'0');
+  const curDia=String(now.getDate()).padStart(2,'0');
+  (D.clientes||[]).filter(c=>c.bday).forEach(c=>{
+    const [,m,d]=(c.bday||'').split('-');
+    if(m===curMes){
+      const esHoy=d===curDia;
+      const esPasado=d<curDia;
+      if(!esPasado||esHoy){
+        const cuandoLabel=esHoy?'Hoy 🎂':`Día ${+d}`;
+        notifs.push({tipo:'bday',titulo:`${cuandoLabel} — ${c.nombre}`,sub:esHoy?'¡Feliz cumpleaños!':'Este mes',orden:'bday-'+m+d});
+      }
+    }
+  });
+
+  // Inventario agotado o bajo stock
+  (D.inventario||[]).filter(i=>invSt(i)!=='ok').forEach(i=>{
+    const st=invSt(i);
+    notifs.push({tipo:'inv',titulo:i.nombre,sub:st==='empty'?`Agotado · ${i.stock} ${i.unidad}`:`Poco stock · ${i.stock}/${i.min} ${i.unidad}`,orden:'inv'});
+  });
+
+  return notifs;
+}
+
+function _updateNotifBadge(){
+  const n=buildNotifications().length;
+  const b=document.getElementById('notif-badge');
+  if(!b)return;
+  b.textContent=n||'';
+  b.style.display=n?'flex':'none';
+}
+
+function toggleNotifPanel(){
+  const panel=document.getElementById('notif-panel');
+  if(!panel)return;
+  const isOpen=panel.style.display==='block';
+  if(isOpen){panel.style.display='none';return;}
+  renderNotifPanel();
+  panel.style.display='block';
+  // Cerrar al hacer click fuera
+  setTimeout(()=>{
+    function closeOnOut(e){
+      if(!panel.contains(e.target)&&!e.target.closest('[onclick="toggleNotifPanel()"]')){
+        panel.style.display='none';
+        document.removeEventListener('click',closeOnOut,true);
+      }
+    }
+    document.addEventListener('click',closeOnOut,true);
+  },50);
+}
+
+function renderNotifPanel(){
+  const notifs=buildNotifications();
+  _updateNotifBadge();
+  const cont=document.getElementById('notif-content');
+  if(!cont)return;
+  if(!notifs.length){
+    cont.innerHTML=`<div style="padding:32px 16px;text-align:center">
+      <div style="font-size:36px">✨</div>
+      <div style="font-size:13px;color:var(--gray);margin-top:10px;font-weight:600">Todo al día</div>
+      <div style="font-size:11px;color:var(--gray);margin-top:4px">Sin citas, cumpleaños ni alertas pendientes</div>
+    </div>`;
+    return;
+  }
+  const citas=notifs.filter(n=>n.tipo==='cita');
+  const bdays=notifs.filter(n=>n.tipo==='bday');
+  const inv=notifs.filter(n=>n.tipo==='inv');
+  let html='';
+  if(citas.length){
+    html+=`<div class="notif-group-hdr">📅 Próximas citas</div>`;
+    citas.forEach(n=>{html+=`<div class="notif-item notif-cita">
+      <div class="notif-icon">📅</div>
+      <div class="notif-text"><div class="notif-title">${n.titulo}</div><div class="notif-sub">${n.sub}</div></div>
+    </div>`;});
+  }
+  if(bdays.length){
+    html+=`<div class="notif-group-hdr">🎂 Cumpleaños este mes</div>`;
+    bdays.forEach(n=>{html+=`<div class="notif-item notif-bday">
+      <div class="notif-icon">🎂</div>
+      <div class="notif-text"><div class="notif-title">${n.titulo}</div><div class="notif-sub">${n.sub}</div></div>
+    </div>`;});
+  }
+  if(inv.length){
+    html+=`<div class="notif-group-hdr">📦 Inventario</div>`;
+    inv.forEach(n=>{html+=`<div class="notif-item notif-inv">
+      <div class="notif-icon">${n.sub.startsWith('Agotado')?'🚨':'⚠️'}</div>
+      <div class="notif-text"><div class="notif-title">${n.titulo}</div><div class="notif-sub">${n.sub}</div></div>
+    </div>`;});
+  }
+  cont.innerHTML=html;
 }
 </script>
 
