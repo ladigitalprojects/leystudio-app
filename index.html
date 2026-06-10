@@ -163,6 +163,21 @@ nav::-webkit-scrollbar{display:none;}
 @media(max-width:600px){
   .form-box{top:auto!important;bottom:0!important;left:0!important;transform:none!important;width:100%!important;border-radius:20px 20px 0 0!important;max-height:88vh!important;padding:20px 16px 30px!important;}
 }
+/* ══ MOBILE CARDS ══ */
+.mob-list{display:none;flex-direction:column;gap:10px;padding:4px 0}
+.mob-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 14px 12px;box-shadow:0 1px 6px rgba(100,70,40,.06);transition:box-shadow .2s}
+.mob-card:active{box-shadow:0 3px 12px rgba(178,146,87,.18)}
+.mob-card-top{display:flex;align-items:center;gap:10px}
+.mob-card-name{font-size:15px;font-weight:800;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mob-card-sub{font-size:11px;color:var(--gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mob-card-divider{border:none;border-top:1px solid var(--border);margin:10px 0}
+.mob-card-bottom{display:flex;align-items:center;justify-content:space-between}
+.mob-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.mob-date-badge{background:linear-gradient(135deg,rgba(178,146,87,.12),rgba(178,146,87,.06));border:1px solid rgba(178,146,87,.25);border-radius:10px;padding:8px 10px;text-align:center;flex-shrink:0;min-width:42px}
+@media(max-width:600px){
+  .mob-list{display:flex}
+  .desk-table{display:none!important}
+}
 @media(max-width:900px){
   .ham-btn{display:flex;align-items:center;justify-content:center;}
   nav{flex-direction:column;padding:0;overflow:hidden;max-height:0;transition:max-height .35s ease;top:64px;position:sticky;z-index:40;}
@@ -1122,9 +1137,10 @@ footer span{color:var(--gold);}
         <option>Confirmada</option><option>Completada</option><option>Cancelada</option><option>No Show</option>
       </select>
     </div>
-    <div class="tbl-wrap">
+    <div class="tbl-wrap desk-table">
     <table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Clienta</th><th>Servicios</th><th>Total</th><th>Pago</th><th>Estado</th><th>Notas</th><th>Acciones</th></tr></thead>
     <tbody id="citas-tb"></tbody></table></div>
+    <div class="mob-list" id="citas-mob"></div>
   </div>
 </div>
 
@@ -1156,9 +1172,10 @@ footer span{color:var(--gold);}
     <div class="search-bar">
       <input type="text" id="s-cl" placeholder="Buscar clienta..." oninput="renderClientes()">
     </div>
-    <div class="tbl-wrap">
+    <div class="tbl-wrap desk-table">
     <table><thead><tr><th>#</th><th onclick="clSortBy('nombre')" style="cursor:pointer" title="Ordenar">Nombre ⇅</th><th>Teléfono</th><th onclick="clSortBy('fecha')" style="cursor:pointer" title="Ordenar">1ra Visita ⇅</th><th onclick="clSortBy('visitas')" style="cursor:pointer" title="Ordenar">Visitas ⇅</th><th onclick="clSortBy('total')" style="cursor:pointer" title="Ordenar">Total gastado ⇅</th><th>Último servicio</th><th>Acciones</th></tr></thead>
     <tbody id="cl-tb"></tbody></table></div>
+    <div class="mob-list" id="cl-mob"></div>
     <p class="tip">Visitas y total calculados automáticamente desde citas completadas. Toca Editar para modificar datos de la clienta.</p>
 
     <!-- Stats Panel -->
@@ -1215,9 +1232,10 @@ footer span{color:var(--gold);}
         <button class="hbtn hbtn-outline" onclick="setFinRango('todo')" id="fr-todo" style="font-size:10px;padding:5px 9px">Todo</button>
       </div>
     </div>
-    <div class="tbl-wrap">
+    <div class="tbl-wrap desk-table">
     <table><thead><tr><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Descripción</th><th>Monto</th><th>Pago</th><th>Ref.</th><th>Origen</th><th>Acciones</th></tr></thead>
     <tbody id="fin-tb"></tbody></table></div>
+    <div class="mob-list" id="fin-mob"></div>
   </div>
 </div>
 
@@ -1254,9 +1272,10 @@ footer span{color:var(--gold);}
         <option value="">Todos</option><option value="ok">OK</option><option value="low">Poco Stock</option><option value="empty">🚨 Agotado</option>
       </select>
     </div>
-    <div class="tbl-wrap">
+    <div class="tbl-wrap desk-table">
     <table><thead><tr><th>#</th><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mín.</th><th>Unidad</th><th>Precio</th><th>Proveedor</th><th>Últ. Compra</th><th>Estado</th><th>Acciones</th></tr></thead>
     <tbody id="inv-tb"></tbody></table></div>
+    <div class="mob-list" id="inv-mob"></div>
   </div>
 </div>
 
@@ -2213,6 +2232,40 @@ function renderCitas(){
         <button class="action-icon-btn action-del" onclick="delCita(${c.id})" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
       </td></tr>`;
   }).join('');
+  // ── Mobile cards ──
+  const _citasMob=document.getElementById('citas-mob');
+  if(_citasMob) _citasMob.innerHTML=list.map(c=>{
+    const svcs=c.servicios||[];
+    const svcLine=svcs.slice(0,2).map(s=>s.nombre).join(' · ')+(svcs.length>2?` +${svcs.length-2}`:'');
+    const [cy,cm,cd]=(c.fecha||'').split('-');
+    const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const accion=c.estado==='Confirmada'
+      ?`<button class="action-icon-btn action-check" onclick="completarCita(${c.id})" title="Completar" style="height:34px;width:34px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></button>`
+      :`<button class="action-icon-btn action-pdf" onclick="descargarReciboPDF(${c.id})" title="PDF" style="height:34px;width:34px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`;
+    return`<div class="mob-card">
+      <div class="mob-card-top">
+        <div class="mob-date-badge">
+          <div style="font-size:22px;font-weight:800;color:var(--cream);line-height:1">${cd||'—'}</div>
+          <div style="font-size:9px;font-weight:700;color:var(--gold-deep);text-transform:uppercase">${meses[(+cm||1)-1]||''}</div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="mob-card-name">${c.clienta}</div>
+          <div class="mob-card-sub">${c.hora} · ${svcLine||'Sin servicio'}</div>
+        </div>
+        ${estadoBadge(c.estado)}
+      </div>
+      <hr class="mob-card-divider">
+      <div class="mob-card-bottom">
+        <div style="font-size:20px;font-weight:800;color:var(--pink)">${fmtM(c.precioTotal||0)}</div>
+        <div class="mob-actions">
+          ${accion}
+          <button class="action-icon-btn action-msg" onclick="openWAcita(${c.id})" style="height:34px;width:34px" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
+          <button class="action-icon-btn action-edit" onclick="openEditCita(${c.id})" style="height:34px;width:34px" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="action-icon-btn action-del" onclick="delCita(${c.id})" style="height:34px;width:34px" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 function addCita(){
   const servicios=getSvcRowsData();
@@ -2296,6 +2349,45 @@ function renderClientes(){
       <td><strong style="color:var(--pink)">${fmtM(st.total)}</strong></td>
       <td style="max-width:200px;font-size:11px">${st.ultimoSvc.length>45?st.ultimoSvc.substring(0,45)+'…':st.ultimoSvc}</td>
       <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:10px 4px"><button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn action-pdf" onclick="openFicha(${c.id})" title="Ficha técnica"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button><button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td></tr>`;
+  }).join('');
+  // ── Mobile cards ──
+  const _clMob=document.getElementById('cl-mob');
+  if(_clMob) _clMob.innerHTML=list.map(c=>{
+    const st=clientStats(c.nombre);
+    const bdayBadge=(()=>{
+      if(!c.bday) return '';
+      const [,m,d]=(c.bday||'').split('-');
+      const now=new Date(); const nm=String(now.getMonth()+1).padStart(2,'0'); const nd=String(now.getDate()).padStart(2,'0');
+      if(m===nm && d===nd) return '<span title="Cumpleaños hoy!" style="color:#f1c40f;font-size:14px;margin-left:4px">🎂</span>';
+      if(m===nm) return '<span title="Cumpleaños este mes" style="color:#f39c12;font-size:12px;margin-left:4px">🎁</span>';
+      return '';
+    })();
+    const initials=(c.nombre||'?').split(' ').slice(0,2).map(x=>x[0]||'').join('').toUpperCase()||'?';
+    const avatarHtml=c.foto
+      ?`<img src="${c.foto}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--gold)">`
+      :`<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-deep));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;flex-shrink:0">${initials}</div>`;
+    return`<div class="mob-card">
+      <div class="mob-card-top">
+        ${avatarHtml}
+        <div style="flex:1;min-width:0">
+          <div class="mob-card-name">${c.nombre}${bdayBadge}</div>
+          <div class="mob-card-sub">${c.tel||'Sin teléfono'}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:18px;font-weight:800;color:var(--pink)">${fmtM(st.total)}</div>
+          <div style="font-size:10px;color:var(--gray)">${st.visitas} visita${st.visitas!==1?'s':''}</div>
+        </div>
+      </div>
+      <hr class="mob-card-divider">
+      <div class="mob-card-bottom">
+        <div style="font-size:11px;color:var(--gray);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${st.ultimoSvc||'Sin servicios'}</div>
+        <div class="mob-actions">
+          <button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" style="height:34px;width:34px" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button>
+          <button class="action-icon-btn action-pdf" onclick="openFicha(${c.id})" style="height:34px;width:34px" title="Ficha técnica"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>
+          <button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" style="height:34px;width:34px" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+      </div>
+    </div>`;
   }).join('');
 }
 function addCliente(){
@@ -2653,6 +2745,37 @@ function renderFinanzas(){
       <td>${m.pago}</td><td>${m.ref||'—'}</td>
       <td>${m.citaId?`<span class="badge bb" title="Cita #${m.citaId}">Cita</span>`:'<span class="badge bgr">Manual</span>'}</td>
       <td style="white-space:nowrap;display:flex;gap:4px;padding:10px 4px"><button class="action-icon-btn action-edit" onclick="openEditMov(${m.id})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-icon-btn action-del" onclick="delMov(${m.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></td></tr>`).join('');
+  // ── Mobile cards ──
+  const _finMob=document.getElementById('fin-mob');
+  if(_finMob) _finMob.innerHTML=list.map(m=>{
+    const esIngreso=m.tipo==='Ingreso';
+    const [cy,cm,cd]=(m.fecha||'').split('-');
+    const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return`<div class="mob-card">
+      <div class="mob-card-top">
+        <div class="mob-date-badge">
+          <div style="font-size:22px;font-weight:800;color:var(--cream);line-height:1">${cd||'—'}</div>
+          <div style="font-size:9px;font-weight:700;color:var(--gold-deep);text-transform:uppercase">${meses[(+cm||1)-1]||''}</div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="mob-card-name">${m.desc}</div>
+          <div class="mob-card-sub">${m.cat} · ${m.pago}</div>
+        </div>
+        <span class="badge ${esIngreso?'bb-pink':'bgo'}" style="flex-shrink:0">${esIngreso?'Ingreso':'Gasto'}</span>
+      </div>
+      <hr class="mob-card-divider">
+      <div class="mob-card-bottom">
+        <div>
+          <div style="font-size:20px;font-weight:800;color:${esIngreso?'var(--pink)':'var(--gold-deep)'}">${fmtM(m.monto)}</div>
+          <div style="font-size:10px;color:var(--gray)">${m.citaId?'Auto · Cita #'+m.citaId:'Manual'}</div>
+        </div>
+        <div class="mob-actions">
+          <button class="action-icon-btn action-edit" onclick="openEditMov(${m.id})" style="height:34px;width:34px" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="action-icon-btn action-del" onclick="delMov(${m.id})" style="height:34px;width:34px" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 function addMovimiento(){
   const m={id:nextId(D.movimientos),
@@ -2735,6 +2858,35 @@ function renderInventario(){
         <button onclick="adjStock(${item.id},-1)" style="background:var(--border);border:none;color:var(--cream);border-radius:4px;padding:2px 7px;cursor:pointer;margin:0 3px">−</button>
         <button class="ibtn" onclick="delInv(${item.id})">🗑</button>
       </td></tr>`).join('');
+  // ── Mobile cards ──
+  const _invMob=document.getElementById('inv-mob');
+  if(_invMob) _invMob.innerHTML=list.map(item=>{
+    const st=invSt(item);
+    const stHtml=st==='empty'?'<span class="s-empty">Agotado</span>':st==='low'?'<span class="s-low">Poco stock</span>':'<span class="s-ok">OK</span>';
+    const stockColor=item.stock===0?'var(--gold-deep)':item.stock<=item.min?'var(--gold-deep)':'var(--pink)';
+    return`<div class="mob-card">
+      <div class="mob-card-top">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(178,146,87,.2),rgba(178,146,87,.08));border:1px solid rgba(178,146,87,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">🧴</div>
+        <div style="flex:1;min-width:0">
+          <div class="mob-card-name">${item.nombre}</div>
+          <div class="mob-card-sub">${item.cat} · ${item.proveedor||'Sin proveedor'}</div>
+        </div>
+        ${stHtml}
+      </div>
+      <hr class="mob-card-divider">
+      <div class="mob-card-bottom">
+        <div>
+          <div style="font-size:18px;font-weight:800;color:${stockColor}">${item.stock} <span style="font-size:11px;font-weight:400;color:var(--gray)">${item.unidad}</span></div>
+          <div style="font-size:10px;color:var(--gray)">Mín: ${item.min} · ${fmtM(item.precio)}</div>
+        </div>
+        <div class="mob-actions">
+          <button onclick="adjStock(${item.id},1)" style="height:34px;min-width:34px;padding:0 10px;background:var(--gold);border:none;color:var(--black);border-radius:8px;cursor:pointer;font-weight:800;font-size:18px;line-height:1">+</button>
+          <button onclick="adjStock(${item.id},-1)" style="height:34px;min-width:34px;padding:0 10px;background:var(--border);border:none;color:var(--cream);border-radius:8px;cursor:pointer;font-weight:800;font-size:18px;line-height:1">−</button>
+          <button class="action-icon-btn action-del" onclick="delInv(${item.id})" style="height:34px;width:34px" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 function addInventario(){
   const nombre=document.getElementById('i-n').value.trim();
