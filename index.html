@@ -1287,9 +1287,9 @@ footer span{color:var(--gold);}
 
   <!-- Ficha servicio -->
   <div class="modal-overlay" id="modal-svc-ficha">
-    <div class="modal" style="max-width:580px;padding:0;overflow:hidden">
+    <div class="modal" style="max-width:580px;padding:0;overflow:hidden;display:flex;flex-direction:column">
       <!-- Header ficha -->
-      <div style="background:linear-gradient(135deg,rgba(221,152,177,.15),rgba(178,146,87,.1));padding:20px 24px 16px;border-bottom:1px solid var(--border)">
+      <div style="background:linear-gradient(135deg,rgba(221,152,177,.15),rgba(178,146,87,.1));padding:20px 24px 16px;border-bottom:1px solid var(--border);flex-shrink:0">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
           <div style="flex:1">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -1311,6 +1311,8 @@ footer span{color:var(--gold);}
           </div>
         </div>
       </div>
+      <!-- Scrollable body -->
+      <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
       <!-- Fotos carousel -->
       <div id="svc-photos-wrap" style="display:none;background:#111;position:relative;overflow:hidden">
         <div id="svc-carousel" style="display:flex;transition:transform .3s ease;height:210px"></div>
@@ -1358,8 +1360,9 @@ footer span{color:var(--gold);}
           <button class="btn-pri" onclick="addSvcProd()" style="white-space:nowrap">+ Agregar</button>
         </div>
       </div>
-      <!-- Footer -->
-      <div style="padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--row-alt)">
+      </div><!-- /scrollable body -->
+      <!-- Footer sticky -->
+      <div style="padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--row-alt);flex-shrink:0">
         <button class="btn-pri" style="flex:1" onclick="saveSvcFicha()">Guardar ficha</button>
         <button class="btn-sec" onclick="closeModal('modal-svc-ficha')">Cerrar</button>
       </div>
