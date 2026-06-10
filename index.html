@@ -604,6 +604,41 @@ footer span{color:var(--gold);}
 [contenteditable] li{margin:2px 0;}
 [contenteditable] h4{color:var(--gold-deep);font-size:13px;margin:8px 0 4px;font-weight:700;}
 [contenteditable]:empty:before{content:attr(data-placeholder);color:var(--gray);pointer-events:none;}
+
+/* ── CLIENT AVATAR ── */
+.cl-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0;background:var(--champagne);}
+.cl-avatar-placeholder{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--gold));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;border:2px solid var(--gold);}
+.avatar-upload-wrap{position:relative;display:inline-block;cursor:pointer;}
+.avatar-upload-wrap:hover .avatar-upload-overlay{opacity:1;}
+.avatar-upload-overlay{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;font-size:18px;}
+
+/* ── SERVICE CATALOG CARDS ── */
+.svc-catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:10px;}
+.svc-catalog-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;}
+.svc-catalog-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(100,70,40,.15);}
+.svc-card-img{width:100%;height:130px;object-fit:cover;display:block;background:var(--champagne);}
+.svc-card-img-placeholder{width:100%;height:130px;background:linear-gradient(135deg,rgba(221,152,177,.2),rgba(178,146,87,.12));display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;}
+.svc-card-img-upload{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:20px;padding:3px 8px;font-size:10px;cursor:pointer;transition:.2s;}
+.svc-card-img-upload:hover{background:var(--gold);}
+.svc-card-body{padding:10px 12px 12px;}
+.svc-card-cat{font-size:9px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.svc-card-name{font-size:12px;font-weight:700;color:var(--cream);line-height:1.3;margin-bottom:6px;}
+.svc-card-meta{display:flex;justify-content:space-between;align-items:center;}
+.svc-card-price{font-size:14px;font-weight:800;color:var(--pink);}
+.svc-card-dur{font-size:10px;color:var(--gray);}
+.svc-view-toggle{display:flex;gap:6px;align-items:center;}
+.svc-view-btn{border:1px solid var(--border);background:var(--card);border-radius:8px;padding:5px 10px;cursor:pointer;color:var(--gray);font-size:12px;transition:.15s;}
+.svc-view-btn.active{border-color:var(--gold);color:var(--gold-deep);background:rgba(178,146,87,.1);}
+
+/* ── BIRTHDAY SECTION ── */
+.bday-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.bday-row:last-child{border-bottom:none;}
+.bday-badge{background:rgba(221,152,177,.15);color:var(--pink);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px;}
+
+@media(max-width:600px){
+  .svc-catalog-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+  .svc-card-img,.svc-card-img-placeholder{height:110px;}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
@@ -632,6 +667,19 @@ footer span{color:var(--gold);}
   <div class="modal">
     <div class="modal-title">Editar Clienta
       <button class="modal-close" onclick="closeModal('modal-cl')">✕</button>
+    </div>
+    <!-- Avatar upload -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div class="avatar-upload-wrap" onclick="triggerClientePhotoUpload()">
+        <img id="e-cl-avatar-img" src="" style="display:none" class="cl-avatar" style="width:60px;height:60px">
+        <div id="e-cl-avatar-placeholder" class="cl-avatar-placeholder" style="width:60px;height:60px;font-size:20px">?</div>
+        <div class="avatar-upload-overlay">📷</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--cream)" id="e-cl-nombre-preview">Clienta</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:2px">Toca la foto para cambiarla</div>
+      </div>
+      <input type="file" id="e-cl-photo-input" accept="image/*" style="display:none" onchange="handleClientePhoto(this)">
     </div>
     <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px;">
       <input type="hidden" id="e-cl-id">
@@ -1353,6 +1401,10 @@ footer span{color:var(--gold);}
 
     <!-- Resumen categorías -->
     <div id="svc-cat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px"></div>
+    <!-- Catalog view -->
+    <div id="svc-catalog-view" style="display:none">
+      <div class="svc-catalog-grid" id="svc-catalog-grid"></div>
+    </div>
 
     <!-- Filtros -->
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
@@ -1413,7 +1465,7 @@ footer span{color:var(--gold);}
 <div class="section" id="tab-notificaciones">
 
   <!-- KPIs rápidos -->
-  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
     <div class="kpi-card kpi-gold">
       <div class="kpi-label">Citas mañana</div>
       <div class="kpi-value" id="n-tomorrow">—</div>
@@ -1431,6 +1483,12 @@ footer span{color:var(--gold);}
       <div class="kpi-value" id="n-inactive">—</div>
       <div class="kpi-sub">más de 30 días sin visita</div>
       <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg></div>
+    </div>
+    <div class="kpi-card kpi-red" style="cursor:pointer" onclick="document.getElementById('bday-section').scrollIntoView({behavior:'smooth'})">
+      <div class="kpi-label">Cumpleaños próximos</div>
+      <div class="kpi-value" id="n-bday">—</div>
+      <div class="kpi-sub">próximos 14 días</div>
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
     </div>
   </div>
 
@@ -1463,6 +1521,14 @@ footer span{color:var(--gold);}
       <button class="wa-btn" onclick="enviarTodosReactivacion()">Enviar a todas</button>
     </div>
     <div id="notif-inactive-list" style="margin-top:12px"></div>
+  </div>
+
+  <!-- Cumpleaños próximos -->
+  <div class="card" style="margin-top:16px" id="bday-section">
+    <div class="card-header">
+      <span class="card-title">🎂 Cumpleaños Próximos (14 días)</span>
+    </div>
+    <div id="notif-bday-list" style="margin-top:12px"></div>
   </div>
 
   <!-- Panel de plantillas -->
@@ -1823,14 +1889,28 @@ function descargarReciboPDF(citaId){
   doc.text('SERVICIOS',14,y+1); y+=8;
 
   (c.servicios||[]).forEach(s=>{
+    if(y>185){doc.addPage();y=20;}
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...dkgray);
-    const nm=s.nombre.length>35?s.nombre.substring(0,35)+'…':s.nombre;
-    doc.text('·  '+nm,14,y);
+    // Wrap long names
+    const words=s.nombre.split(' '); let line1=''; let line2='';
+    words.forEach(w=>{ if((line1+' '+w).length<=38) line1+=(line1?' ':'')+w; else line2+=(line2?' ':'')+w; });
+    doc.text('·  '+line1,14,y);
     doc.setFont('helvetica','bold'); doc.setTextColor(...gold);
     doc.text('L. '+Number(s.precio).toLocaleString('es-HN'),W-14,y,{align:'right'});
+    if(line2){ y+=5; doc.setFont('helvetica','normal'); doc.setTextColor(...mdgray); doc.setFontSize(7); doc.text('   '+line2,14,y); }
     doc.setDrawColor(...bord); doc.setLineWidth(0.2); doc.line(14,y+1.5,W-14,y+1.5);
     y+=7;
   });
+  // Show discount if any
+  if(c.descuento && c.descuento>0){
+    if(y>185){doc.addPage();y=20;}
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...mdgray);
+    doc.text('  Descuento',14,y);
+    doc.setFont('helvetica','bold'); doc.setTextColor([180,60,60]);
+    doc.text('- L. '+Number(c.descuento).toLocaleString('es-HN'),W-14,y,{align:'right'});
+    doc.setDrawColor(...bord); doc.setLineWidth(0.2); doc.line(14,y+1.5,W-14,y+1.5);
+    y+=7;
+  }
 
   // Total
   y+=3;
@@ -2217,7 +2297,7 @@ function renderClientes(){
       return '';
     })();
     return`<tr>
-      <td>${i+1}</td><td><strong>${c.nombre}</strong>${bdayBadge}</td>
+      <td>${_renderAvatar(c,34)}</td><td>${i+1}</td><td><strong>${c.nombre}</strong>${bdayBadge}</td>
       <td>${c.tel}</td><td>${c.ig||'—'}</td><td>${fmtD(c.fecha)}</td>
       <td><span class="badge bgo">${st.visitas}</span></td>
       <td><strong style="color:var(--pink)">${fmtM(st.total)}</strong></td>
@@ -2242,6 +2322,13 @@ function openEditCliente(id){
   const c=D.clientes.find(x=>x.id===id); if(!c) return;
   document.getElementById('e-cl-id').value=id;
   document.getElementById('e-cl-n').value=c.nombre;
+  document.getElementById('e-cl-nombre-preview').textContent=c.nombre;
+  // Load avatar
+  const img=document.getElementById('e-cl-avatar-img');
+  const ph=document.getElementById('e-cl-avatar-placeholder');
+  if(c.foto){img.src=c.foto;img.style.display='block';ph.style.display='none';}
+  else{img.style.display='none';ph.style.display='flex';ph.textContent=(c.nombre||'?').split(' ').slice(0,2).map(x=>x[0]||'').join('').toUpperCase()||'?';}
+  const photoInp=document.getElementById('e-cl-photo-input'); if(photoInp) photoInp.dataset.newFoto='';
   document.getElementById('e-cl-tel').value=c.tel||'';
   document.getElementById('e-cl-ig').value=c.ig||'';
   document.getElementById('e-cl-f').value=c.fecha||'';
@@ -2258,6 +2345,8 @@ function saveEditCliente(){
   c.fecha=document.getElementById('e-cl-f').value;
   c.notas=(document.getElementById('e-cl-notas')?.value||'').trim();
   c.bday=document.getElementById('e-cl-bday').value||'';
+  const photoInp=document.getElementById('e-cl-photo-input');
+  if(photoInp?.dataset.newFoto) c.foto=photoInp.dataset.newFoto;
   saveAndSync(); renderClientes(); actualizarDatalist();
   closeModal('modal-cl'); toast('Clienta actualizada');
 }
@@ -3959,6 +4048,52 @@ function renderNotificaciones(){
         </div>`;
       }).join('');
 
+  // ── Cumpleaños próximos (14 días) ──
+  const todDate = new Date(todStr);
+  const bdayList = D.clientes.filter(c=>{
+    if(!c.bday) return false;
+    const [,bm,bd] = (c.bday||'').split('-');
+    if(!bm||!bd) return false;
+    const thisYear = todDate.getFullYear();
+    // Try this year and next year
+    for(const yr of [thisYear, thisYear+1]){
+      const bd2 = new Date(yr, parseInt(bm)-1, parseInt(bd));
+      const diff = Math.floor((bd2-todDate)/86400000);
+      if(diff>=0 && diff<=14) return true;
+    }
+    return false;
+  }).map(c=>{
+    const [,bm,bd] = (c.bday||'').split('-');
+    const thisYear = todDate.getFullYear();
+    let bdDate = new Date(thisYear, parseInt(bm)-1, parseInt(bd));
+    if(bdDate < todDate) bdDate = new Date(thisYear+1, parseInt(bm)-1, parseInt(bd));
+    const days = Math.floor((bdDate-todDate)/86400000);
+    return {...c, _daysUntil: days, _bdDate: bdDate};
+  }).sort((a,b)=>a._daysUntil-b._daysUntil);
+
+  document.getElementById('n-bday').textContent = bdayList.length;
+
+  const bl = document.getElementById('notif-bday-list');
+  bl.innerHTML = bdayList.length === 0
+    ? '<p style="color:#444;font-size:13px;padding:8px 0">No hay cumpleaños en los próximos 14 días 🎉</p>'
+    : bdayList.map(c=>{
+        const label = c._daysUntil===0 ? '<span class="bday-badge">¡HOY! 🎂</span>'
+          : c._daysUntil===1 ? '<span class="bday-badge">Mañana</span>'
+          : `<span class="bday-badge">En ${c._daysUntil} días</span>`;
+        const bm = (c.bday||'').split('-')[1];
+        const bd = (c.bday||'').split('-')[2];
+        return `<div class="bday-row">
+          <div style="display:flex;align-items:center;gap:10px">
+            ${_renderAvatar(c,36)}
+            <div>
+              <strong style="color:var(--cream)">${c.nombre}</strong> ${label}
+              <div style="font-size:11px;color:var(--gray);margin-top:1px">📅 ${bd}/${bm} &nbsp; 📱 ${c.tel||'Sin tel'}</div>
+            </div>
+          </div>
+          <button class="wa-btn" style="background:var(--pink)" onclick="openWABday(${c.id})">🎂 Felicitar</button>
+        </div>`;
+      }).join('');
+
   // Templates grid
   document.getElementById('plantillas-grid').innerHTML = WA_TEMPLATES.map(t => `
     <div class="wa-template" onclick="abrirPlantillaDirecta('${t.id}')">
@@ -4370,6 +4505,122 @@ function showEmptyState(){
 }
 
 init();
+
+// ─── IMAGE COMPRESSION ───────────────────────────
+function compressImage(file, maxW=700, quality=0.75){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const ratio=Math.min(1,maxW/img.width);
+        const canvas=document.createElement('canvas');
+        canvas.width=img.width*ratio; canvas.height=img.height*ratio;
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg',quality));
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── RENDER AVATAR HELPER ────────────────────────
+function _renderAvatar(c, size=38){
+  if(c.foto){
+    return `<img src="${c.foto}" class="cl-avatar" style="width:${size}px;height:${size}px">`;
+  }
+  const initials=(c.nombre||'?').split(' ').slice(0,2).map(x=>x[0]||'').join('').toUpperCase()||'?';
+  return `<div class="cl-avatar-placeholder" style="width:${size}px;height:${size}px;font-size:${Math.floor(size*.35)}px">${initials}</div>`;
+}
+
+// ─── CLIENTE PHOTO UPLOAD ────────────────────────
+function triggerClientePhotoUpload(){
+  document.getElementById('e-cl-photo-input').click();
+}
+async function handleClientePhoto(inp){
+  if(!inp.files[0]) return;
+  const b64=await compressImage(inp.files[0]);
+  document.getElementById('e-cl-avatar-img').src=b64;
+  document.getElementById('e-cl-avatar-img').style.display='block';
+  document.getElementById('e-cl-avatar-placeholder').style.display='none';
+  inp.dataset.newFoto=b64;
+}
+
+// ─── SERVICE CATALOG VIEW ────────────────────────
+let _svcView='tabla';
+function setSvcView(view){
+  _svcView=view;
+  document.getElementById('btn-view-tabla').classList.toggle('active',view==='tabla');
+  document.getElementById('btn-view-catalogo').classList.toggle('active',view==='catalogo');
+  // Show/hide filter row and table
+  const filterRow=document.getElementById('svc-filter-row');
+  const tableWrap=document.getElementById('svc-table-wrap');
+  const catalogView=document.getElementById('svc-catalog-view');
+  if(filterRow) filterRow.style.display=view==='tabla'?'':'none';
+  if(tableWrap) tableWrap.style.display=view==='tabla'?'':'none';
+  if(catalogView) catalogView.style.display=view==='catalogo'?'':'none';
+  if(view==='catalogo') renderServiciosCatalogo();
+}
+
+function renderServiciosCatalogo(){
+  const svcs=getAllSvcs();
+  const catFilter=document.getElementById('svc-cat-filter')?.value||'';
+  const q=(document.getElementById('svc-search')?.value||'').toLowerCase();
+  const filtered=svcs.filter(s=>(!catFilter||s.cat===catFilter)&&(!q||s.nombre.toLowerCase().includes(q)||s.cat.toLowerCase().includes(q)));
+  const extra=D.svcExtra||{};
+  const grid=document.getElementById('svc-catalog-grid');
+  if(!grid) return;
+  if(!filtered.length){grid.innerHTML='<p style="color:var(--gray);padding:20px 0">Sin servicios en esta categoría.</p>';return;}
+  grid.innerHTML=filtered.map(s=>{
+    const key=_svcKey(s);
+    const foto=(extra[key]?.foto)||'';
+    const imgHTML=foto
+      ? `<img src="${foto}" class="svc-card-img" alt="${s.nombre}">`
+      : `<div class="svc-card-img-placeholder"><span style="font-size:36px">${_catEmoji(s.cat)}</span><button class="svc-card-img-upload" onclick="event.stopPropagation();uploadSvcFoto('${key}')">📷 Agregar foto</button></div>`;
+    return `<div class="svc-catalog-card" onclick="openSvcFicha('${key}')">
+      <div style="position:relative">${imgHTML}${foto?`<button class="svc-card-img-upload" onclick="event.stopPropagation();uploadSvcFoto('${key}')">📷</button>`:''}</div>
+      <div class="svc-card-body">
+        <div class="svc-card-cat">${s.cat}</div>
+        <div class="svc-card-name">${s.nombre}</div>
+        <div class="svc-card-meta">
+          <span class="svc-card-price">${fmtM(s.precio)}</span>
+          <span class="svc-card-dur">${_durFmt(s.duracion)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _catEmoji(cat){
+  const m={Acrílico:'💅',Gel:'✨','Art Nails':'🎨',Efectos:'🌟',Diseño:'🖌️',Retiro:'🗑️',Reparación:'🔧',Refill:'🔄','Spa Manicure':'💆','Spa Pedicure':'🦶',Depilación:'🪷','Nail Forms':'📋'};
+  return m[cat]||'💅';
+}
+
+function uploadSvcFoto(key){
+  const inp=document.createElement('input');
+  inp.type='file'; inp.accept='image/*';
+  inp.onchange=async()=>{
+    if(!inp.files[0]) return;
+    const b64=await compressImage(inp.files[0]);
+    if(!D.svcExtra) D.svcExtra={};
+    if(!D.svcExtra[key]) D.svcExtra[key]={};
+    D.svcExtra[key].foto=b64;
+    saveAndSync(); renderServiciosCatalogo();
+    toast('✅ Foto del servicio guardada');
+  };
+  inp.click();
+}
+
+// ─── BIRTHDAY WA ─────────────────────────────────
+function openWABday(id){
+  const c=D.clientes.find(x=>x.id===id); if(!c) return;
+  const t=WA_TEMPLATES.find(x=>x.id==='cumple');
+  const msg=t?t.build(c.nombre):'';
+  openWAModal(c.nombre, c.tel, WA_TEMPLATES, 'cumple');
+  if(msg) document.getElementById('wa-custom-msg').value=msg;
+}
+
 </script>
 </body>
 </html>
