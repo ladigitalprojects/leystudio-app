@@ -420,7 +420,7 @@ footer span{color:var(--gold);}
   /* Forms */
   .fg{grid-template-columns:1fr!important;}
   .fgrp.span2,.fgrp.span3{grid-column:span 1!important;}
-  .svc-row{grid-template-columns:1fr 90px auto;}
+  .svc-row{grid-template-columns:1fr 80px 36px;gap:6px;}
   /* Tables — scroll horizontal, columnas clave visibles */
   .tbl-wrap{-webkit-overflow-scrolling:touch;}
   table{font-size:11px;}
@@ -609,7 +609,7 @@ footer span{color:var(--gold);}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
 <style>
-.flatpickr-calendar{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:10px!important;box-shadow:0 4px 16px rgba(100,70,40,.12)!important;}
+.flatpickr-calendar{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:10px!important;box-shadow:0 8px 32px rgba(100,70,40,.25)!important;z-index:9999!important;}
 .flatpickr-months,.flatpickr-weekdays{background:var(--champagne)!important;border-radius:10px 10px 0 0!important;}
 .flatpickr-month,.flatpickr-weekday{color:#B29257!important;fill:#B29257!important;}
 .flatpickr-current-month,.flatpickr-current-month .numInputWrapper{color:#B29257!important;}
@@ -640,7 +640,7 @@ footer span{color:var(--gold);}
       <div class="fgrp"><label>Instagram</label><input type="text" id="e-cl-ig"></div>
       <div class="fgrp"><label>1ra Visita</label><input type="text" class="fpdate" id="e-cl-f"></div>
       <div class="fgrp"><label>Cumpleaños</label><input type="text" class="fpdate" id="e-cl-bday" placeholder="dd/mm/aaaa"></div>
-      
+      <div class="fgrp" style="grid-column:span 2"><label>Notas / Preferencias</label><input type="text" id="e-cl-notas" placeholder="Preferencias, alergias..."></div>
     </div>
     <div class="factions">
       <button class="btn-pri" onclick="saveEditCliente()">Guardar cambios</button>
@@ -892,7 +892,7 @@ footer span{color:var(--gold);}
     </div>
     <div style="width:60px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:10px auto 22px;border-radius:2px"></div>
     <div style="margin-bottom:28px">
-      <div style="font-size:11px;color:var(--gold-deep);text-transform:uppercase;letter-spacing:3px;margin-bottom:20px;text-align:center;font-weight:600">Acceso al sistema</div>
+      
       <div style="position:relative;margin-bottom:12px">
         <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%)"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="#A9884D" stroke-width="1.8"><circle cx="10" cy="7" r="4"/><path d="M3 18c0-3.866 3.134-7 7-7s7 3.134 7 7"/></svg></span>
         <input class="login-input" type="text" id="login-user" placeholder="Usuario" autocomplete="username" style="padding-left:38px">
@@ -1087,7 +1087,14 @@ footer span{color:var(--gold);}
         <div style="font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Servicios</div>
         <div class="svc-rows" id="svc-rows"></div>
         <button class="add-svc-btn" onclick="addSvcRow()" style="margin-top:6px;">+ Agregar servicio</button>
-        <div style="margin-top:10px;">Total: <span class="total-display" id="cita-total">L. 0</span></div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:12px;color:var(--gray)">Descuento:</span>
+            <input type="number" id="c-descuento" placeholder="0" min="0" oninput="recalcTotal()"
+              style="width:80px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--cream);font-size:13px;">
+          </div>
+          <div>Total: <span class="total-display" id="cita-total">L. 0</span></div>
+        </div>
         <p id="fc-note" style="font-size:11px;color:var(--gold);margin-top:8px;display:none"> Al guardar como "Completada" se registrará en Finanzas automáticamente.</p>
       </div>
       <div class="factions">
@@ -2025,12 +2032,12 @@ function addSvcRow(nombre='',precio=0){
   const idx=container.children.length;
   const allSvcs=getAllSvcs();
   const row=document.createElement('div'); row.className='svc-row'; row.dataset.idx=idx;
-  const initNombre=nombre||allSvcs[0]?.nombre||'';
-  const initPrecio=precio||(allSvcs.find(s=>s.nombre===initNombre)?.precio)||allSvcs[0]?.precio||0;
+  const initNombre=nombre||'';
+  const initPrecio=precio||0;
   row.innerHTML=`
     <div class="svc-search-wrap">
       <input class="svc-search-inp" placeholder="Buscar servicio..." value="${initNombre}" autocomplete="off" readonly
-        onclick="openSvcDropdown(this)" oninput="filterSvcDropdown(this)">
+        onclick="openSvcDropdown(this)" ontouchend="openSvcDropdown(this)" oninput="filterSvcDropdown(this)">
       <ul class="svc-dropdown"></ul>
     </div>
     <input type="number" placeholder="Precio" value="${initPrecio}" oninput="recalcTotal()">
@@ -2082,6 +2089,8 @@ function recalcTotal(){
     const inp=row.querySelector('input[type=number]');
     total+=parseFloat(inp?.value)||0;
   });
+  const disc=parseFloat(document.getElementById('c-descuento')?.value)||0;
+  total=Math.max(0,total-disc);
   document.getElementById('cita-total').textContent=fmtM(total);
 }
 function getSvcRowsData(){
@@ -2138,13 +2147,15 @@ function addCita(){
   if(!servicios.length){toast('Agrega al menos un servicio','warn');return;}
   const clienta=document.getElementById('c-cl').value.trim();
   if(!clienta){toast('Ingresa el nombre de la clienta','warn');return;}
-  const precioTotal=servicios.reduce((s,x)=>s+x.precio,0);
+  const subtotal=servicios.reduce((s,x)=>s+x.precio,0);
+  const descuento=parseFloat(document.getElementById('c-descuento')?.value)||0;
+  const precioTotal=Math.max(0,subtotal-descuento);
   const c={
     id:nextId(D.citas),
     fecha:document.getElementById('c-f').value||todayStr(),
     hora:document.getElementById('c-h').value,
     clienta,tel:document.getElementById('c-tel').value.trim(),
-    servicios,precioTotal,
+    servicios,precioTotal,descuento,
     pago:document.getElementById('c-pago').value,
     estado:document.getElementById('c-estado').value,
     notas:document.getElementById('c-notas').value.trim(),origen:'manual'
@@ -2152,9 +2163,14 @@ function addCita(){
   D.citas.push(c);
   if(c.estado==='Completada'){autoRegistrarIngreso(c);toast('✅ Cita guardada e ingreso registrado en Finanzas');}
   else toast('✅ Cita guardada');
-  saveAndSync(); renderAll(); toggleForm('fc');
-  document.getElementById('c-cl').value=''; document.getElementById('c-notas').value='';
+  // Reset completo del formulario
+  ['c-cl','c-notas','c-tel','c-h'].forEach(fid=>{const e=document.getElementById(fid);if(e)e.value='';});
+  const disc2=document.getElementById('c-descuento'); if(disc2) disc2.value='';
+  document.getElementById('c-f').value=todayStr();
+  document.getElementById('c-estado').value='Confirmada';
+  document.getElementById('c-pago').value='Efectivo';
   document.getElementById('svc-rows').innerHTML=''; recalcTotal();
+  saveAndSync(); renderAll(); toggleForm('fc');
 }
 function completarCita(id){
   const c=D.citas.find(x=>x.id===id); if(!c) return;
@@ -2220,7 +2236,7 @@ function addCliente(){
     bday:document.getElementById('cl-bday').value||'',
     notas:document.getElementById('cl-notas').value.trim()});
   saveAndSync(); renderClientes(); actualizarDatalist();
-  toggleForm('fcl'); document.getElementById('cl-n').value=''; toast('✅ Clienta registrada');
+  ['cl-n','cl-tel','cl-ig','cl-bday','cl-notas'].forEach(fid=>{const e=document.getElementById(fid);if(e)e.value='';}); document.getElementById('cl-f').value=todayStr(); toggleForm('fcl'); toast('✅ Clienta registrada');
 }
 function openEditCliente(id){
   const c=D.clientes.find(x=>x.id===id); if(!c) return;
@@ -2229,7 +2245,7 @@ function openEditCliente(id){
   document.getElementById('e-cl-tel').value=c.tel||'';
   document.getElementById('e-cl-ig').value=c.ig||'';
   document.getElementById('e-cl-f').value=c.fecha||'';
-  document.getElementById('e-cl-notas').value=c.notas||'';
+  const eNotas=document.getElementById('e-cl-notas'); if(eNotas) eNotas.value=c.notas||'';
   document.getElementById('e-cl-bday').value=c.bday||'';
   openModal('modal-cl');
 }
@@ -2240,7 +2256,7 @@ function saveEditCliente(){
   c.tel=document.getElementById('e-cl-tel').value.trim();
   c.ig=document.getElementById('e-cl-ig').value.trim();
   c.fecha=document.getElementById('e-cl-f').value;
-  c.notas=document.getElementById('e-cl-notas').value.trim();
+  c.notas=(document.getElementById('e-cl-notas')?.value||'').trim();
   c.bday=document.getElementById('e-cl-bday').value||'';
   saveAndSync(); renderClientes(); actualizarDatalist();
   closeModal('modal-cl'); toast('Clienta actualizada');
@@ -3272,13 +3288,13 @@ function doImport(e){
 function addSvcRowEdit(nombre='',precio=0){
   const container=document.getElementById('svc-rows-edit');
   const allSvcs=getAllSvcs();
-  const initNombre=nombre||allSvcs[0]?.nombre||'';
-  const initPrecio=precio||(allSvcs.find(s=>s.nombre===initNombre)?.precio)||allSvcs[0]?.precio||0;
+  const initNombre=nombre||'';
+  const initPrecio=precio||0;
   const row=document.createElement('div'); row.className='svc-row';
   row.innerHTML=`
     <div class="svc-search-wrap">
       <input class="svc-search-inp" placeholder="Buscar servicio..." value="${initNombre}" autocomplete="off" readonly
-        onclick="openSvcDropdown(this)" oninput="filterSvcDropdown(this)">
+        onclick="openSvcDropdown(this)" ontouchend="openSvcDropdown(this)" oninput="filterSvcDropdown(this)">
       <ul class="svc-dropdown"></ul>
     </div>
     <input type="number" placeholder="Precio" value="${initPrecio}" oninput="recalcTotalEdit()">
@@ -4030,8 +4046,36 @@ function showTab(name){
 }
 function toggleForm(id){
   const el=document.getElementById(id);
+  const opening=!el.classList.contains('open');
   el.classList.toggle('open');
-  if(el.classList.contains('open')) setTimeout(()=>reinitFlatpickr(el),50);
+  if(opening){
+    // Limpiar campos de texto al abrir
+    el.querySelectorAll('input[type=text]:not(.fpdate),input[type=tel],textarea').forEach(inp=>{
+      if(inp.id!=='c-f'&&inp.id!=='m-f'&&inp.id!=='i-f'&&inp.id!=='cl-f') inp.value='';
+    });
+    el.querySelectorAll('input[type=number]').forEach(inp=>inp.value='');
+    el.querySelectorAll('select').forEach(sel=>sel.selectedIndex=0);
+    // Reset específico citas
+    if(id==='fc'){
+      document.getElementById('c-f').value=todayStr();
+      document.getElementById('c-estado').value='Confirmada';
+      document.getElementById('c-pago').value='Efectivo';
+      document.getElementById('c-cl').value='';
+      document.getElementById('c-tel').value='';
+      document.getElementById('c-notas').value='';
+      const disc=document.getElementById('c-descuento'); if(disc) disc.value='';
+      document.getElementById('svc-rows').innerHTML='';
+      recalcTotal();
+      addSvcRow();
+      checkEstado();
+    }
+    // Reset específico clientes
+    if(id==='fcl'){
+      ['cl-n','cl-tel','cl-ig','cl-bday','cl-notas'].forEach(fid=>{const e=document.getElementById(fid);if(e)e.value='';});
+      document.getElementById('cl-f').value=todayStr();
+    }
+    setTimeout(()=>reinitFlatpickr(el),80);
+  }
 }
 function renderAll(){
   renderDashboard();renderCitas();renderClientes();
@@ -4262,7 +4306,6 @@ function init(){
   initSvcCatFilter();
   actualizarDatalist();
   initMesFilter();
-  addSvcRow();
   renderAll();
   // Restaurar último tab activo
   try{ const lt=localStorage.getItem('ls_last_tab'); if(lt && lt!=='dashboard') showTab(lt); }catch(e){}
@@ -4277,7 +4320,7 @@ function init(){
     if(typeof flatpickr==='undefined') return;
     const scope=ctx||document;
     scope.querySelectorAll('.fpdate').forEach(el=>{
-      if(el._flatpickr) return; // ya inicializado
+      if(el._flatpickr) el._flatpickr.destroy();
       const fp=flatpickr(el,{...window._fpOpts, onChange(sel,ds){el.dispatchEvent(new Event('change'));}});
       if(el.value) fp.setDate(el.value,false,'Y-m-d');
     });
