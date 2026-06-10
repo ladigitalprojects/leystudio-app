@@ -2794,7 +2794,7 @@ body{width:210mm;min-height:297mm;font-family:Arial,sans-serif;background:#F5EFE
   <div style="position:absolute;bottom:6mm;left:0;right:0;text-align:center;font-size:6pt;color:${GRAY}">Ley Studio · Nail Artist · Tegucigalpa · @ley_studiohn</div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"><\/script>
 <script>
 window.addEventListener('load',function(){
   var el=document.getElementById('ficha-pg');
@@ -2806,7 +2806,7 @@ window.addEventListener('load',function(){
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
   }).from(el).save().then(function(){window.close();});
 });
-</script>
+<\/script>
 </body></html>`;
 }
 
