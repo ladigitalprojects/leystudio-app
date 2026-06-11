@@ -62,6 +62,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--cream);min-
 .radio-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);background:#fff;flex-shrink:0;transition:all .18s}
 .radio-item input:checked~.radio-dot{background:var(--gold);border-color:var(--gold)}
 .radio-label{font-size:12px;font-weight:500;color:var(--cream)}
+.radio-item input:checked~.radio-label{font-weight:700;color:var(--gold)}
 /* Sub-sección dentro de historial */
 .med-subsec{margin-bottom:14px}
 .med-subsec-title{font-size:9px;font-weight:800;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px dotted var(--border)}
@@ -98,7 +99,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--cream);min-
 #obs-text{width:100%;min-height:80px;border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--cream);background:#fff;font-family:'Inter',sans-serif;resize:vertical;outline:none}
 #obs-text:focus{border-color:var(--pink)}
 /* Botones */
-.f-actions{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:10px;z-index:100;max-width:820px;margin:0 auto}
+.f-actions{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:10px;z-index:100;}
 .btn-save{flex:1;padding:13px;border-radius:10px;border:none;background:var(--pink);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;transition:opacity .2s}
 .btn-save:active{opacity:.85}
 .btn-pdf{padding:13px 18px;border-radius:10px;border:2px solid var(--gold);background:transparent;color:var(--gold-dk);font-weight:700;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px;white-space:nowrap}
@@ -106,11 +107,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--cream);min-
 .hands-wrap{display:flex;justify-content:center;gap:8px;margin-bottom:12px;opacity:.6}
 /* Responsive */
 @media(max-width:600px){
-  .fg-2{grid-template-columns:1fr}
-  .fg-3{grid-template-columns:1fr 1fr}
+  .fg-2,.fg-3{grid-template-columns:1fr}
+  .fg-redes{grid-template-columns:1fr 1fr}
+  .fg-gustos{grid-template-columns:1fr 1fr}
   .med-grid{grid-template-columns:1fr}
   .f-header{flex-direction:column;align-items:center;text-align:center}
-  .f-actions{left:0;right:0}
+  .f-logo{width:60px;height:60px}
+  .f-title{font-size:22px}
+  .f-section{padding:16px 12px}
+  .nail-shapes{gap:8px}
+  .nail-svg-wrap{width:44px;height:66px}
+  .check-cols-2{grid-template-columns:1fr}
+  .tipo-cliente-wrap{flex-direction:column}
+  .tc-option{min-width:unset}
+}
+@media(min-width:601px){
+  .fg-redes{grid-template-columns:1fr 1fr 1fr}
+  .fg-gustos{grid-template-columns:1fr 1fr}
 }
 /* Print hide actions */
 @media print{.f-actions{display:none}}
@@ -147,17 +160,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--cream);min-
       <div class="fgrp"><label>Correo electrónico</label><input type="email" id="f-correo" placeholder="correo@ejemplo.com"></div>
       <div class="fgrp"><label>Teléfono / WhatsApp</label><input type="tel" id="f-tel" readonly></div>
     </div>
-    <div class="fg fg-3" style="margin-bottom:12px">
+    <div class="fg fg-redes" style="margin-bottom:12px">
       <div class="fgrp"><label>📘 Facebook</label><input type="text" id="f-fb" placeholder="@usuario"></div>
       <div class="fgrp"><label>📸 Instagram</label><input type="text" id="f-ig" placeholder="@usuario"></div>
       <div class="fgrp"><label>🎵 TikTok</label><input type="text" id="f-tiktok" placeholder="@usuario"></div>
     </div>
-    <div class="fg fg-2">
+    <div class="fg fg-2" style="margin-bottom:12px">
       <div class="fgrp"><label>Teléfono de emergencia</label><input type="tel" id="f-tel-emerg" placeholder="+504 9999-9999"></div>
-      <div class="fg fg-2">
-        <div class="fgrp"><label>🎵 Música favorita</label><input type="text" id="f-musica" placeholder="Género o artista"></div>
-        <div class="fgrp"><label>🍿 Snack favorito</label><input type="text" id="f-snack" placeholder="Snack favorito"></div>
-      </div>
+      <div class="fgrp" style="grid-column:2"></div>
+    </div>
+    <div class="fg fg-gustos">
+      <div class="fgrp"><label>🎵 Música favorita</label><input type="text" id="f-musica" placeholder="Género o artista"></div>
+      <div class="fgrp"><label>🍿 Snack favorito</label><input type="text" id="f-snack" placeholder="Snack favorito"></div>
     </div>
   </div>
 
@@ -358,10 +372,10 @@ async function init(){
     fichaData=c.ficha||{};
     buildMedTable();
     prefill();
-    initFirma();
     document.getElementById('loading').style.display='none';
     document.getElementById('ficha-wrap').style.display='block';
     document.getElementById('f-actions').style.display='flex';
+    requestAnimationFrame(()=>{ initFirma(); });
   } catch(e){
     showError('Error al cargar datos. Intenta de nuevo.');
   }
@@ -453,7 +467,11 @@ function selTipo(opt){ document.querySelectorAll('.tc-option').forEach(o=>o.clas
 function initFirma(){
   firmaCanvas=document.getElementById('canvas-firma');
   firmaCtx=firmaCanvas.getContext('2d');
-  firmaCanvas.width=firmaCanvas.offsetWidth||Math.min(window.innerWidth-72,700);
+  const cw=firmaCanvas.getBoundingClientRect().width||Math.min(window.innerWidth-48,750);
+  firmaCanvas.width=Math.floor(cw*window.devicePixelRatio||cw);
+  firmaCanvas.height=Math.floor(120*(window.devicePixelRatio||1));
+  firmaCanvas.style.height='120px';
+  firmaCtx.scale(window.devicePixelRatio||1,window.devicePixelRatio||1);
   firmaCtx.lineWidth=2; firmaCtx.lineCap='round'; firmaCtx.strokeStyle='#3D2B1F';
   // Pre-cargar firma si existe
   if(fichaData.firma){ const img=new Image(); img.onload=()=>firmaCtx.drawImage(img,0,0); img.src=fichaData.firma; }
