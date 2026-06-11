@@ -546,24 +546,32 @@ async function guardarFicha(){
 async function descargarPDF(){
   const btn=document.querySelector('.btn-pdf');
   btn.innerHTML='⏳ Generando...'; btn.disabled=true;
+  // Ocultar barra inferior para que no aparezca en el PDF
+  const act=document.getElementById('f-actions');
+  if(act) act.style.visibility='hidden';
   try{
-    const nombre=(clienteObj.nombre||'Clienta').replace(/\s+/g,'_');
+    const nombre=(clienteObj&&clienteObj.nombre?clienteObj.nombre:'Clienta').replace(/\s+/g,'_');
     const filename=`Ficha_${nombre}.pdf`;
-    // Guardar primero
-    const newFicha=collectData();
-    const el=document.getElementById('ficha-wrap').cloneNode(true);
-    // Quitar loading, toast etc
+    // Usar el elemento live directamente (no cloneNode — cloneNode desconecta del DOM y da PDF en blanco)
+    const el=document.getElementById('ficha-wrap');
     const opt={
-      margin:[8,8,8,8],
+      margin:[10,10,10,10],
       filename,
       image:{type:'jpeg',quality:0.97},
-      html2canvas:{scale:2,useCORS:true,backgroundColor:'#FDF8F2'},
+      html2canvas:{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#FDF8F2',logging:false},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
     };
     await html2pdf().set(opt).from(el).save();
     toast('📄 PDF descargado: '+filename);
-  } catch(e){ toast('⚠️ Error al generar PDF'); }
-  finally{ btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descargar PDF'; btn.disabled=false; }
+  } catch(e){
+    console.error('PDF error:',e);
+    toast('⚠️ Error al generar PDF');
+  }
+  finally{
+    if(act) act.style.visibility='visible';
+    btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descargar PDF';
+    btn.disabled=false;
+  }
 }
 
 // ── Toast ──
