@@ -874,7 +874,7 @@ footer span{color:var(--gold);}
     <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px;">
       <input type="hidden" id="e-cit-id">
       <div class="fgrp"><label>Fecha</label><input type="text" class="fpdate" id="e-cit-f"></div>
-      <div class="fgrp"><label>Hora</label><input type="time" id="e-cit-h"></div>
+      <div class="fgrp"><label>Hora</label><input type="text" class="fptime" id="e-cit-h" placeholder="09:00" autocomplete="off" style="cursor:pointer"></div>
       <div class="fgrp"><label>Clienta</label><input type="text" id="e-cit-cl" list="cl-list"></div>
       <div class="fgrp"><label>Teléfono</label><div class="tel-wrap"><select class="tel-code" id="e-cit-telcode"><option value="+504">+504</option><option value="+1">+1</option></select><input type="tel" class="tel-num" id="e-cit-tel" placeholder="9999-9999" maxlength="9"></div></div>
       <div class="fgrp"><label>Método de pago</label>
@@ -2593,7 +2593,7 @@ function deleteCliente(){
   saveAndSync(); renderClientes(); actualizarDatalist();
   closeModal('modal-cl'); toast('✅ Clienta eliminada');
 }
-function closeModal(id){document.getElementById(id).classList.remove('open');} function openModal(id){const el=document.getElementById(id); if(!el) return; el.classList.add('open'); setTimeout(()=>reinitFlatpickr(el),50);}
+function closeModal(id){document.getElementById(id).classList.remove('open');} function openModal(id){const el=document.getElementById(id); if(!el) return; el.classList.add('open'); setTimeout(()=>{reinitFlatpickr(el); if(window.reinitFlatpickrTime) reinitFlatpickrTime(el);},80);}
 
 function openFicha(id){
   const c=D.clientes.find(x=>x.id===id); if(!c) return;
@@ -5159,7 +5159,11 @@ function init(){
     scope.querySelectorAll('.fptime').forEach(el=>{
       if(el._flatpickr) el._flatpickr.destroy();
       flatpickr(el,{enableTime:true,noCalendar:true,dateFormat:'H:i',time_24hr:true,minuteIncrement:15,allowInput:true,disableMobile:true,
-        onChange:function(sel,ds){el.value=ds; el.dispatchEvent(new Event('change'));}});
+        appendTo:document.body,
+        defaultHour:9,defaultMinute:0,
+        onReady:function(sel,ds,fp){const cur=el.value;if(cur&&/^\d{1,2}:\d{2}$/.test(cur)){fp.setDate(cur,true);}else{fp.setDate('09:00',true);}},
+        onChange:function(sel,ds){el.value=ds;el.dispatchEvent(new Event('change'));}
+      });
     });
   };
   reinitFlatpickr();
