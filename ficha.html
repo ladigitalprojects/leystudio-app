@@ -542,33 +542,158 @@ async function guardarFicha(){
   finally{ btn.textContent='💾 Guardar Ficha'; btn.disabled=false; }
 }
 
+// ── Construir HTML de ficha con estilos inline (sin Google Fonts — evita CORS en html2canvas) ──
+function _buildFichaForPDF(c,f,logoSrc,filename){
+  const PINK='#CF3271', BEIGE='#F5EFE8', DARK='#2D1A0E', GOLD='#C9A870', GRAY='#8A7A6A', LGOLD='#E8D9BE';
+  const fmtD=s=>{if(!s)return '';const p=s.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:s;};
+  const dot=a=>'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+(a?PINK:LGOLD)+';flex-shrink:0;margin-top:1px"></span>';
+  const chk=(arr,v)=>dot((arr||[]).includes(v));
+  const fld=(lbl,val,extra)=>'<div style="margin-bottom:5px'+(extra?';'+extra:'')+'"><div style="font-size:5.5pt;font-weight:700;color:'+PINK+';letter-spacing:.5px;margin-bottom:1px">'+lbl+'</div><div style="background:'+BEIGE+';border-radius:3px;padding:2px 7px;min-height:15px;font-size:8pt;color:'+DARK+'">'+((val||'')+'')+'</div></div>';
+  const sec=t=>'<div style="display:flex;align-items:center;gap:8px;margin:7px 0 5px"><div style="flex:1;height:1px;background:'+GOLD+'"></div><div style="font-size:9.5pt;font-weight:700;color:'+PINK+';letter-spacing:2px;white-space:nowrap">'+t+'</div><div style="flex:1;height:1px;background:'+GOLD+'"></div></div>';
+  const sub=t=>'<div style="font-size:6pt;font-weight:700;color:'+PINK+';letter-spacing:1px;margin:5px 0 3px">'+t+'</div>';
+  const col=t=>'<div style="font-size:5.5pt;font-weight:700;color:'+GOLD+';letter-spacing:1px;margin:0 0 3px">'+t+'</div>';
+  const item=(cls,arr,v)=>'<div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:2.5px">'+chk(arr,v)+'<span style="font-size:7pt;color:'+DARK+'">'+v+'</span></div>';
+  const clinica=['Tratamiento Médico','Hongos o Bacterias','Psoriasis','Dermatitis','Descamación de Uña','Diabetes','Embarazo'];
+  const alts=['Sana','Onicomicosis','Onicofágicas','Amarillas','Estriada','Paroniquia','Otras'];
+  const capas=['Dorsal','Intermedia','Ventral'];
+  const pieles=['Sensible','Seca','Mixta','Grasa'];
+  const tiposUna=['Árida','Neutra','Lípida'];
+  const anatomia=['Plana','Convexa','Cóncava','Coiloniquia'];
+  const svcLbls=[['tips','Tips'],['softgel','Soft Gel'],['acrilico','Acrílico'],['polygel','Polygel'],['gelConstructor','Gel Constructor'],['manicuraRusa','Manicura Rusa']];
+  const dedos=[['pulgar','PULGAR'],['indice','ÍNDICE'],['medio','MEDIO'],['anular','ANULAR'],['menique','MEÑIQUE']];
+  const medsRows=svcLbls.map(([s,l],i)=>{
+    const bg=i%2===0?BEIGE:'#FAF6EF';
+    const cells=dedos.map(([d])=>'<td style="border:1px solid '+GOLD+';text-align:center;padding:1px 2px;font-size:7pt;width:30px">'+((f.medidas||{})[s]?.[d]||'')+'</td>').join('');
+    return '<tr><td style="border:1px solid '+GOLD+';padding:2px 5px;font-size:7.5pt;font-weight:600;color:'+DARK+';background:'+bg+'">'+l+'</td>'+cells+'</tr>';
+  }).join('');
+  const nails={
+    Cuadrada:'<svg viewBox="0 0 46 82" width="32" height="58"><path d="M9,16 L37,16 L37,60 Q37,72 23,72 Q9,72 9,60 Z" fill="none" stroke="#2d1a0e" stroke-width="1.6"/><line x1="7" y1="77" x2="39" y2="77" stroke="#2d1a0e" stroke-width="1.8"/></svg>',
+    Coffin:'<svg viewBox="0 0 46 82" width="32" height="58"><path d="M15,16 L31,16 L39,58 Q39,70 23,70 Q7,70 7,58 Z" fill="none" stroke="#2d1a0e" stroke-width="1.6"/><line x1="5" y1="77" x2="41" y2="77" stroke="#2d1a0e" stroke-width="1.8"/></svg>',
+    Almond:'<svg viewBox="0 0 46 82" width="32" height="58"><path d="M9,58 Q9,72 23,72 Q37,72 37,58 C37,28 31,6 23,6 C15,6 9,28 9,58 Z" fill="none" stroke="#2d1a0e" stroke-width="1.6"/><line x1="7" y1="77" x2="39" y2="77" stroke="#2d1a0e" stroke-width="1.8"/></svg>',
+    Stiletto:'<svg viewBox="0 0 46 82" width="32" height="58"><path d="M13,58 Q13,72 23,72 Q33,72 33,58 C33,34 26,3 23,3 C20,3 13,34 13,58 Z" fill="none" stroke="#2d1a0e" stroke-width="1.6"/><line x1="11" y1="77" x2="35" y2="77" stroke="#2d1a0e" stroke-width="1.8"/></svg>'
+  };
+  const nailRow=['Cuadrada','Coffin','Almond','Stiletto'].map(n=>'<div style="text-align:center">'+nails[n]+'<div style="font-size:5pt;color:'+GRAY+';margin-top:1px">'+n.toUpperCase()+'</div></div>').join('');
+  const handL='<svg viewBox="0 0 90 120" width="68" height="92"><g fill="none" stroke="#2d1a0e" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,74 C14,68 10,54 10,46 C10,40 14,37 18,37 C22,37 24,40 24,46 L24,74"/><path d="M26,74 L26,24 C26,18 29,15 33,15 C37,15 40,18 40,24 L40,74"/><path d="M42,74 L42,18 C42,12 45,9 49,9 C53,9 56,12 56,18 L56,74"/><path d="M58,74 L58,24 C58,18 61,15 65,15 C69,15 72,18 72,24 L72,74"/><path d="M74,74 L74,36 C74,30 77,27 80,27 C83,27 86,30 86,36 L86,74"/><path d="M10,74 Q8,100 12,108 Q30,116 48,116 Q66,116 80,110 Q86,100 86,74"/></g></svg>';
+  const handR='<svg viewBox="0 0 90 120" width="68" height="92" style="transform:scaleX(-1)"><g fill="none" stroke="#2d1a0e" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14,74 C14,68 10,54 10,46 C10,40 14,37 18,37 C22,37 24,40 24,46 L24,74"/><path d="M26,74 L26,24 C26,18 29,15 33,15 C37,15 40,18 40,24 L40,74"/><path d="M42,74 L42,18 C42,12 45,9 49,9 C53,9 56,12 56,18 L56,74"/><path d="M58,74 L58,24 C58,18 61,15 65,15 C69,15 72,18 72,24 L72,74"/><path d="M74,74 L74,36 C74,30 77,27 80,27 C83,27 86,30 86,36 L86,74"/><path d="M10,74 Q8,100 12,108 Q30,116 48,116 Q66,116 80,110 Q86,100 86,74"/></g></svg>';
+  const handSVG='<div style="display:flex;justify-content:center;gap:2px">'+handL+handR+'</div>';
+  const formaSelected=f.forma||'', largoSelected=f.largo||'', tipoVisita=f.tipoVisita||'';
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{width:210mm;min-height:297mm;font-family:Arial,sans-serif;background:#F5EFE8;-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{width:210mm;min-height:297mm;padding:7mm 10mm 10mm;background:#F5EFE8;position:relative}</style></head><body>
+<div class="page" id="ficha-pg">
+  <div style="display:flex;align-items:flex-start;margin-bottom:4px">
+    <div style="width:58px;flex-shrink:0">${logoSrc?'<img src="'+logoSrc+'" style="width:52px;height:auto">':''}</div>
+    <div style="flex:1;text-align:center;padding-top:2px">
+      <div style="font-family:cursive;font-size:18pt;color:${PINK};line-height:1">Manicure</div>
+      <div style="font-family:Georgia,serif;font-size:26pt;font-weight:700;color:${PINK};line-height:1">Ficha Tecnica</div>
+      <div style="font-family:Georgia,serif;font-size:20pt;font-weight:700;color:${PINK};line-height:1.1">Clientas</div>
+      <div style="font-size:6pt;color:${GRAY};margin-top:3px">Toda la información proporcionada será utilizada únicamente para brindar servicio personalizado y seguro</div>
+    </div>
+    <div style="width:58px"></div>
+  </div>
+  <div style="height:1px;background:${GOLD};margin-bottom:4px"></div>
+  ${sec('INFORMACION GENERAL')}
+  <div style="display:flex;gap:8px;margin-bottom:4px">
+    <div style="flex:1">
+      ${fld('NOMBRE COMPLETO',c.nombre)}
+      ${fld('CORREO',f.correo)}
+      <div style="margin-bottom:5px"><div style="font-size:5.5pt;font-weight:700;color:${PINK};letter-spacing:.5px;margin-bottom:1px">REDES SOCIALES</div><div style="background:${BEIGE};border-radius:3px;padding:2px 7px;min-height:15px;font-size:8pt;color:${DARK}">📷 ${(f.ig||c.ig||'')}</div></div>
+    </div>
+    <div style="flex:1">
+      ${fld('CUMPLEAÑOS',fmtD(c.bday))}
+      ${fld('TELEFONO / WHATSAPP',c.tel)}
+      ${fld('TELEFONO EMERGENCIA',f.telEmg)}
+      <div style="display:flex;gap:5px">
+        <div style="flex:1"><div style="font-size:5.5pt;color:${PINK};font-weight:700">MUSICA</div><div style="background:${BEIGE};border-radius:3px;padding:2px 6px;font-size:7.5pt;color:${DARK}">${(f.musica||'')}</div></div>
+        <div style="flex:1"><div style="font-size:5.5pt;color:${PINK};font-weight:700">SNACK</div><div style="background:${BEIGE};border-radius:3px;padding:2px 6px;font-size:7.5pt;color:${DARK}">${(f.snack||'')}</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="height:1px;background:${GOLD};margin-bottom:4px"></div>
+  ${sec('HISTORIAL MEDICO')}
+  <div style="display:flex;gap:10px;margin-bottom:4px">
+    <div style="width:38%">
+      ${sub('INFORMACIÓN CLÍNICA')}
+      ${clinica.map(v=>item('',f.clinica,v)).join('')}
+    </div>
+    <div style="flex:1">
+      ${sub('EVALUACIÓN DE LA UÑA NATURAL')}
+      <div style="display:flex;gap:6px">
+        <div style="flex:1.1">${col('ALTERACIONES')}${alts.map(v=>item('',f.alteraciones,v)).join('')}</div>
+        <div style="flex:1">${col('CAPAS')}${capas.map(v=>item('',f.capas,v)).join('')}${col('TIPOS UÑA')}${tiposUna.map(v=>item('',f.tiposUna,v)).join('')}</div>
+        <div style="flex:1">${col('TIPO PIEL')}${pieles.map(v=>item('',f.piel,v)).join('')}${col('ANATOMÍA')}${anatomia.map(v=>item('',f.anatomia,v)).join('')}</div>
+      </div>
+    </div>
+  </div>
+  <div style="height:1px;background:${GOLD};margin-bottom:4px"></div>
+  <div style="display:flex;gap:10px;margin-bottom:4px">
+    <div style="width:44%">
+      ${sub('MEDIDAS')}
+      <div style="text-align:center;margin:3px 0 4px">${handSVG}</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:${PINK}"><th style="border:1px solid ${GOLD};padding:2px 4px;font-size:6.5pt;color:white;text-align:left">SERVICIO</th>${dedos.map(([,l])=>'<th style="border:1px solid '+GOLD+';padding:2px;font-size:5.5pt;color:white;text-align:center">'+l+'</th>').join('')}</tr></thead>
+        <tbody>${medsRows}</tbody>
+      </table>
+    </div>
+    <div style="flex:1">
+      ${sub('DISEÑO Y ESTRUCTURA')}
+      <div style="display:flex;justify-content:space-around;margin-bottom:6px">${nailRow}</div>
+      <div style="margin-bottom:5px"><div style="font-size:6pt;font-weight:700;color:${DARK};margin-bottom:3px">FORMA</div>
+        <div style="display:flex;gap:12px">${['Cuadrada','Coffin','Almond','Stiletto'].map(v=>'<div style="display:flex;align-items:center;gap:3px">'+dot(formaSelected===v)+'<span style="font-size:7pt;color:'+DARK+'">'+v+'</span></div>').join('')}</div>
+      </div>
+      <div style="margin-bottom:6px"><div style="font-size:6pt;font-weight:700;color:${DARK};margin-bottom:3px">LARGO</div>
+        <div style="display:flex;gap:12px">${['#1','#2','#3','#4'].map(v=>'<div style="display:flex;align-items:center;gap:3px">'+dot(largoSelected===v)+'<span style="font-size:7pt;color:'+DARK+'">'+v+'</span></div>').join('')}</div>
+      </div>
+      <div style="height:1px;background:${GOLD};margin:5px 0"></div>
+      ${sub('FIRMA DEL CLIENTE')}
+      ${['Nuevo','Cliente Frecuente','Referido'].map(v=>'<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">'+dot(tipoVisita===v)+'<span style="font-size:8pt;color:'+DARK+';font-weight:600">'+v.toUpperCase()+'</span></div>').join('')}
+      <div style="margin-top:8px;font-size:7pt;color:${DARK}">FIRMA: <span style="display:inline-block;width:120px;border-bottom:1px solid ${DARK}"></span></div>
+    </div>
+  </div>
+  <div style="height:1px;background:${GOLD};margin-bottom:4px"></div>
+  <div style="font-size:9pt;font-weight:700;color:${PINK};letter-spacing:2px;margin-bottom:3px">OBSERVACIONES</div>
+  <div style="border-bottom:1px solid ${DARK};min-height:9px;font-size:8pt;color:${DARK};padding-bottom:2px">${(f.obs||'')}</div>
+  <div style="border-bottom:1px solid #ccc;margin-top:7px;min-height:9px"></div>
+  <div style="border-bottom:1px solid #ccc;margin-top:7px;min-height:9px"></div>
+  <div style="position:absolute;bottom:6mm;left:0;right:0;text-align:center;font-size:6pt;color:${GRAY}">Ley Studio · Nail Artist · Tegucigalpa · @ley_studiohn</div>
+</div>
+</body></html>`;
+}
+
 // ── Descargar PDF con html2pdf.js ──
 async function descargarPDF(){
   const btn=document.querySelector('.btn-pdf');
   btn.innerHTML='⏳ Generando...'; btn.disabled=true;
-  // Ocultar barra inferior para que no aparezca en el PDF
-  const act=document.getElementById('f-actions');
-  if(act) act.style.visibility='hidden';
   try{
-    const nombre=(clienteObj&&clienteObj.nombre?clienteObj.nombre:'Clienta').replace(/\s+/g,'_');
+    const f=collectData();
+    const c=clienteObj||{};
+    const nombre=(c.nombre||'Clienta').replace(/\s+/g,'_');
     const filename=`Ficha_${nombre}.pdf`;
-    // Usar el elemento live directamente (no cloneNode — cloneNode desconecta del DOM y da PDF en blanco)
-    const el=document.getElementById('ficha-wrap');
-    const opt={
-      margin:[10,10,10,10],
+    // Logo embebido en la página
+    const logoEl=document.querySelector('.f-logo');
+    const logoSrc=logoEl?logoEl.src:'';
+    // Construir HTML con estilos inline (sin Google Fonts) — evita CORS en html2canvas
+    const html=_buildFichaForPDF(c,f,logoSrc,filename);
+    const parser=new DOMParser();
+    const pdoc=parser.parseFromString(html,'text/html');
+    const pg=pdoc.getElementById('ficha-pg');
+    if(!pg){toast('⚠️ Error al preparar PDF');return;}
+    const wrapper=document.createElement('div');
+    wrapper.style.cssText='position:fixed;left:-9999px;top:0;width:210mm;min-height:297mm;background:#F5EFE8;font-family:Arial,sans-serif;z-index:-1;';
+    pg.style.cssText='width:210mm;min-height:297mm;padding:7mm 10mm 10mm;background:#F5EFE8;position:relative;box-sizing:border-box;';
+    wrapper.appendChild(pg);
+    document.body.appendChild(wrapper);
+    await html2pdf().set({
+      margin:[7,7,7,7],
       filename,
-      image:{type:'jpeg',quality:0.97},
-      html2canvas:{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#FDF8F2',logging:false},
+      image:{type:'jpeg',quality:.96},
+      html2canvas:{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#F5EFE8',logging:false},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-    };
-    await html2pdf().set(opt).from(el).save();
+    }).from(wrapper).save();
+    document.body.removeChild(wrapper);
     toast('📄 PDF descargado: '+filename);
-  } catch(e){
+  }catch(e){
     console.error('PDF error:',e);
     toast('⚠️ Error al generar PDF');
-  }
-  finally{
-    if(act) act.style.visibility='visible';
+  }finally{
     btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descargar PDF';
     btn.disabled=false;
   }
