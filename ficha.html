@@ -579,7 +579,7 @@ async function _fillFichaPDF(c,f,filename,flatten=false){
   ['Cuadrada','Coffin','Almond','Stiletto'].forEach((lbl,i)=>chk(`forma_${i+1}`,(f.forma||'').toLowerCase()===lbl.toLowerCase()));
   ['#1','#2','#3','#4'].forEach((lbl,i)=>chk(`largo_${i+1}`,f.largo===lbl));
   ['Nuevo','Cliente Frecuente','Referido'].forEach((lbl,i)=>chk(`cliente_tipo_${i+1}`,(f.tipoVisita||'').toLowerCase()===lbl.toLowerCase()));
-  if(flatten) form.flatten();
+  if(flatten){ form.flatten(); try{ pdfDoc.catalog.delete(PDFLib.PDFName.of("AcroForm")); }catch(e){} }
   const bytes=await pdfDoc.save();
   const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
   const a=document.createElement('a');
