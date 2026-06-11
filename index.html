@@ -2665,7 +2665,7 @@ function guardarFicha(){
 async function _fillFichaPDF(c, f, filename, flatten=false){
   if(!window.PDFLib||!window.PDFLib.PDFDocument) throw new Error('pdf-lib no cargado');
   const {PDFDocument} = window.PDFLib;
-  const resp = await fetch('/ficha_template.pdf');
+  const resp = await fetch('/ficha_template.pdf?v=9&t=' + Date.now());
   if(!resp.ok) throw new Error('No se encontró ficha_template.pdf');
   const pdfDoc = await PDFDocument.load(await resp.arrayBuffer());
   const form = pdfDoc.getForm();
@@ -2703,10 +2703,30 @@ async function _fillFichaPDF(c, f, filename, flatten=false){
   ['Cuadrada','Coffin','Almond','Stiletto'].forEach((lbl,i)=>chk(`forma_${i+1}`,(f.forma||'').toLowerCase()===lbl.toLowerCase()));
   ['#1','#2','#3','#4'].forEach((lbl,i)=>chk(`largo_${i+1}`,f.largo===lbl));
   ['Nuevo','Cliente Frecuente','Referido'].forEach((lbl,i)=>chk(`cliente_tipo_${i+1}`,(f.tipoVisita||'').toLowerCase()===lbl.toLowerCase()));
-  // Aplanar: convierte campos en contenido estático y elimina AcroForm del catálogo
+  // Aplanar: elimina toda interactividad del formulario
   if(flatten){
-    form.flatten();
-    try{ pdfDoc.catalog.delete(PDFLib.PDFName.of('AcroForm')); }catch(e){}
+    try{ form.flatten(); }catch(e){}
+    const { PDFName, PDFArray } = PDFLib;
+    // Eliminar anotaciones widget de cada página
+    for(const page of pdfDoc.getPages()){
+      try{
+        const annotsRef = page.node.get(PDFName.of('Annots'));
+        if(annotsRef){
+          const annots = pdfDoc.context.lookup(annotsRef);
+          if(annots && annots.asArray){
+            const filtered = annots.asArray().filter(ref=>{
+              try{
+                const obj=pdfDoc.context.lookup(ref);
+                return obj.get(PDFName.of('Subtype'))?.encodedName!==PDFName.of('Widget').encodedName;
+              }catch(e){return true;}
+            });
+            page.node.set(PDFName.of('Annots'), pdfDoc.context.obj(filtered));
+          } else { page.node.delete(PDFName.of('Annots')); }
+        }
+      }catch(e){ try{ page.node.delete(PDFName.of('Annots')); }catch(e2){} }
+    }
+    // Eliminar AcroForm del catálogo
+    try{ pdfDoc.catalog.delete(PDFName.of('AcroForm')); }catch(e){}
   }
   // Descargar
   const bytes = await pdfDoc.save();
