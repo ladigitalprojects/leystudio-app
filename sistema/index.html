@@ -1045,8 +1045,8 @@ body.dark-mode #modal-ficha tbody td:first-child{background:#222;}
           <button class="forgot-link" onclick="toggleForgot()">¿Olvidaste tu contraseña?</button>
         </div>
         <div id="reset-box">
-          <div style="font-size:11px;color:var(--gray);margin-bottom:8px;">Ingresa tu usuario para que el administrador pueda restablecer tu contraseña.</div>
-          <input class="login-input" type="text" id="reset-user" placeholder="Tu usuario" style="margin-bottom:8px;">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:8px;">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</div>
+          <input class="login-input" type="email" id="reset-user" placeholder="Tu correo" style="margin-bottom:8px;padding-left:14px;">
           <button class="login-btn" style="background:var(--champagne);color:var(--gray-dk);border:1px solid var(--border);" onclick="doResetRequest()">Enviar solicitud</button>
           <div class="login-error" id="reset-msg" style="color:var(--gold);"></div>
         </div>
@@ -1921,10 +1921,11 @@ const KEY='leystudio_v3';
 // ── Firebase Realtime Database ──
 const FIREBASE_BASE = 'https://ley-studio-b069e-default-rtdb.firebaseio.com';
 const FIREBASE_URL = FIREBASE_BASE + '/data.json';
-const FIREBASE_API_KEY = 'PEGAR_API_KEY_AQUI'; // Firebase Console → Configuración del proyecto → Clave de API web
+const FIREBASE_API_KEY = 'AIzaSyC85_lPNWwYGHupPEL8V6hxS3bWGHRW_6E';
 const FB_USER_MAP = { // usuario corto → correo registrado en Firebase Auth
-  'leonardo': 'PEGAR_CORREO_LEONARDO',
-  'admin': 'PEGAR_CORREO_ADMIN'
+  'leonardo': 'leonardoalvarado.jm@gmail.com',
+  'admin': 'leylan.perdomo@gmail.com',
+  'leylan': 'leylan.perdomo@gmail.com'
 };
 
 // ── Firebase Auth (REST, sin SDK) ──
@@ -4161,17 +4162,23 @@ function toggleForgot(){
   const box = document.getElementById('reset-box');
   box.classList.toggle('open');
 }
-function doResetRequest(){
-  const user = (document.getElementById('reset-user')?.value||'').trim();
+async function doResetRequest(){
+  const raw = (document.getElementById('reset-user')?.value||'').trim();
   const msg = document.getElementById('reset-msg');
-  if(!user){msg.textContent='Ingresa tu usuario.';return;}
-  const u = (D.usuarios||[]).find(x=>x.username===user||x.nombre.toLowerCase()===user.toLowerCase());
-  if(!u){msg.textContent='Usuario no encontrado.';return;}
+  const email = raw.includes('@') ? raw.toLowerCase() : (FB_USER_MAP[raw.toLowerCase()]||'');
+  if(!email){ msg.textContent='Ingresa tu correo registrado.'; return; }
   msg.style.color='var(--gold)';
-  msg.textContent='Solicitud enviada. Un administrador restablecerá tu contraseña.';
-  // Log reset request in DB
-  if(window.db){
-    window.db.ref('resetRequests').push({usuario:user,nombre:u.nombre,fecha:new Date().toISOString(),atendido:false});
+  msg.textContent='Enviando...';
+  try{
+    const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=' + FIREBASE_API_KEY, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({requestType:'PASSWORD_RESET', email})
+    });
+    const j = await r.json();
+    if(!r.ok) throw new Error((j.error && j.error.message)||'');
+    msg.textContent='✅ Te enviamos un correo para restablecer tu contraseña. Revisa también spam.';
+  }catch(e){
+    msg.textContent=/EMAIL_NOT_FOUND/.test(String(e.message)) ? 'Ese correo no está registrado.' : 'No se pudo enviar. Intenta de nuevo.';
   }
 }
 async function doLogin(){
