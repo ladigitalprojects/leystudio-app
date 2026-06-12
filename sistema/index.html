@@ -938,6 +938,31 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
     </div>
   </div>
 </div>
+<!-- MODAL CORREO CLIENTA -->
+<div class="modal-overlay" id="modal-correo">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">Enviar correo<button class="modal-close" onclick="closeModal('modal-correo')">&#x2715;</button></div>
+    <input type="hidden" id="mc-cl-id">
+    <p id="mc-dest" style="font-size:12px;color:var(--gold-deep);font-weight:600;margin:0 0 12px"></p>
+    <div class="fgrp" style="margin-bottom:10px"><label>Plantilla</label>
+      <select id="mc-plantilla" onchange="aplicarPlantillaCorreo()"><option value="libre">Mensaje libre</option><option value="cumple">🎂 Feliz cumpleaños</option></select>
+    </div>
+    <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="mc-asunto" placeholder="Asunto del correo"></div>
+    <div class="fgrp" style="margin-bottom:14px"><label>Mensaje</label><textarea id="mc-msg" rows="6" placeholder="Escribe el mensaje..." style="width:100%;box-sizing:border-box;resize:vertical"></textarea></div>
+    <button class="add-btn" id="mc-btn" onclick="enviarCorreoCliente()">Enviar correo</button>
+  </div>
+</div>
+<!-- MODAL CAMPAÑA -->
+<div class="modal-overlay" id="modal-campana">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title">📣 Campaña por correo<button class="modal-close" onclick="closeModal('modal-campana')">&#x2715;</button></div>
+    <p id="camp-info" style="font-size:12px;color:var(--gray);margin:0 0 12px"></p>
+    <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="camp-asunto" placeholder="Ej. ✨ Promo de junio en Ley Studio"></div>
+    <div class="fgrp" style="margin-bottom:14px"><label>Mensaje</label><textarea id="camp-msg" rows="7" placeholder="Texto de la promoción... Cada clienta recibirá su saludo personalizado al inicio." style="width:100%;box-sizing:border-box;resize:vertical"></textarea></div>
+    <button class="add-btn" id="camp-btn" onclick="enviarCampana()">Enviar campaña</button>
+    <div id="camp-prog" style="font-size:12px;color:var(--gold-deep);margin-top:10px;font-weight:600"></div>
+  </div>
+</div>
 <div class="modal-overlay" id="modal-cita">
   <div class="modal" style="max-width:560px">
     <div class="modal-title">Editar Cita
@@ -1297,6 +1322,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
       <div class="tt">Base de Clientas</div>
       <div style="display:flex;gap:8px">
         <button class="hbtn hbtn-outline" onclick="showTab('estadisticas')" id="btn-stats" style="font-size:11px;padding:6px 12px;display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17V10M7 17V7M11 17V4M15 17V10M19 17H1"/></svg> Estadísticas</button>
+        <button class="hbtn hbtn-outline" onclick="openCampana()" style="font-size:11px;padding:6px 12px">✉️ Campaña</button>
         <button class="add-btn" onclick="toggleForm('fcl')">+ Nueva clienta</button>
       </div></div>
 
@@ -1988,6 +2014,132 @@ async function authedFetch(url, opts){
 // ── Tokens de ficha pública ──
 function genFichaToken(){ const a=new Uint8Array(18); crypto.getRandomValues(a); return Array.from(a,b=>b.toString(16).padStart(2,'0')).join(''); }
 function _pubPayload(c){ const f=c.ficha||{}; return {clienteId:c.id, nombre:c.nombre||'', tel:c.tel||'', bday:c.bday||'', correo:f.correo||c.correo||'', ig:f.ig||c.ig||'', ficha:f}; }
+
+// ═══════════════════════════════════════════════════
+// CORREOS (endpoint PHP en Hostinger, remitente hola@leystudiohn.com)
+// ═══════════════════════════════════════════════════
+const MAIL_ENDPOINT='/api/enviar-correo.php';
+async function enviarCorreo(to,subject,html,attachment){
+  const t=await fbToken();
+  if(!t) throw new Error('Sin sesión');
+  const r=await fetch(MAIL_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken:t,to,subject,html,attachment:attachment||null})});
+  let j={}; try{ j=await r.json(); }catch(e){}
+  if(!r.ok||!j.ok) throw new Error(j.error||'No se pudo enviar');
+  return true;
+}
+function mailWrap(titulo,cuerpo){
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5EFE6;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5EFE6;padding:24px 0;"><tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:94%;background:#FDF8F2;border:1px solid #B29257;border-radius:14px;overflow:hidden;">
+      <tr><td style="background:#3D2B1F;padding:22px;text-align:center;">
+        <div style="font-family:Georgia,serif;font-size:34px;color:#DD98B1;line-height:1">LS</div>
+        <div style="color:#ffffff;font-size:14px;letter-spacing:4px;margin-top:4px;">LEY STUDIO</div>
+        <div style="color:#DD98B1;font-size:9px;letter-spacing:3px;margin-top:2px;">NAIL ARTIST</div>
+      </td></tr>
+      <tr><td style="height:3px;background:#B29257;font-size:0;">&nbsp;</td></tr>
+      <tr><td style="padding:26px 30px;">
+        <h2 style="margin:0 0 14px;color:#A9884D;font-size:19px;font-weight:600;">${titulo}</h2>
+        <div style="color:#3D2B1F;font-size:14px;line-height:1.7;">${cuerpo}</div>
+      </td></tr>
+      <tr><td style="padding:16px 30px 22px;border-top:1px solid #EDE0C8;text-align:center;color:#9A8070;font-size:11px;line-height:1.8;">
+        Ley Studio · Nail Artist · Tegucigalpa<br>
+        Instagram <a href="https://instagram.com/ley_studiohn" style="color:#CF8AA3;text-decoration:none;">@ley_studiohn</a> · WhatsApp <a href="https://wa.me/50494994709" style="color:#CF8AA3;text-decoration:none;">+504 9499-4709</a>
+      </td></tr>
+    </table>
+  </td></tr></table></body></html>`;
+}
+function _clienteCorreo(c){ return (c&&((c.ficha&&c.ficha.correo)||c.correo))||''; }
+function _fmtFechaLarga(f){ try{ return new Date(f+'T12:00:00').toLocaleDateString('es-HN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch(e){ return f; } }
+
+async function enviarRecordatorioCorreo(citaId){
+  const c=D.citas.find(x=>+x.id===+citaId); if(!c) return;
+  const cl=D.clientes.find(x=>x.nombre===c.clienta)||{};
+  const to=_clienteCorreo(cl);
+  if(!to){ toast('Esta clienta no tiene correo registrado','warn'); return; }
+  const svcs=(c.servicios||[]).map(s=>s.nombre).join(', ')||'tu servicio';
+  const cuerpo=`Hola <strong>${c.clienta.split(' ')[0]}</strong> 💅<br><br>Te recordamos tu cita en <strong>Ley Studio</strong>:<br><br>📅 <strong>${_fmtFechaLarga(c.fecha)}</strong><br>🕐 <strong>${c.hora||''}</strong><br>✨ ${svcs}<br><br>Si necesitas reprogramar, escríbenos por WhatsApp con gusto.<br><br>¡Te esperamos!`;
+  toast('Enviando correo...');
+  try{ await enviarCorreo(to,'Recordatorio de tu cita 💅 — Ley Studio',mailWrap('Recordatorio de cita',cuerpo)); toast('✉️ Recordatorio enviado a '+to); }
+  catch(e){ toast('⚠️ No se pudo enviar: '+e.message,'warn'); }
+}
+
+async function enviarReciboCorreo(citaId){
+  const r=_buildReciboDoc(citaId); if(!r) return;
+  const cl=D.clientes.find(x=>x.nombre===r.c.clienta)||{};
+  const to=_clienteCorreo(cl);
+  if(!to){ toast('Esta clienta no tiene correo registrado','warn'); return; }
+  const b64=r.doc.output('datauristring').split(',')[1];
+  const cuerpo=`Hola <strong>${r.c.clienta.split(' ')[0]}</strong>,<br><br>Adjuntamos el recibo de tu visita del <strong>${_fmtFechaLarga(r.c.fecha)}</strong>.<br><br>¡Gracias por confiar en Ley Studio! 💕`;
+  toast('Enviando recibo...');
+  try{ await enviarCorreo(to,'Tu recibo — Ley Studio',mailWrap('Recibo de tu visita',cuerpo),{name:r.filename,data:b64}); toast('✉️ Recibo enviado a '+to); }
+  catch(e){ toast('⚠️ No se pudo enviar: '+e.message,'warn'); }
+}
+
+function openCorreoCliente(id){
+  const c=D.clientes.find(x=>x.id===id); if(!c) return;
+  const to=_clienteCorreo(c);
+  if(!to){ toast('Esta clienta no tiene correo registrado. Agrégalo en Editar.','warn'); return; }
+  document.getElementById('mc-cl-id').value=id;
+  document.getElementById('mc-dest').textContent=c.nombre+' · '+to;
+  document.getElementById('mc-plantilla').value='libre';
+  aplicarPlantillaCorreo();
+  openModal('modal-correo');
+}
+function aplicarPlantillaCorreo(){
+  const id=+document.getElementById('mc-cl-id').value;
+  const c=D.clientes.find(x=>x.id===id)||{nombre:''};
+  const nom=(c.nombre||'').split(' ')[0];
+  if(document.getElementById('mc-plantilla').value==='cumple'){
+    document.getElementById('mc-asunto').value='¡Feliz cumpleaños, '+nom+'! 🎂💅';
+    document.getElementById('mc-msg').value='¡Feliz cumpleaños, '+nom+'! 🎉\n\nEn Ley Studio queremos celebrarte: este mes tienes un detalle especial esperándote en tu próxima visita.\n\nAgenda tu cita por WhatsApp y ven a consentirte. 💕';
+  } else {
+    document.getElementById('mc-asunto').value='';
+    document.getElementById('mc-msg').value='';
+  }
+}
+async function enviarCorreoCliente(){
+  const id=+document.getElementById('mc-cl-id').value;
+  const c=D.clientes.find(x=>x.id===id); if(!c) return;
+  const asunto=document.getElementById('mc-asunto').value.trim();
+  const msg=document.getElementById('mc-msg').value.trim();
+  if(!asunto||!msg){ toast('Completa asunto y mensaje','warn'); return; }
+  const btn=document.getElementById('mc-btn'); btn.disabled=true; btn.textContent='Enviando...';
+  try{
+    await enviarCorreo(_clienteCorreo(c),asunto,mailWrap(asunto,msg.replace(/\n/g,'<br>')));
+    toast('✉️ Correo enviado');
+    closeModal('modal-correo');
+  }catch(e){ toast('⚠️ No se pudo enviar: '+e.message,'warn'); }
+  btn.disabled=false; btn.textContent='Enviar correo';
+}
+
+function openCampana(){
+  const dest=D.clientes.filter(c=>_clienteCorreo(c));
+  document.getElementById('camp-info').textContent=dest.length+' clientas con correo recibirán este mensaje ('+(D.clientes.length-dest.length)+' sin correo registrado).';
+  document.getElementById('camp-prog').textContent='';
+  openModal('modal-campana');
+}
+async function enviarCampana(){
+  const asunto=document.getElementById('camp-asunto').value.trim();
+  const msg=document.getElementById('camp-msg').value.trim();
+  if(!asunto||!msg){ toast('Completa asunto y mensaje','warn'); return; }
+  const dest=D.clientes.filter(c=>_clienteCorreo(c));
+  if(!dest.length){ toast('Ninguna clienta tiene correo registrado','warn'); return; }
+  if(!confirm('¿Enviar esta campaña a '+dest.length+' clientas?')) return;
+  const btn=document.getElementById('camp-btn'); btn.disabled=true;
+  const prog=document.getElementById('camp-prog');
+  let ok=0,fail=0;
+  for(let i=0;i<dest.length;i++){
+    const c=dest[i];
+    prog.textContent='Enviando '+(i+1)+' de '+dest.length+'…';
+    const cuerpo='Hola <strong>'+(c.nombre||'').split(' ')[0]+'</strong>,<br><br>'+msg.replace(/\n/g,'<br>');
+    try{ await enviarCorreo(_clienteCorreo(c),asunto,mailWrap(asunto,cuerpo)); ok++; }
+    catch(e){ fail++; }
+    await new Promise(r=>setTimeout(r,800));
+  }
+  prog.textContent='Listo: '+ok+' enviados'+(fail?(', '+fail+' fallidos'):'')+'.';
+  btn.disabled=false;
+  toast('📣 Campaña: '+ok+' correos enviados'+(fail?(', '+fail+' fallidos'):''));
+}
 let syncDebounce = null;
 let isSyncing = false;
 
@@ -2119,12 +2271,12 @@ async function probarConexion(){
 }
 
 // ── PDF RECEIPT ──
-function descargarReciboPDF(citaId){
+function _buildReciboDoc(citaId){
   citaId=+citaId; // asegurar número para comparación estricta
-  const c = D.citas.find(x=>+x.id===citaId); if(!c) return;
+  const c = D.citas.find(x=>+x.id===citaId); if(!c) return null;
   // Acceso robusto — html2pdf bundlea jsPDF pero puede no exponerlo globalmente
   const _jsPDF=(window.jspdf&&window.jspdf.jsPDF)||(typeof jspdf!=='undefined'&&jspdf.jsPDF)||window.jsPDF;
-  if(!_jsPDF){ toast('⚠️ Error PDF: recarga la página','warn'); return; }
+  if(!_jsPDF){ toast('⚠️ Error PDF: recarga la página','warn'); return null; }
   const doc = new _jsPDF({unit:'mm',format:'a5',orientation:'portrait'});
   const W = doc.internal.pageSize.getWidth(); // 148mm
   const H = 210;
@@ -2238,7 +2390,11 @@ function descargarReciboPDF(citaId){
   doc.setFillColor(...gold); doc.rect(0,H-4,W,4,'F');
 
   const filename=`LeyStudio_Recibo_${c.clienta.replace(/\s/g,'_')}_${c.fecha}.pdf`;
-  doc.save(filename);
+  return {doc, c, filename};
+}
+function descargarReciboPDF(citaId){
+  const r=_buildReciboDoc(citaId); if(!r) return;
+  r.doc.save(r.filename);
   toast('Recibo descargado');
 }
 
@@ -2510,7 +2666,7 @@ function renderCitas(){
     const svcsHtml=svcs.slice(0,2).map(s=>`<span style="font-size:11px;color:var(--gray-dk);display:block">${s.nombre} <span style="color:var(--gold)">(L.${s.precio})</span></span>`).join('')+(svcs.length>2?`<span style="font-size:10px;color:var(--pink);font-weight:600">+${svcs.length-2} más</span>`:'');
     const accionBtn = c.estado==='Confirmada'
       ? `<button class="action-icon-btn action-check" onclick="completarCita(${c.id})" title="Marcar como completada"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>`
-      : `<button class="action-icon-btn action-wa" onclick="generarFactura(${c.id})" title="Enviar por WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn action-pdf" onclick="descargarReciboPDF(${c.id})" title="Descargar PDF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button>`;
+      : `<button class="action-icon-btn action-wa" onclick="generarFactura(${c.id})" title="Enviar por WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn action-pdf" onclick="descargarReciboPDF(${c.id})" title="Descargar PDF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button><button class="action-icon-btn" onclick="enviarReciboCorreo(${c.id})" title="Enviar recibo por correo" style="color:#CF8AA3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button>`;
     return`<tr>
       <td style="color:var(--pink);font-weight:700;font-size:12px">${i+1}</td>
       <td>${fmtD(c.fecha)}</td><td>${c.hora||'—'}</td>
@@ -2522,7 +2678,7 @@ function renderCitas(){
       <td style="color:var(--gray);font-size:12px">${c.notas||'—'}</td>
       <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:8px 4px">
         ${accionBtn}
-        <button class="action-icon-btn action-msg" onclick="openWAcita(${c.id})" title="Mensaje"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
+        <button class="action-icon-btn action-msg" onclick="openWAcita(${c.id})" title="Mensaje"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button><button class="action-icon-btn" onclick="enviarRecordatorioCorreo(${c.id})" style="height:34px;width:34px;color:#CF8AA3" title="Recordatorio por correo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button>
         <button class="action-icon-btn action-edit" onclick="openEditCita(${c.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="action-icon-btn action-del" onclick="delCita(${c.id})" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
       </td></tr>`;
@@ -2536,7 +2692,7 @@ function renderCitas(){
     const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     const accion=c.estado==='Confirmada'
       ?`<button class="action-icon-btn action-check" onclick="completarCita(${c.id})" title="Completar" style="height:34px;width:34px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></button>`
-      :`<button class="action-icon-btn action-pdf" onclick="descargarReciboPDF(${c.id})" title="PDF" style="height:34px;width:34px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`;
+      :`<button class="action-icon-btn action-pdf" onclick="descargarReciboPDF(${c.id})" title="PDF" style="height:34px;width:34px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button><button class="action-icon-btn" onclick="enviarReciboCorreo(${c.id})" title="Enviar recibo por correo" style="color:#CF8AA3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button>`;
     return`<div class="mob-card">
       <div class="mob-card-top">
         <div class="mob-date-badge">
@@ -2554,7 +2710,7 @@ function renderCitas(){
         <div style="font-size:20px;font-weight:800;color:var(--pink)">${fmtM(c.precioTotal||0)}</div>
         <div class="mob-actions">
           ${accion}
-          <button class="action-icon-btn action-msg" onclick="openWAcita(${c.id})" style="height:34px;width:34px" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
+          <button class="action-icon-btn action-msg" onclick="openWAcita(${c.id})" style="height:34px;width:34px" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button><button class="action-icon-btn" onclick="enviarRecordatorioCorreo(${c.id})" style="height:34px;width:34px;color:#CF8AA3" title="Recordatorio por correo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button>
           <button class="action-icon-btn action-edit" onclick="openEditCita(${c.id})" style="height:34px;width:34px" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
           <button class="action-icon-btn action-del" onclick="delCita(${c.id})" style="height:34px;width:34px" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
         </div>
@@ -2643,7 +2799,7 @@ function renderClientes(){
       <td><span class="badge bgo">${st.visitas}</span></td>
       <td><strong style="color:var(--pink)">${fmtM(st.total)}</strong></td>
       <td style="max-width:200px;font-size:11px">${st.ultimoSvc.length>45?st.ultimoSvc.substring(0,45)+'…':st.ultimoSvc}</td>
-      <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:10px 4px"><button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn action-pdf" onclick="openFicha(${c.id})" title="Ficha técnica"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button><button class="action-icon-btn" onclick="copiarEnlaceCliente(${c.id})" title="Copiar enlace de ficha" style="color:var(--gold)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></button><button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td></tr>`;
+      <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:10px 4px"><button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn" onclick="openCorreoCliente(${c.id})" title="Enviar correo" style="color:#CF8AA3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button><button class="action-icon-btn action-pdf" onclick="openFicha(${c.id})" title="Ficha técnica"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button><button class="action-icon-btn" onclick="copiarEnlaceCliente(${c.id})" title="Copiar enlace de ficha" style="color:var(--gold)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></button><button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td></tr>`;
   }).join('');
   // ── Mobile cards ──
   const _clMob=document.getElementById('cl-mob');
@@ -2677,7 +2833,7 @@ function renderClientes(){
       <div class="mob-card-bottom">
         <div style="font-size:11px;color:var(--gray);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${st.ultimoSvc||'Sin servicios'}</div>
         <div class="mob-actions">
-          <button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" style="height:34px;width:34px" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button>
+          <button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" style="height:34px;width:34px" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn" onclick="openCorreoCliente(${c.id})" title="Enviar correo" style="color:#CF8AA3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button>
           <button class="action-icon-btn action-pdf" onclick="openFicha(${c.id})" style="height:34px;width:34px" title="Ficha técnica"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>
           <button class="action-icon-btn" onclick="copiarEnlaceCliente(${c.id})" style="height:34px;width:34px;color:var(--gold)" title="Copiar enlace de ficha"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></button>
           <button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" style="height:34px;width:34px" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
@@ -4619,7 +4775,7 @@ function renderNotificaciones(){
             <span style="font-size:11px;color:#555">📱 ${c.tel||'Sin tel'}</span>
             <div style="font-size:11px;color:#555;margin-top:2px">Última visita: ${last?fmtD(last.fecha):'Sin citas'} · <span style="color:#e74c3c">${days} días</span></div>
           </div>
-          <button class="wa-btn" style="background:#8e44ad" onclick="openWAcliente(${c.id})">💬 Reactivar</button>
+          <button class="wa-btn" style="background:#8e44ad" onclick="openWAcliente(${c.id})">💬 Reactivar</button><button class="action-icon-btn" onclick="openCorreoCliente(${c.id})" title="Enviar correo" style="color:#CF8AA3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button>
         </div>`;
       }).join('');
 
