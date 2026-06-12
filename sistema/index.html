@@ -4233,10 +4233,8 @@ async function doLogin(){
   document.getElementById('login-screen').classList.add('hidden');
   applyRoleUI();
   err.textContent='';
-  renderAll();
-  try{ const lt=localStorage.getItem('ls_last_tab'); if(lt && lt!=='dashboard') showTab(lt); }catch(e){}
+  appBoot();
   toast('Bienvenida, ' + currentUser.nombre.split(' ')[0] + ' 💅');
-  pullFromCloud();
 }
 
 function checkSession(){
@@ -4736,6 +4734,7 @@ function enviarTodosReactivacion(){
 // NAV / FORMS
 // ═══════════════════════════════════════════════════
 function showTab(name){
+  setTimeout(()=>{try{reinitFlatpickr();reinitFlatpickrTime();}catch(e){}},60);
   const _lbls={dashboard:'Dashboard',citas:'Citas',clientes:'Clientas',finanzas:'Finanzas',inventario:'Inventario',servicios:'Servicios',calendario:'Calendario',notificaciones:'Notificaciones',estadisticas:'Estadísticas',reportes:'Reportes',config:'Config'};
   const _bc=document.getElementById('h-breadcrumb');
   if(_bc){_bc.textContent=_lbls[name]||name;_bc.style.display=window.innerWidth>900?'inline':'none';}
@@ -5439,6 +5438,41 @@ function closeNavOnTabClick(){
   if(window.innerWidth <= 768) document.querySelector('nav').classList.remove('nav-open');
 }
 // ═══════════════════════════════════════════════════
+// FLATPICKR — fechas y horas (global, cubre todo campo de fecha/hora)
+// ═══════════════════════════════════════════════════
+window._fpOpts={dateFormat:'Y-m-d',locale:{firstDayOfWeek:1,
+  months:{shorthand:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+          longhand:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']},
+  weekdays:{shorthand:['Do','Lu','Ma','Mi','Ju','Vi','Sá'],longhand:['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']}},
+  allowInput:true,disableMobile:true};
+window.reinitFlatpickr=function(ctx){
+  if(typeof flatpickr==='undefined') return;
+  const scope=ctx||document;
+  scope.querySelectorAll('.fpdate, input[type="date"]').forEach(el=>{
+    try{
+      if(el._flatpickr) el._flatpickr.destroy();
+      const fp=flatpickr(el,{...window._fpOpts, onChange(sel,ds){el.dispatchEvent(new Event('change'));}});
+      if(el.value) fp.setDate(el.value,false,'Y-m-d');
+    }catch(e){}
+  });
+};
+window.reinitFlatpickrTime=function(ctx){
+  if(typeof flatpickr==='undefined') return;
+  const scope=ctx||document;
+  scope.querySelectorAll('.fptime, input[type="time"]').forEach(el=>{
+    try{
+      if(el._flatpickr) el._flatpickr.destroy();
+      flatpickr(el,{enableTime:true,noCalendar:true,dateFormat:'H:i',time_24hr:true,minuteIncrement:15,allowInput:true,disableMobile:true,
+        appendTo:document.body,
+        defaultHour:9,defaultMinute:0,
+        onReady:function(sel,ds,fp){const cur=el.value;if(cur&&/^\d{1,2}:\d{2}$/.test(cur)){fp.setDate(cur,true);}else{fp.setDate('09:00',true);}},
+        onChange:function(sel,ds){el.value=ds;el.dispatchEvent(new Event('change'));}
+      });
+    }catch(e){}
+  });
+};
+
+// ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
 function init(){
@@ -5450,7 +5484,13 @@ function init(){
       {id:1,nombre:'Administrador',username:'admin',password:hashPass('leystudio2026'),rol:'admin',createdAt:todayStr()},
       {id:2,nombre:'Leonardo Alvarado',username:'leonardo',password:hashPass('Leys2026'),rol:'admin',createdAt:todayStr()}
     ];saveLocal();}
-  if(!checkSession()) return; // stop init if not logged in
+  if(checkSession()) appBoot();
+}
+
+// Arranque de la app: corre al cargar con sesión O después de un login fresco
+let _booted=false;
+function appBoot(){
+  if(_booted) return; _booted=true;
   initSvcDropdown();
   initSvcCatFilter();
   actualizarDatalist();
@@ -5459,35 +5499,6 @@ function init(){
   // Restaurar último tab activo
   try{ const lt=localStorage.getItem('ls_last_tab'); if(lt && lt!=='dashboard') showTab(lt); }catch(e){}
   ['c-f','m-f','i-f','cl-f'].forEach(id=>{const el=document.getElementById(id); if(el) el.value=todayStr();});
-  // Flatpickr — selector de fechas moderno
-  window._fpOpts={dateFormat:'Y-m-d',locale:{firstDayOfWeek:1,
-    months:{shorthand:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-            longhand:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']},
-    weekdays:{shorthand:['Do','Lu','Ma','Mi','Ju','Vi','Sá'],longhand:['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']}},
-    allowInput:true,disableMobile:true};
-  window.reinitFlatpickr=function(ctx){
-    if(typeof flatpickr==='undefined') return;
-    const scope=ctx||document;
-    scope.querySelectorAll('.fpdate').forEach(el=>{
-      if(el._flatpickr) el._flatpickr.destroy();
-      const fp=flatpickr(el,{...window._fpOpts, onChange(sel,ds){el.dispatchEvent(new Event('change'));}});
-      if(el.value) fp.setDate(el.value,false,'Y-m-d');
-    });
-  };
-  // Time picker
-  window.reinitFlatpickrTime=function(ctx){
-    if(typeof flatpickr==='undefined') return;
-    const scope=ctx||document;
-    scope.querySelectorAll('.fptime').forEach(el=>{
-      if(el._flatpickr) el._flatpickr.destroy();
-      flatpickr(el,{enableTime:true,noCalendar:true,dateFormat:'H:i',time_24hr:true,minuteIncrement:15,allowInput:true,disableMobile:true,
-        appendTo:document.body,
-        defaultHour:9,defaultMinute:0,
-        onReady:function(sel,ds,fp){const cur=el.value;if(cur&&/^\d{1,2}:\d{2}$/.test(cur)){fp.setDate(cur,true);}else{fp.setDate('09:00',true);}},
-        onChange:function(sel,ds){el.value=ds;el.dispatchEvent(new Event('change'));}
-      });
-    });
-  };
   reinitFlatpickr();
   reinitFlatpickrTime();
 
