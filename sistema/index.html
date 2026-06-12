@@ -1919,7 +1919,59 @@ function getCats(){ return [...new Set(getAllSvcs().map(s=>s.cat))]; }
 const KEY='leystudio_v3';
 
 // ── Firebase Realtime Database ──
-const FIREBASE_URL = 'https://ley-studio-b069e-default-rtdb.firebaseio.com/data.json';
+const FIREBASE_BASE = 'https://ley-studio-b069e-default-rtdb.firebaseio.com';
+const FIREBASE_URL = FIREBASE_BASE + '/data.json';
+const FIREBASE_API_KEY = 'PEGAR_API_KEY_AQUI'; // Firebase Console → Configuración del proyecto → Clave de API web
+const FB_USER_MAP = { // usuario corto → correo registrado en Firebase Auth
+  'leonardo': 'PEGAR_CORREO_LEONARDO',
+  'admin': 'PEGAR_CORREO_ADMIN'
+};
+
+// ── Firebase Auth (REST, sin SDK) ──
+let fbAuth = null; // {idToken, refreshToken, exp, email}
+function fbAuthSave(){ try{ if(fbAuth) localStorage.setItem('ls_fb_auth', JSON.stringify(fbAuth)); else localStorage.removeItem('ls_fb_auth'); }catch(e){} }
+function fbAuthLoad(){ try{ fbAuth = JSON.parse(localStorage.getItem('ls_fb_auth')); }catch(e){ fbAuth = null; } }
+async function fbSignIn(email, password){
+  const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + FIREBASE_API_KEY, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email, password, returnSecureToken:true})
+  });
+  const j = await r.json();
+  if(!r.ok) throw new Error((j.error && j.error.message) || 'AUTH_ERROR');
+  fbAuth = {idToken:j.idToken, refreshToken:j.refreshToken, exp: Date.now() + (parseInt(j.expiresIn||'3600',10)-60)*1000, email:j.email};
+  fbAuthSave();
+  return fbAuth;
+}
+async function fbRefresh(){
+  if(!fbAuth || !fbAuth.refreshToken) return null;
+  try{
+    const r = await fetch('https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_API_KEY, {
+      method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(fbAuth.refreshToken)
+    });
+    const j = await r.json();
+    if(!r.ok) throw 0;
+    fbAuth = {idToken:j.id_token, refreshToken:j.refresh_token, exp: Date.now() + (parseInt(j.expires_in||'3600',10)-60)*1000, email:fbAuth.email};
+    fbAuthSave();
+    return fbAuth;
+  }catch(e){ fbAuth = null; fbAuthSave(); return null; }
+}
+async function fbToken(){
+  if(!fbAuth) fbAuthLoad();
+  if(!fbAuth) return null;
+  if(Date.now() > fbAuth.exp) await fbRefresh();
+  return fbAuth ? fbAuth.idToken : null;
+}
+async function authedFetch(url, opts){
+  const t = await fbToken();
+  if(!t) throw new Error('Sin sesión de Firebase');
+  const sep = url.includes('?') ? '&' : '?';
+  return fetch(url + sep + 'auth=' + t, opts);
+}
+
+// ── Tokens de ficha pública ──
+function genFichaToken(){ const a=new Uint8Array(18); crypto.getRandomValues(a); return Array.from(a,b=>b.toString(16).padStart(2,'0')).join(''); }
+function _pubPayload(c){ const f=c.ficha||{}; return {clienteId:c.id, nombre:c.nombre||'', tel:c.tel||'', bday:c.bday||'', correo:f.correo||c.correo||'', ig:f.ig||c.ig||'', ficha:f}; }
 let syncDebounce = null;
 let isSyncing = false;
 
@@ -1945,22 +1997,31 @@ async function pushToCloud(){
   setSyncStatus('sync-busy');
   let success = false;
   try{
-    // Merge protector: no pisar fichas guardadas por clientas (ficha.html) más recientes que las locales
+    // Tokens de ficha + merge de fichas guardadas por clientas en /pub
     try{
-      const rr = await fetch(FIREBASE_URL);
-      const remote = await rr.json();
-      if(remote && Array.isArray(remote.clientes)){
-        remote.clientes.forEach(rc=>{
-          if(!rc || !rc.ficha || !rc.ficha.fechaActualizacion) return;
-          const lc = (D.clientes||[]).find(x=>x && x.id===rc.id);
+      (D.clientes||[]).forEach(c=>{ if(c && !c.fichaToken) c.fichaToken = genFichaToken(); });
+      const rr = await authedFetch(FIREBASE_BASE + '/pub.json');
+      const pub = await rr.json();
+      if(pub){
+        Object.entries(pub).forEach(([tok,p])=>{
+          if(!p || !p.ficha || !p.ficha.fechaActualizacion) return;
+          const lc = (D.clientes||[]).find(x=>x && x.fichaToken===tok);
           if(!lc) return;
           const lf = lc.ficha && lc.ficha.fechaActualizacion;
-          if(!lf || new Date(rc.ficha.fechaActualizacion) > new Date(lf)) lc.ficha = rc.ficha;
+          if(!lf || new Date(p.ficha.fechaActualizacion) > new Date(lf)){
+            lc.ficha = p.ficha;
+            if(p.correo) lc.correo = p.correo;
+            if(p.ig) lc.ig = p.ig;
+          }
         });
       }
-    }catch(e){ /* sin red: seguimos con datos locales */ }
+      // Espejo público actualizado (solo lo que la clienta necesita ver)
+      const pubAll = {};
+      (D.clientes||[]).forEach(c=>{ if(c && c.fichaToken) pubAll[c.fichaToken] = _pubPayload(c); });
+      await authedFetch(FIREBASE_BASE + '/pub.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(pubAll)});
+    }catch(e){ /* sin red o sin sesión: seguimos con datos locales */ }
     const body = JSON.stringify(D);
-    const r = await fetch(FIREBASE_URL, {
+    const r = await authedFetch(FIREBASE_URL, {
       method: 'PUT',
       headers: {'Content-Type':'application/json'},
       body
@@ -1984,7 +2045,7 @@ async function pushToCloud(){
 async function pullFromCloud(){
   setSyncStatus('sync-busy');
   try{
-    const r = await fetch(FIREBASE_URL);
+    const r = await authedFetch(FIREBASE_URL);
     if(r.ok){
       const remote = await r.json();
       if(remote && remote.citas && remote.citas.length > 0){
@@ -2022,7 +2083,7 @@ async function probarConexion(){
   box.textContent = '⏳ Probando conexión con Firebase...';
   try{
     const t0 = Date.now();
-    const r = await fetch(FIREBASE_URL);
+    const r = await authedFetch(FIREBASE_URL);
     const ms = Date.now() - t0;
     if(r.ok){
       const rec = await r.json();
@@ -2195,7 +2256,7 @@ async function resetAllData(){
   saveLocal();
   // Borrar en Firebase
   try {
-    const r = await fetch(FIREBASE_URL, {
+    const r = await authedFetch(FIREBASE_URL, {
       method: 'PUT',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify(D)
@@ -2863,8 +2924,13 @@ function exportarFichaPDF(){
     .catch(e=>{console.error(e);toast('⚠️ Error al generar PDF');});
 }
 
-function copiarEnlaceCliente(id){
-  const url=`https://leystudiohn.com/ficha.html?id=${id}`;
+async function copiarEnlaceCliente(id){
+  const c=D.clientes.find(x=>x.id===id); if(!c) return;
+  if(!c.fichaToken){ c.fichaToken=genFichaToken(); saveAndSync(); }
+  try{
+    await authedFetch(`${FIREBASE_BASE}/pub/${c.fichaToken}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(_pubPayload(c))});
+  }catch(e){ toast('⚠️ No se pudo publicar la ficha. Revisa tu conexión o sesión.','warn'); return; }
+  const url=`https://leystudiohn.com/ficha.html?t=${c.fichaToken}`;
   if(navigator.clipboard){
     navigator.clipboard.writeText(url).then(()=>toast('🔗 Enlace copiado al portapapeles')).catch(()=>{_copyFallback(url);});
   } else { _copyFallback(url); }
@@ -4108,91 +4174,61 @@ function doResetRequest(){
     window.db.ref('resetRequests').push({usuario:user,nombre:u.nombre,fecha:new Date().toISOString(),atendido:false});
   }
 }
-function doLogin(){
+async function doLogin(){
   const raw = document.getElementById('login-user').value.trim();
   const p   = document.getElementById('login-pass').value;
   const err = document.getElementById('login-error');
   const btn = document.getElementById('login-btn');
   if(!raw || !p){ err.textContent='Completa todos los campos.'; return; }
-
+  if(FIREBASE_API_KEY.indexOf('PEGAR')===0){ err.textContent='Falta configurar la API key de Firebase.'; return; }
+  const email = raw.includes('@') ? raw.toLowerCase() : (FB_USER_MAP[raw.toLowerCase()]||'');
+  if(!email || email.indexOf('PEGAR')===0){ err.textContent='Ingresa tu correo registrado.'; return; }
+  btn.textContent='Verificando...'; btn.disabled=true; err.textContent='';
+  try{
+    await fbSignIn(email, p);
+  }catch(e){
+    const m = String(e.message||'');
+    err.textContent = /EMAIL_NOT_FOUND|INVALID_PASSWORD|INVALID_LOGIN_CREDENTIALS/.test(m) ? 'Correo o contraseña incorrectos.'
+      : /TOO_MANY/.test(m) ? 'Demasiados intentos. Espera unos minutos.'
+      : 'Error de conexión. Intenta de nuevo.';
+    btn.textContent='ENTRAR'; btn.disabled=false; return;
+  }
+  // Cargar datos de la nube con sesión
+  btn.textContent='Sincronizando...';
+  try{
+    const r = await authedFetch(FIREBASE_URL);
+    if(r.ok){
+      const remote = await r.json();
+      if(remote && remote.citas){ Object.assign(D, remote); saveLocal(); }
+    }
+  }catch(e){ /* sin conexión: usamos lo local */ }
+  btn.textContent='ENTRAR'; btn.disabled=false;
+  // Usuario de la app (para roles y saludo)
   if(!D.usuarios || !D.usuarios.length) loadLocal();
-
-  function findUser(data){
-    const q = raw.toLowerCase();
-    return (data||[]).find(x =>
-      x.username.toLowerCase() === q ||
-      x.nombre.toLowerCase() === q ||
-      x.nombre.toLowerCase().replace(/\s+/g,'') === q.replace(/\s+/g,'')
-    );
-  }
-
-  async function attemptLogin(usuarios){
-    const user = findUser(usuarios);
-    if(!user){
-      err.textContent = 'Usuario no encontrado.';
-      btn.textContent='ENTRAR'; btn.disabled=false; return;
-    }
-    const match = user.password === p || user.password === hashPass(p);
-    if(!match){
-      err.textContent = 'Contraseña incorrecta.';
-      btn.textContent='ENTRAR'; btn.disabled=false; return;
-    }
-    currentUser = {id:user.id, nombre:user.nombre, username:user.username, rol:user.rol};
-    sessionStorage.setItem('ls_session', JSON.stringify(currentUser));
-
-    // Si no hay datos locales, jalamos de la nube ANTES de mostrar la app
-    const localTotal = D.citas.length + D.clientes.length + D.movimientos.length;
-    if(localTotal === 0){
-      btn.textContent='Sincronizando...'; btn.disabled=true;
-      try{
-        const r = await fetch(FIREBASE_URL);
-        if(r.ok){
-          const remote = await r.json();
-          if(remote && remote.citas && remote.citas.length > 0){
-            Object.assign(D, remote);
-            saveLocal();
-          }
-        }
-      } catch(e){ /* sin conexión — mostramos lo que hay */ }
-      btn.textContent='ENTRAR'; btn.disabled=false;
-    }
-
-    document.getElementById('login-screen').classList.add('hidden');
-    applyRoleUI();
-    err.textContent='';
-    renderAll();
-    try{ const lt=localStorage.getItem('ls_last_tab'); if(lt && lt!=='dashboard') showTab(lt); }catch(e){}
-    toast('Bienvenida, ' + user.nombre.split(' ')[0] + ' 💅');
-    // Pull secundario para actualizaciones en background
-    pullFromCloud();
-  }
-
-  const localUser = findUser(D.usuarios);
-  if(localUser){
-    attemptLogin(D.usuarios);
-  } else {
-    btn.textContent='Verificando...'; btn.disabled=true; err.textContent='';
-    fetch(FIREBASE_URL)
-    .then(r=>r.ok?r.json():null).then(remote=>{
-      if(remote && remote.usuarios){
-        Object.assign(D, remote);
-        saveLocal();
-      }
-      btn.textContent='ENTRAR'; btn.disabled=false;
-      attemptLogin(D.usuarios);
-    }).catch(()=>{
-      btn.textContent='ENTRAR'; btn.disabled=false;
-      attemptLogin(D.usuarios);
-    });
-  }
+  const localPart = email.split('@')[0];
+  const user = (D.usuarios||[]).find(x=>{
+    const u=(x.username||'').toLowerCase();
+    return (FB_USER_MAP[u]||'').toLowerCase()===email || u===localPart;
+  }) || {id:0, nombre:localPart, username:localPart, rol:'admin'};
+  currentUser = {id:user.id, nombre:user.nombre, username:user.username, rol:user.rol||'admin'};
+  sessionStorage.setItem('ls_session', JSON.stringify(currentUser));
+  document.getElementById('login-screen').classList.add('hidden');
+  applyRoleUI();
+  err.textContent='';
+  renderAll();
+  try{ const lt=localStorage.getItem('ls_last_tab'); if(lt && lt!=='dashboard') showTab(lt); }catch(e){}
+  toast('Bienvenida, ' + currentUser.nombre.split(' ')[0] + ' 💅');
+  pullFromCloud();
 }
 
 function checkSession(){
   const s = sessionStorage.getItem('ls_session');
-  if(s){
+  fbAuthLoad();
+  if(s && fbAuth && fbAuth.refreshToken){
     currentUser = JSON.parse(s);
     document.getElementById('login-screen').classList.add('hidden');
     applyRoleUI();
+    fbRefresh(); // renovar token en background
     return true;
   }
   return false;
@@ -4200,6 +4236,8 @@ function checkSession(){
 
 function logout(){
   sessionStorage.removeItem('ls_session');
+  try{ localStorage.removeItem('ls_fb_auth'); }catch(e){}
+  fbAuth = null;
   currentUser = null;
   location.reload();
 }

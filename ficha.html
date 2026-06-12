@@ -347,9 +347,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--cream);min-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script>
-const DB='https://ley-studio-b069e-default-rtdb.firebaseio.com/data.json';
+const FB_BASE='https://ley-studio-b069e-default-rtdb.firebaseio.com';
 const params=new URLSearchParams(location.search);
-const CLIENT_ID=+params.get('id');
+const TOKEN=(params.get('t')||'').replace(/[^a-zA-Z0-9_-]/g,'');
+const CLIENT_ID=+params.get('id'); // enlaces de la versión anterior
 const SERVICIOS_MED=['Tips','Soft Gel','Acrílico','Polygel','Gel Constructor','Manicura Rusa'];
 const SVC_KEY_MAP={'Tips':'tips','Soft Gel':'softgel','Acrílico':'acrilico','Polygel':'polygel','Gel Constructor':'gelConstructor','Manicura Rusa':'manicuraRusa'};
 const FINGERS=['pulgar','indice','medio','anular','menique'];
@@ -367,14 +368,16 @@ let firmaCanvas,firmaCtx,dibujando=false,firmaModificada=false;
 
 // ── Init ──
 async function init(){
-  if(!CLIENT_ID){ showError('Enlace inválido. Solicita uno nuevo a Ley Studio.'); return; }
+  if(!TOKEN){
+    showError(CLIENT_ID?'Este enlace es de una versión anterior. Pídele a Ley Studio uno nuevo 💅':'Enlace inválido. Solicita uno nuevo a Ley Studio.');
+    return;
+  }
   try{
-    const res=await fetch(DB);
-    const data=await res.json();
-    const c=(data.clientes||[]).find(x=>x.id===CLIENT_ID);
-    if(!c){ showError('Clienta no encontrada. Verifica el enlace.'); return; }
-    clienteObj=c;
-    fichaData=c.ficha||{};
+    const res=await fetch(`${FB_BASE}/pub/${TOKEN}.json`);
+    const p=await res.json();
+    if(!p||!p.nombre){ showError('Clienta no encontrada. Verifica el enlace.'); return; }
+    clienteObj={id:p.clienteId,nombre:p.nombre,tel:p.tel||'',ig:p.ig||'',correo:p.correo||'',bday:p.bday||''};
+    fichaData=p.ficha||{};
     buildMedTable();
     prefill();
     document.getElementById('loading').style.display='none';
@@ -534,25 +537,19 @@ function getVal(id){ const el=document.getElementById(id); return el?el.value.tr
 function radioVal(name){ const el=document.querySelector(`input[name="${name}"]:checked`); return el?el.value:''; }
 
 // ── Guardar en Firebase ──
-const DB_ROOT='https://ley-studio-b069e-default-rtdb.firebaseio.com/data';
 async function guardarFicha(){
   const btn=document.querySelector('.btn-save');
   btn.textContent='⏳ Guardando...'; btn.disabled=true;
   try{
     const newFicha=collectData();
-    const res=await fetch(DB); const data=await res.json();
-    if(!data||!Array.isArray(data.clientes)){ toast('⚠️ Error al cargar datos. Intenta de nuevo.'); return; }
-    const idx=data.clientes.findIndex(x=>x&&x.id===CLIENT_ID);
-    if(idx<0){ toast('⚠️ Error: clienta no encontrada'); return; }
-    // Escritura dirigida: solo la ficha de esta clienta (no sobrescribe el resto de la BD)
-    const r1=await fetch(`${DB_ROOT}/clientes/${idx}/ficha.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(newFicha)});
+    // Escritura dirigida: solo el nodo público de esta clienta
+    const r1=await fetch(`${FB_BASE}/pub/${TOKEN}/ficha.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(newFicha)});
     if(!r1.ok) throw new Error('PUT ficha falló');
-    // También actualizar campos de info general
     const patch={};
     if(newFicha.correo) patch.correo=newFicha.correo;
     if(newFicha.ig) patch.ig=newFicha.ig;
     if(Object.keys(patch).length){
-      await fetch(`${DB_ROOT}/clientes/${idx}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(patch)});
+      await fetch(`${FB_BASE}/pub/${TOKEN}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(patch)});
     }
     fichaData=newFicha;
     toast('✅ Ficha guardada exitosamente');
