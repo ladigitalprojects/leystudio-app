@@ -669,6 +669,24 @@ body.dark-mode #modal-ficha .modal{background:var(--card);}
 body.dark-mode #modal-ficha input[type=checkbox],body.dark-mode #modal-ficha input[type=radio]{background:#1c1c1c!important;}
 body.dark-mode #modal-ficha input[type=checkbox]:checked,body.dark-mode #modal-ficha input[type=radio]:checked{background:var(--pink)!important;}
 body.dark-mode #modal-ficha tbody td:first-child{background:#222;}
+#modal-ficha .adm-sub-lbl{font-size:10px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin:4px 0 10px;text-align:center;}
+#modal-ficha .adm-nails{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
+#modal-ficha .adm-nail{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;}
+#modal-ficha .adm-nail input{display:none!important;}
+#modal-ficha .adm-nail-card{border:1.5px solid #E3D5C0;border-radius:12px;padding:10px 16px;background:#fff;transition:all .2s;line-height:0;}
+#modal-ficha .adm-nail:hover .adm-nail-card{border-color:var(--gold);}
+#modal-ficha .adm-nail input:checked ~ .adm-nail-card{border-color:var(--pink);background:#FBEFF4;box-shadow:0 4px 14px rgba(221,152,177,.3);}
+#modal-ficha .adm-nail-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--gray-dk);font-weight:600;}
+#modal-ficha .adm-nail input:checked ~ .adm-nail-lbl{color:var(--pink);font-weight:700;}
+#modal-ficha .adm-pills{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
+#modal-ficha .adm-pill{cursor:pointer;}
+#modal-ficha .adm-pill input{display:none!important;}
+#modal-ficha .adm-pill span{display:inline-block;border:1.5px solid #E3D5C0;border-radius:12px;padding:9px 22px;background:#fff;font-size:13px;font-weight:700;color:var(--gray-dk);transition:all .2s;}
+#modal-ficha .adm-pill:hover span{border-color:var(--gold);}
+#modal-ficha .adm-pill input:checked ~ span{border-color:var(--gold-deep);background:#F8F1E5;color:var(--gold-deep);box-shadow:0 3px 10px rgba(178,146,87,.25);}
+#modal-ficha .adm-pill-wide input:checked ~ span{border-color:var(--pink);background:#FBEFF4;color:var(--pink-deep,#CF8AA3);box-shadow:0 3px 10px rgba(221,152,177,.3);}
+body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill span{background:#1c1c1c;border-color:#333;}
+
 
 #reset-box{display:none;margin-top:12px;}
 #reset-box.open{display:block;}.modal-overlay.open{display:flex!important;}
@@ -865,20 +883,13 @@ body.dark-mode #modal-ficha tbody td:first-child{background:#222;}
 </tbody>
       </table>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
-      <div>
-        <div class="cfg-block-title" style="margin-bottom:8px">FORMA</div>
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-forma" value="Cuadrada"> Cuadrada</label><label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-forma" value="Coffin"> Coffin</label><label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-forma" value="Almond"> Almond</label><label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-forma" value="Stiletto"> Stiletto</label>
-      </div>
-      <div>
-        <div class="cfg-block-title" style="margin-bottom:8px">LARGO</div>
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-largo" value="#1"> #1</label><label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-largo" value="#2"> #2</label><label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-largo" value="#3"> #3</label><label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-largo" value="#4"> #4</label>
-      </div>
-      <div>
-        <div class="cfg-block-title" style="margin-bottom:8px">TIPO DE VISITA</div>
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-tipo-visita" value="Nuevo"> Nuevo</label><label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-tipo-visita" value="Cliente Frecuente"> Cliente Frecuente</label><label style="display:flex;align-items:center;gap:5px;font-size:12px;margin-bottom:5px"><input type="radio" name="f-tipo-visita" value="Referido"> Referido</label>
-      </div>
-    </div>
+    <div class="cfg-block-title" style="margin-bottom:10px">DISEÑO Y ESTRUCTURA</div>
+    <div class="adm-sub-lbl">Forma de uña</div>
+    <div class="adm-nails"><label class="adm-nail"><input type="radio" name="f-forma" value="Cuadrada"><div class="adm-nail-card"><svg viewBox="0 0 46 82" width="30" height="54"><path d="M9,16 L37,16 L37,60 Q37,72 23,72 Q9,72 9,60 Z" fill="none" stroke="#2d1a0e" stroke-width="1.6" stroke-linejoin="round"/><path d="M9,54 Q23,58 37,54" fill="none" stroke="#2d1a0e" stroke-width="0.9" opacity="0.4"/><line x1="7" y1="77" x2="39" y2="77" stroke="#2d1a0e" stroke-width="1.8"/></svg></div><div class="adm-nail-lbl">Cuadrada</div></label><label class="adm-nail"><input type="radio" name="f-forma" value="Coffin"><div class="adm-nail-card"><svg viewBox="0 0 46 82" width="30" height="54"><path d="M15,16 L31,16 L39,58 Q39,70 23,70 Q7,70 7,58 Z" fill="none" stroke="#2d1a0e" stroke-width="1.6" stroke-linejoin="round"/><path d="M7,54 Q23,59 39,54" fill="none" stroke="#2d1a0e" stroke-width="0.9" opacity="0.4"/><line x1="5" y1="77" x2="41" y2="77" stroke="#2d1a0e" stroke-width="1.8"/></svg></div><div class="adm-nail-lbl">Coffin</div></label><label class="adm-nail"><input type="radio" name="f-forma" value="Almond"><div class="adm-nail-card"><svg viewBox="0 0 46 82" width="30" height="54"><path d="M9,58 Q9,72 23,72 Q37,72 37,58 C37,28 31,6 23,6 C15,6 9,28 9,58 Z" fill="none" stroke="#2d1a0e" stroke-width="1.6"/><path d="M9,54 Q23,59 37,54" fill="none" stroke="#2d1a0e" stroke-width="0.9" opacity="0.4"/><line x1="7" y1="77" x2="39" y2="77" stroke="#2d1a0e" stroke-width="1.8"/></svg></div><div class="adm-nail-lbl">Almond</div></label><label class="adm-nail"><input type="radio" name="f-forma" value="Stiletto"><div class="adm-nail-card"><svg viewBox="0 0 46 82" width="30" height="54"><path d="M13,58 Q13,72 23,72 Q33,72 33,58 C33,34 26,3 23,3 C20,3 13,34 13,58 Z" fill="none" stroke="#2d1a0e" stroke-width="1.6"/><path d="M13,54 Q23,58 33,54" fill="none" stroke="#2d1a0e" stroke-width="0.9" opacity="0.4"/><line x1="11" y1="77" x2="35" y2="77" stroke="#2d1a0e" stroke-width="1.8"/></svg></div><div class="adm-nail-lbl">Stiletto</div></label></div>
+    <div class="adm-sub-lbl">Largo preferido</div>
+    <div class="adm-pills"><label class="adm-pill"><input type="radio" name="f-largo" value="#1"><span>#1</span></label><label class="adm-pill"><input type="radio" name="f-largo" value="#2"><span>#2</span></label><label class="adm-pill"><input type="radio" name="f-largo" value="#3"><span>#3</span></label><label class="adm-pill"><input type="radio" name="f-largo" value="#4"><span>#4</span></label></div>
+    <div class="adm-sub-lbl">Tipo de cliente</div>
+    <div class="adm-pills" style="margin-bottom:16px"><label class="adm-pill adm-pill-wide"><input type="radio" name="f-tipo-visita" value="Nuevo"><span>✨ Nuevo</span></label><label class="adm-pill adm-pill-wide"><input type="radio" name="f-tipo-visita" value="Cliente Frecuente"><span>⭐ Frecuente</span></label><label class="adm-pill adm-pill-wide"><input type="radio" name="f-tipo-visita" value="Referido"><span>💌 Referido</span></label></div>
     <div class="cfg-block-title" style="margin-bottom:8px">OBSERVACIONES</div>
     <textarea id="f-obs" rows="3" style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px;font-size:13px;resize:vertical;box-sizing:border-box" placeholder="Observaciones adicionales..."></textarea>
     <div class="factions" style="margin-top:16px">

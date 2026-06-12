@@ -484,8 +484,16 @@ function initFirma(){
   firmaCanvas.style.height='120px';
   firmaCtx.scale(window.devicePixelRatio||1,window.devicePixelRatio||1);
   firmaCtx.lineWidth=2; firmaCtx.lineCap='round'; firmaCtx.strokeStyle='#3D2B1F';
-  // Pre-cargar firma si existe
-  if(fichaData.firma){ const img=new Image(); img.onload=()=>firmaCtx.drawImage(img,0,0); img.src=fichaData.firma; }
+  // Pre-cargar firma si existe (escalada al tamaño actual del canvas)
+  if(fichaData.firma&&String(fichaData.firma).startsWith('data:image')){
+    const img=new Image();
+    img.onload=()=>{
+      const w=firmaCanvas.getBoundingClientRect().width, h=120;
+      const sc=Math.min(w/img.width,h/img.height);
+      firmaCtx.drawImage(img,0,0,img.width,img.height,(w-img.width*sc)/2,(h-img.height*sc)/2,img.width*sc,img.height*sc);
+    };
+    img.src=fichaData.firma;
+  }
   // Touch
   firmaCanvas.addEventListener('touchstart',e=>{e.preventDefault();dibujando=true;const t=e.touches[0];const r=firmaCanvas.getBoundingClientRect();firmaCtx.beginPath();firmaCtx.moveTo(t.clientX-r.left,t.clientY-r.top);},{passive:false});
   firmaCanvas.addEventListener('touchmove',e=>{e.preventDefault();if(!dibujando)return;const t=e.touches[0];const r=firmaCanvas.getBoundingClientRect();firmaCtx.lineTo(t.clientX-r.left,t.clientY-r.top);firmaCtx.stroke();firmaModificada=true;},{passive:false});
