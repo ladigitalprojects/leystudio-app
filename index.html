@@ -1877,6 +1877,20 @@ async function pushToCloud(){
   setSyncStatus('sync-busy');
   let success = false;
   try{
+    // Merge protector: no pisar fichas guardadas por clientas (ficha.html) más recientes que las locales
+    try{
+      const rr = await fetch(FIREBASE_URL);
+      const remote = await rr.json();
+      if(remote && Array.isArray(remote.clientes)){
+        remote.clientes.forEach(rc=>{
+          if(!rc || !rc.ficha || !rc.ficha.fechaActualizacion) return;
+          const lc = (D.clientes||[]).find(x=>x && x.id===rc.id);
+          if(!lc) return;
+          const lf = lc.ficha && lc.ficha.fechaActualizacion;
+          if(!lf || new Date(rc.ficha.fechaActualizacion) > new Date(lf)) lc.ficha = rc.ficha;
+        });
+      }
+    }catch(e){ /* sin red: seguimos con datos locales */ }
     const body = JSON.stringify(D);
     const r = await fetch(FIREBASE_URL, {
       method: 'PUT',
@@ -2614,23 +2628,24 @@ function openFicha(id){
   // Old 'tipoUna' maps to 'alteraciones' + 'tiposUna'; old 'formaUna' → 'anatomia'
   const altArr=f.alteraciones||(f.tipoUna||[]).filter(v=>['Sana','Micosis','Onicomicosis','Onicofágicas','Amarillas','Estriada','Paroniquia','Otras'].includes(v)).map(v=>v==='Micosis'?'Onicomicosis':v);
   const tiposUnaArr=f.tiposUna||[];
-  const anatomiaArr=f.anatomia||(f.formaUna||[]);
-  const pielArr=f.piel||(f.piel&&typeof f.piel==='string'?[f.piel]:[]);
-  const capasArr=f.capas||[];
-  document.querySelectorAll('.f-clinica').forEach(cb=>{cb.checked=clinicaArr.includes(cb.value);});
-  document.querySelectorAll('.f-alt').forEach(cb=>{cb.checked=altArr.includes(cb.value);});
+  const anatomiaArr=(f.anatomia||(f.formaUna||[])).map(canonVal);
+  const pielArr=(Array.isArray(f.piel)?f.piel:(f.piel?[f.piel]:[])).map(canonVal);
+  const capasArr=(f.capas||[]).map(canonVal);
+  const clinicaArrC=clinicaArr.map(canonVal), altArrC=altArr.map(canonVal), tiposUnaArrC=tiposUnaArr.map(canonVal);
+  document.querySelectorAll('.f-clinica').forEach(cb=>{cb.checked=clinicaArrC.includes(cb.value);});
+  document.querySelectorAll('.f-alt').forEach(cb=>{cb.checked=altArrC.includes(cb.value);});
   document.querySelectorAll('.f-capa').forEach(cb=>{cb.checked=capasArr.includes(cb.value);});
   document.querySelectorAll('.f-piel-cb').forEach(cb=>{cb.checked=pielArr.includes(cb.value);});
-  document.querySelectorAll('.f-tipo-una').forEach(cb=>{cb.checked=tiposUnaArr.includes(cb.value);});
+  document.querySelectorAll('.f-tipo-una').forEach(cb=>{cb.checked=tiposUnaArrC.includes(cb.value);});
   document.querySelectorAll('.f-anatomia').forEach(cb=>{cb.checked=anatomiaArr.includes(cb.value);});
   // Medidas backward compat: old services (softgel,tips,extensiones) → new (tips,softgel,acrilico,polygel,gelConstructor,manicuraRusa)
   const oldMeds=f.medidas||{};
   const svcs=['tips','softgel','acrilico','polygel','gelConstructor','manicuraRusa'];
   const dedos=['pulgar','indice','medio','anular','menique'];
   svcs.forEach(s=>dedos.forEach(d=>{const el=document.getElementById('f-med-'+s+'-'+d);if(el)el.value=oldMeds[s]?.[d]||'';}));
-  document.querySelectorAll('[name="f-forma"]').forEach(r=>{r.checked=r.value===(f.forma||'');});
+  document.querySelectorAll('[name="f-forma"]').forEach(r=>{r.checked=r.value===canonVal(f.forma||'');});
   document.querySelectorAll('[name="f-largo"]').forEach(r=>{r.checked=r.value===(f.largo||'');});
-  document.querySelectorAll('[name="f-tipo-visita"]').forEach(r=>{r.checked=r.value===(f.tipoVisita||'');});
+  document.querySelectorAll('[name="f-tipo-visita"]').forEach(r=>{r.checked=r.value===canonVal(f.tipoVisita||'');});
   openModal('modal-ficha');
 }
 function guardarFicha(){
@@ -2640,7 +2655,9 @@ function guardarFicha(){
   const dedos=['pulgar','indice','medio','anular','menique'];
   const medidas={};
   svcs.forEach(s=>{medidas[s]={};dedos.forEach(d=>{const el=document.getElementById('f-med-'+s+'-'+d);medidas[s][d]=el?el.value:'';});});
+  // Preservar campos que el formulario admin no incluye (firma, fb, tiktok, edad, etc.)
   c.ficha={
+    ...(c.ficha||{}),
     correo:document.getElementById('f-correo').value.trim(),
     telEmg:document.getElementById('f-tel-emg').value.trim(),
     ig:document.getElementById('f-ig2').value.trim(),
@@ -2657,10 +2674,17 @@ function guardarFicha(){
     forma:(document.querySelector('[name="f-forma"]:checked')||{}).value||'',
     largo:(document.querySelector('[name="f-largo"]:checked')||{}).value||'',
     tipoVisita:(document.querySelector('[name="f-tipo-visita"]:checked')||{}).value||'',
-    medidas
+    medidas,
+    fechaActualizacion:new Date().toISOString()
   };
   saveAndSync(); closeModal('modal-ficha'); toast('✅ Ficha técnica guardada');
 }
+// ── Canonicalización de valores de ficha (compat con datos viejos en minúsculas/sin tildes) ──
+const _strip=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const FICHA_ALIAS={tratamiento:'Tratamiento Médico',hongos:'Hongos o Bacterias',descamacion:'Descamación de Uña',frecuente:'Cliente Frecuente'};
+const CANON_LABELS=['Tratamiento Médico','Hongos o Bacterias','Psoriasis','Dermatitis','Descamación de Uña','Diabetes','Embarazo','Sana','Onicomicosis','Onicofágicas','Amarillas','Estriada','Paroniquia','Otras','Dorsal','Intermedia','Ventral','Sensible','Seca','Mixta','Grasa','Árida','Neutra','Lípida','Plana','Convexa','Cóncava','Coiloniquia','Nuevo','Cliente Frecuente','Referido','Cuadrada','Coffin','Almond','Stiletto'];
+function canonVal(v){const k=_strip(v);if(!k)return '';return FICHA_ALIAS[k]||CANON_LABELS.find(c=>_strip(c)===k)||String(v);}
+
 // ── Rellenar PDF oficial con pdf-lib ──
 async function _fillFichaPDF(c, f, filename, flatten=false){
   if(!window.PDFLib||!window.PDFLib.PDFDocument) throw new Error('pdf-lib no cargado');
@@ -2671,17 +2695,35 @@ async function _fillFichaPDF(c, f, filename, flatten=false){
   const form = pdfDoc.getForm();
   const txt=(n,v)=>{try{form.getTextField(n).setText(String(v||''));}catch(e){}};
   const chk=(n,on)=>{try{if(on)form.getCheckBox(n).check();else form.getCheckBox(n).uncheck();}catch(e){}};
-  const has=(arr,v)=>(arr||[]).some(x=>x&&v&&x.toLowerCase()===v.toLowerCase());
+  const has=(arr,v)=>(arr||[]).some(x=>x&&v&&_strip(canonVal(x))===_strip(v));
   const fmtD=b=>{if(!b)return '';const p=b.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:b;};
   // Texto
   txt('nombre_completo',c.nombre); txt('edad_cumpleanos',fmtD(c.bday));
   txt('correo',f.correo); txt('telefono_whatsapp',c.tel);
   txt('instagram',f.ig||c.ig); txt('facebook',f.fb||''); txt('tiktok',f.tiktok||'');
   txt('telefono_emergencia',f.telEmg); txt('gusto_musica',f.musica); txt('gusto_snack',f.snack);
-  txt('observaciones',f.obs); txt('firma_cliente',f.firma||'');
+  // Observaciones: incluir obsClinicas (el template no tiene campo propio para ellas)
+  txt('observaciones',[f.obs,f.obsClinicas?('Obs. clínicas: '+f.obsClinicas):''].filter(Boolean).join('  |  '));
+  // Firma: si es imagen (dataURL del canvas), incrustarla sobre el campo; nunca volcar base64 como texto
+  if(f.firma&&/^data:image\/png/i.test(f.firma)){
+    try{
+      const png=await pdfDoc.embedPng(f.firma);
+      const widget=form.getTextField('firma_cliente').acroField.getWidgets()[0];
+      const rect=widget.getRectangle();
+      const pages=pdfDoc.getPages();
+      let page=pages[pages.length-1];
+      try{const pRef=widget.P();const found=pages.find(pg=>pg.ref===pRef);if(found)page=found;}catch(e){}
+      const sc=Math.min(rect.width/png.width,rect.height/png.height,1);
+      const iw=png.width*sc,ih=png.height*sc;
+      page.drawImage(png,{x:rect.x+(rect.width-iw)/2,y:rect.y+(rect.height-ih)/2,width:iw,height:ih});
+    }catch(e){}
+  }else if(f.firma&&!String(f.firma).startsWith('data:')){
+    txt('firma_cliente',f.firma);
+  }
   // Clínica
   ['Tratamiento Médico','Hongos o Bacterias','Psoriasis','Dermatitis','Descamación de Uña','Diabetes','Embarazo','Observaciones Clínicas']
     .forEach((lbl,i)=>chk(`clinica_${i+1}`,has(f.clinica,lbl)));
+  chk('clinica_8',has(f.clinica,'Observaciones Clínicas')||!!(f.obsClinicas&&String(f.obsClinicas).trim()));
   // Alteraciones
   ['Sana','Onicomicosis','Onicofágicas','Amarillas','Estriada','Paroniquia','Otras']
     .forEach((lbl,i)=>chk(`alteracion_${i+1}`,has(f.alteraciones,lbl)));
@@ -2700,9 +2742,9 @@ async function _fillFichaPDF(c, f, filename, flatten=false){
     dedoKeys.forEach((d,col)=>txt(`medida_r${r+1}_c${col+1}`,row[d]||''));
   });
   // Forma, largo, tipo cliente
-  ['Cuadrada','Coffin','Almond','Stiletto'].forEach((lbl,i)=>chk(`forma_${i+1}`,(f.forma||'').toLowerCase()===lbl.toLowerCase()));
+  ['Cuadrada','Coffin','Almond','Stiletto'].forEach((lbl,i)=>chk(`forma_${i+1}`,_strip(f.forma)===_strip(lbl)));
   ['#1','#2','#3','#4'].forEach((lbl,i)=>chk(`largo_${i+1}`,f.largo===lbl));
-  ['Nuevo','Cliente Frecuente','Referido'].forEach((lbl,i)=>chk(`cliente_tipo_${i+1}`,(f.tipoVisita||'').toLowerCase()===lbl.toLowerCase()));
+  ['Nuevo','Cliente Frecuente','Referido'].forEach((lbl,i)=>chk(`cliente_tipo_${i+1}`,canonVal(f.tipoVisita)===lbl));
   // Aplanar: elimina toda interactividad del formulario
   if(flatten){
     try{ form.flatten(); }catch(e){}
