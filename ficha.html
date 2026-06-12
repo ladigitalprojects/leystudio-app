@@ -650,7 +650,7 @@ async function descargarPDF(){
     const c=clienteObj||{};
     const nombre=(c.nombre||'Clienta').replace(/\s+/g,'_');
     const filename=`Ficha_${nombre}.pdf`;
-    await _fillFichaPDF(c,f,filename);
+    await _fillFichaPDF(c,f,filename,true);
     toast('📄 PDF descargado: '+filename);
   }catch(e){
     console.error('PDF error:',e);
