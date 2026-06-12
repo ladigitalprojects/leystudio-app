@@ -945,7 +945,8 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
     <input type="hidden" id="mc-cl-id">
     <p id="mc-dest" style="font-size:12px;color:var(--gold-deep);font-weight:600;margin:0 0 12px"></p>
     <div class="fgrp" style="margin-bottom:10px"><label>Plantilla</label>
-      <select id="mc-plantilla" onchange="aplicarPlantillaCorreo()"><option value="libre">Mensaje libre</option><option value="cumple">🎂 Feliz cumpleaños</option></select>
+      <select id="mc-plantilla" onchange="aplicarPlantillaCorreo()"><option value="libre">Mensaje libre</option><option value="cumple">🎂 Feliz cumpleaños</option><option value="promo10">✨ Promo 10% junio</option></select>
+      <input type="hidden" id="mc-hero" value="">
     </div>
     <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="mc-asunto" placeholder="Asunto del correo" oninput="actualizarPreviewCorreo()"></div>
     <div class="fgrp" style="margin-bottom:8px"><label>Mensaje</label><textarea id="mc-msg" rows="6" placeholder="Escribe el mensaje..." style="width:100%;box-sizing:border-box;resize:vertical" oninput="actualizarPreviewCorreo()"></textarea></div>
@@ -961,6 +962,10 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
   <div class="modal" style="max-width:620px;max-height:92vh;overflow-y:auto">
     <div class="modal-title">📣 Campaña por correo<button class="modal-close" onclick="closeModal('modal-campana')">&#x2715;</button></div>
     <p id="camp-info" style="font-size:12px;color:var(--gray);margin:0 0 12px"></p>
+    <div class="fgrp" style="margin-bottom:10px"><label>Plantilla</label>
+      <select id="camp-plantilla" onchange="aplicarPlantillaCampana()"><option value="libre">Mensaje libre</option><option value="promo10">✨ Promo 10% junio</option></select>
+      <input type="hidden" id="camp-hero" value="">
+    </div>
     <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="camp-asunto" placeholder="Ej. ✨ Promo de junio en Ley Studio" oninput="actualizarPreviewCampana()"></div>
     <div class="fgrp" style="margin-bottom:14px"><label>Mensaje</label><textarea id="camp-msg" rows="7" oninput="actualizarPreviewCampana()" placeholder="Texto de la promoción... Cada clienta recibirá su saludo personalizado al inicio." style="width:100%;box-sizing:border-box;resize:vertical"></textarea></div>
     <div style="font-size:10px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:1px;margin:4px 0 6px">Vista previa (ejemplo con la primera clienta)</div>
@@ -2034,23 +2039,47 @@ async function enviarCorreo(to,subject,html,attachment){
   if(!r.ok||!j.ok) throw new Error(j.error||'No se pudo enviar');
   return true;
 }
-function mailWrap(titulo,cuerpo){
+function mailWrap(titulo,cuerpo,opts){
+  opts=opts||{};
+  const hero=opts.hero?`
+    <tr><td style="padding:30px 30px 6px;text-align:center;">
+      <div style="font-size:11px;letter-spacing:5px;color:#B29257;text-transform:uppercase;">Solo por junio</div>
+      <div style="font-family:Georgia,'Times New Roman',serif;font-size:92px;line-height:1;color:#A9884D;margin:14px 0 6px;">10<span style="font-size:46px;">%</span></div>
+      <div style="font-size:15px;letter-spacing:4px;color:#4A4A4A;text-transform:uppercase;font-weight:bold;">de descuento en todo</div>
+      <table cellpadding="0" cellspacing="0" align="center" style="margin:16px auto 0;"><tr>
+        <td style="width:70px;font-size:1px;line-height:1px;vertical-align:middle;"><div style="height:1px;background:#D4B483;font-size:0;line-height:0;"></div></td>
+        <td style="padding:0 10px;color:#B29257;font-size:12px;line-height:1;">&#9670;</td>
+        <td style="width:70px;font-size:1px;line-height:1px;vertical-align:middle;"><div style="height:1px;background:#D4B483;font-size:0;line-height:0;"></div></td>
+      </tr></table>
+    </td></tr>`:`
+    <tr><td style="padding:26px 30px 0;">
+      <h2 style="margin:0;color:#A9884D;font-size:20px;font-weight:600;font-family:Georgia,'Times New Roman',serif;">${titulo}</h2>
+    </td></tr>`;
+  const cta=opts.hero?`
+    <tr><td style="text-align:center;padding:6px 30px 30px;">
+      <a href="https://wa.me/50494994709?text=Hola%20Ley%20Studio%2C%20quiero%20agendar%20mi%20cita%20con%20el%2010%25%20de%20descuento%20%F0%9F%92%85" style="display:inline-block;background:#B29257;color:#ffffff;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;padding:14px 34px;border-radius:999px;">Agendar mi cita</a>
+    </td></tr>`:'';
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5EFE6;font-family:Arial,Helvetica,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5EFE6;padding:24px 0;"><tr><td align="center">
-    <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:94%;background:#FDF8F2;border:1px solid #B29257;border-radius:14px;overflow:hidden;">
-      <tr><td style="background:#3D2B1F;padding:22px;text-align:center;">
-        <div style="font-family:Georgia,serif;font-size:34px;color:#DD98B1;line-height:1">LS</div>
-        <div style="color:#ffffff;font-size:14px;letter-spacing:4px;margin-top:4px;">LEY STUDIO</div>
-        <div style="color:#DD98B1;font-size:9px;letter-spacing:3px;margin-top:2px;">NAIL ARTIST</div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5EFE6;padding:26px 0;"><tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:94%;background:#FDF8F2;border:1px solid #B29257;border-radius:18px;overflow:hidden;">
+      <tr><td style="padding:30px 30px 8px;text-align:center;background:#F8F1E5;">
+        <img src="https://leystudiohn.com/assets/logo.png" alt="Ley Studio" width="150" style="width:150px;max-width:60%;height:auto;display:inline-block;">
       </td></tr>
-      <tr><td style="height:3px;background:#B29257;font-size:0;">&nbsp;</td></tr>
-      <tr><td style="padding:26px 30px;">
-        <h2 style="margin:0 0 14px;color:#A9884D;font-size:19px;font-weight:600;">${titulo}</h2>
-        <div style="color:#3D2B1F;font-size:14px;line-height:1.7;">${cuerpo}</div>
+      <tr><td style="background:#F8F1E5;padding:0 0 22px;text-align:center;">
+        <table cellpadding="0" cellspacing="0" align="center"><tr>
+          <td style="width:90px;font-size:1px;line-height:1px;vertical-align:middle;"><div style="height:1px;background:#D4B483;font-size:0;line-height:0;"></div></td>
+          <td style="padding:0 10px;color:#B29257;font-size:11px;line-height:1;">&#9670;</td>
+          <td style="width:90px;font-size:1px;line-height:1px;vertical-align:middle;"><div style="height:1px;background:#D4B483;font-size:0;line-height:0;"></div></td>
+        </tr></table>
       </td></tr>
-      <tr><td style="padding:16px 30px 22px;border-top:1px solid #EDE0C8;text-align:center;color:#9A8070;font-size:11px;line-height:1.8;">
-        Ley Studio · Nail Artist · Tegucigalpa<br>
-        Instagram <a href="https://instagram.com/ley_studiohn" style="color:#CF8AA3;text-decoration:none;">@ley_studiohn</a> · WhatsApp <a href="https://wa.me/50494994709" style="color:#CF8AA3;text-decoration:none;">+504 9499-4709</a>
+      ${hero}
+      <tr><td style="padding:18px 34px 26px;">
+        <div style="color:#4A4A4A;font-size:15px;line-height:1.8;text-align:${opts.hero?'center':'left'};">${cuerpo}</div>
+      </td></tr>
+      ${cta}
+      <tr><td style="padding:18px 30px 24px;border-top:1px solid #EDE0C8;text-align:center;color:#9C8E7A;font-size:11px;line-height:1.9;">
+        Ley Studio &middot; Nail Artist &middot; Tegucigalpa<br>
+        Instagram <a href="https://instagram.com/ley_studiohn" style="color:#A9884D;text-decoration:none;font-weight:bold;">@ley_studiohn</a> &middot; WhatsApp <a href="https://wa.me/50494994709" style="color:#A9884D;text-decoration:none;font-weight:bold;">+504 9499-4709</a>
       </td></tr>
     </table>
   </td></tr></table></body></html>`;
@@ -2069,6 +2098,7 @@ function openMailComposer(cliente,opts){
   document.getElementById('mc-attach-cita').value=opts.citaAdj||'';
   document.getElementById('mc-adjunto').style.display=opts.citaAdj?'block':'none';
   document.getElementById('mc-plantilla').value=opts.plantilla||'libre';
+  document.getElementById('mc-hero').value='';
   document.getElementById('mc-asunto').value=opts.asunto||'';
   document.getElementById('mc-msg').value=opts.msg||'';
   actualizarPreviewCorreo();
@@ -2078,14 +2108,14 @@ function actualizarPreviewCorreo(){
   const fr=document.getElementById('mc-preview'); if(!fr) return;
   const asunto=document.getElementById('mc-asunto').value.trim()||'(Asunto)';
   const msg=(document.getElementById('mc-msg').value||'').replace(/\n/g,'<br>')||'<em style="color:#9A8070">Escribe el mensaje…</em>';
-  fr.srcdoc=mailWrap(asunto,msg);
+  fr.srcdoc=mailWrap(asunto,msg,{hero:document.getElementById('mc-hero').value==='1'});
 }
 function actualizarPreviewCampana(){
   const fr=document.getElementById('camp-preview'); if(!fr) return;
   const asunto=document.getElementById('camp-asunto').value.trim()||'(Asunto)';
   const primera=(D.clientes.find(c=>_clienteCorreo(c))||{nombre:'Clienta'});
-  const msg='Hola <strong>'+(primera.nombre||'Clienta').split(' ')[0]+'</strong>,<br><br>'+((document.getElementById('camp-msg').value||'').replace(/\n/g,'<br>')||'<em style="color:#9A8070">Escribe el mensaje…</em>');
-  fr.srcdoc=mailWrap(asunto,msg);
+  const msg='Hola <strong>'+(primera.nombre||'Clienta').split(' ')[0]+'</strong> 💅<br><br>'+((document.getElementById('camp-msg').value||'').replace(/\n/g,'<br>')||'<em style="color:#9A8070">Escribe el mensaje…</em>');
+  fr.srcdoc=mailWrap(asunto,msg,{hero:document.getElementById('camp-hero').value==='1'});
 }
 
 function enviarRecordatorioCorreo(citaId){
@@ -2120,7 +2150,12 @@ function aplicarPlantillaCorreo(){
   const id=+document.getElementById('mc-cl-id').value;
   const c=D.clientes.find(x=>x.id===id)||{nombre:''};
   const nom=(c.nombre||'').split(' ')[0];
-  if(document.getElementById('mc-plantilla').value==='cumple'){
+  const plan=document.getElementById('mc-plantilla').value;
+  document.getElementById('mc-hero').value=plan==='promo10'?'1':'';
+  if(plan==='promo10'){
+    document.getElementById('mc-asunto').value='✨ 10% de descuento en todo — junio en Ley Studio';
+    document.getElementById('mc-msg').value='Hola '+nom+' 💅\n\nJunio llegó con regalo: durante todo el mes tenemos 10% de descuento en TODOS nuestros servicios.\n\nAcrílicas, soft gel, manicura rusa, pedicure spa… lo que tus uñas pidan, con tu descuento aplicado.\n\nLos cupos vuelan: agenda tu cita por WhatsApp y ven a consentirte.';
+  } else if(plan==='cumple'){
     document.getElementById('mc-asunto').value='¡Feliz cumpleaños, '+nom+'! 🎂💅';
     document.getElementById('mc-msg').value='¡Feliz cumpleaños, '+nom+'! 🎉\n\nEn Ley Studio queremos celebrarte: este mes tienes un detalle especial esperándote en tu próxima visita.\n\nAgenda tu cita por WhatsApp y ven a consentirte. 💕';
   } else {
@@ -2143,13 +2178,25 @@ async function enviarCorreoCliente(){
   }
   const btn=document.getElementById('mc-btn'); btn.disabled=true; btn.textContent='Enviando...';
   try{
-    await enviarCorreo(to,asunto,mailWrap(asunto,msg.replace(/\n/g,'<br>')),attachment);
+    await enviarCorreo(to,asunto,mailWrap(asunto,msg.replace(/\n/g,'<br>'),{hero:document.getElementById('mc-hero').value==='1'}),attachment);
     toast('✉️ Correo enviado a '+to);
     closeModal('modal-correo');
   }catch(e){ toast('⚠️ No se pudo enviar: '+e.message,'warn'); }
   btn.disabled=false; btn.textContent='Enviar correo';
 }
 
+function aplicarPlantillaCampana(){
+  const plan=document.getElementById('camp-plantilla').value;
+  document.getElementById('camp-hero').value=plan==='promo10'?'1':'';
+  if(plan==='promo10'){
+    document.getElementById('camp-asunto').value='✨ 10% de descuento en todo — junio en Ley Studio';
+    document.getElementById('camp-msg').value='Junio llegó con regalo: durante todo el mes tenemos 10% de descuento en TODOS nuestros servicios.\n\nAcrílicas, soft gel, manicura rusa, pedicure spa… lo que tus uñas pidan, con tu descuento aplicado.\n\nLos cupos vuelan: agenda tu cita por WhatsApp y ven a consentirte.';
+  } else {
+    document.getElementById('camp-asunto').value='';
+    document.getElementById('camp-msg').value='';
+  }
+  actualizarPreviewCampana();
+}
 function openCampana(){
   const dest=D.clientes.filter(c=>_clienteCorreo(c));
   document.getElementById('camp-info').textContent=dest.length+' clientas con correo recibirán este mensaje ('+(D.clientes.length-dest.length)+' sin correo registrado).';
@@ -2169,8 +2216,8 @@ async function enviarCampana(){
   for(let i=0;i<dest.length;i++){
     const c=dest[i];
     prog.textContent='Enviando '+(i+1)+' de '+dest.length+'…';
-    const cuerpo='Hola <strong>'+(c.nombre||'').split(' ')[0]+'</strong>,<br><br>'+msg.replace(/\n/g,'<br>');
-    try{ await enviarCorreo(_clienteCorreo(c),asunto,mailWrap(asunto,cuerpo)); ok++; }
+    const cuerpo='Hola <strong>'+(c.nombre||'').split(' ')[0]+'</strong> 💅<br><br>'+msg.replace(/\n/g,'<br>');
+    try{ await enviarCorreo(_clienteCorreo(c),asunto,mailWrap(asunto,cuerpo,{hero:document.getElementById('camp-hero').value==='1'})); ok++; }
     catch(e){ fail++; }
     await new Promise(r=>setTimeout(r,800));
   }
