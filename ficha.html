@@ -354,6 +354,7 @@ const DB='https://ley-studio-b069e-default-rtdb.firebaseio.com/data.json';
 const params=new URLSearchParams(location.search);
 const CLIENT_ID=+params.get('id');
 const SERVICIOS_MED=['Tips','Soft Gel','Acrílico','Polygel','Gel Constructor','Manicura Rusa'];
+const SVC_KEY_MAP={'Tips':'tips','Soft Gel':'softgel','Acrílico':'acrilico','Polygel':'polygel','Gel Constructor':'gelConstructor','Manicura Rusa':'manicuraRusa'};
 const FINGERS=['pulgar','indice','medio','anular','menique'];
 const FINGERS_LABEL=['Pulgar','Índice','Medio','Anular','Meñique'];
 
@@ -413,14 +414,14 @@ function prefill(){
   setVal('f-tel',c.tel||'');
   setVal('f-edad',f.edad||'');
   setVal('f-correo',f.correo||c.correo||'');
-  setVal('f-fb',f.redes_fb||'');
-  setVal('f-ig',f.redes_ig||c.ig||'');
-  setVal('f-tiktok',f.redes_tiktok||'');
-  setVal('f-tel-emerg',f.tel_emergencia||'');
+  setVal('f-fb',f.fb||f.redes_fb||'');
+  setVal('f-ig',f.ig||f.redes_ig||c.ig||'');
+  setVal('f-tiktok',f.tiktok||f.redes_tiktok||'');
+  setVal('f-tel-emerg',f.telEmg||f.tel_emergencia||'');
   setVal('f-musica',f.musica||'');
   setVal('f-snack',f.snack||'');
-  setVal('f-obs-clin',f.obs_clinicas||'');
-  setVal('obs-text',f.observaciones||'');
+  setVal('f-obs-clin',f.obsClinicas||f.obs_clinicas||'');
+  setVal('obs-text',f.obs||f.observaciones||'');
   // Checkboxes clínicos
   (f.clinica||[]).forEach(v=>{
     const el=document.querySelector(`input[name="clin"][value="${v}"]`);
@@ -437,21 +438,25 @@ function prefill(){
     if(el) el.checked=true;
   });
   // Radios
-  setRadio('piel',f.tipo_piel);
-  setRadio('tipouna',f.tipo_una);
-  setRadio('anatomia',f.anatomia);
+  // Admin stores as arrays ['Sensible'], ficha radio uses lowercase 'sensible'
+  const _rv=v=>(Array.isArray(v)?v[0]:v||'').toLowerCase();
+  setRadio('piel',_rv(f.piel||f.tipo_piel));
+  setRadio('tipouna',_rv(f.tiposUna||f.tipo_una));
+  setRadio('anatomia',_rv(f.anatomia));
   // Forma
   if(f.forma){ const el=document.querySelector(`input[name="forma"][value="${f.forma}"]`); if(el) el.checked=true; }
   // Largo
   if(f.largo){ document.querySelectorAll('.largo-btn').forEach(b=>{ if(b.dataset.v===f.largo) b.classList.add('sel'); }); }
   // Tipo cliente
-  if(f.tipo_cliente){ document.querySelectorAll('.tc-option').forEach(o=>{ if(o.dataset.v===f.tipo_cliente) o.classList.add('sel'); }); }
+  const _tv=f.tipoVisita||f.tipo_cliente||'';
+  if(_tv){ document.querySelectorAll('.tc-option').forEach(o=>{ if(o.dataset.v===_tv) o.classList.add('sel'); }); }
   // Medidas
   SERVICIOS_MED.forEach(svc=>{
-    const key=svc.replace(/\s+/g,'_').toLowerCase();
-    const vals=(f.medidas||{})[key]||{};
+    const htmlKey=svc.replace(/\s+/g,'_').toLowerCase();
+    const dbKey=SVC_KEY_MAP[svc]||htmlKey;
+    const vals=(f.medidas||{})[dbKey]||(f.medidas||{})[htmlKey]||{};
     FINGERS.forEach(f2=>{
-      const el=document.getElementById(`med-${key}-${f2}`);
+      const el=document.getElementById(`med-${htmlKey}-${f2}`);
       if(el&&vals[f2]) el.value=vals[f2];
     });
   });
@@ -493,28 +498,31 @@ function limpiarFirma(){ firmaCtx.clearRect(0,0,firmaCanvas.width,firmaCanvas.he
 function collectData(){
   const medidas={};
   SERVICIOS_MED.forEach(svc=>{
-    const key=svc.replace(/\s+/g,'_').toLowerCase();
+    const htmlKey=svc.replace(/\s+/g,'_').toLowerCase();
+    const dbKey=SVC_KEY_MAP[svc]||htmlKey;
     const obj={};
-    FINGERS.forEach(f=>{ const el=document.getElementById(`med-${key}-${f}`); if(el&&el.value.trim()) obj[f]=el.value.trim(); });
-    if(Object.keys(obj).length) medidas[key]=obj;
+    FINGERS.forEach(f=>{ const el=document.getElementById(`med-${htmlKey}-${f}`); if(el&&el.value.trim()) obj[f]=el.value.trim(); });
+    if(Object.keys(obj).length) medidas[dbKey]=obj;
   });
   const formaEl=document.querySelector('input[name="forma"]:checked');
   const largoEl=document.querySelector('.largo-btn.sel');
   const tipoEl=document.querySelector('.tc-option.sel');
   return{
     edad:getVal('f-edad'),correo:getVal('f-correo'),
-    redes_fb:getVal('f-fb'),redes_ig:getVal('f-ig'),redes_tiktok:getVal('f-tiktok'),
-    tel_emergencia:getVal('f-tel-emerg'),musica:getVal('f-musica'),snack:getVal('f-snack'),
-    obs_clinicas:getVal('f-obs-clin'),
+    fb:getVal('f-fb'),ig:getVal('f-ig'),tiktok:getVal('f-tiktok'),
+    telEmg:getVal('f-tel-emerg'),musica:getVal('f-musica'),snack:getVal('f-snack'),
+    obsClinicas:getVal('f-obs-clin'),
     clinica:[...document.querySelectorAll('input[name="clin"]:checked')].map(e=>e.value),
     alteraciones:[...document.querySelectorAll('input[name="alt"]:checked')].map(e=>e.value),
     capas:[...document.querySelectorAll('input[name="capa"]:checked')].map(e=>e.value),
-    tipo_piel:radioVal('piel'),tipo_una:radioVal('tipouna'),anatomia:radioVal('anatomia'),
+    piel:[radioVal('piel')].filter(Boolean),
+    tiposUna:[radioVal('tipouna')].filter(Boolean),
+    anatomia:[radioVal('anatomia')].filter(Boolean),
     forma:formaEl?formaEl.value:'',
     largo:largoEl?largoEl.dataset.v:'',
-    tipo_cliente:tipoEl?tipoEl.dataset.v:'',
+    tipoVisita:tipoEl?tipoEl.dataset.v:'',
     firma:firmaModificada||!fichaData.firma?firmaCanvas.toDataURL('image/png'):fichaData.firma,
-    observaciones:getVal('obs-text'),
+    obs:getVal('obs-text'),
     medidas,
     fechaActualizacion:new Date().toISOString()
   };
@@ -524,7 +532,7 @@ function getVal(id){ const el=document.getElementById(id); return el?el.value.tr
 function radioVal(name){ const el=document.querySelector(`input[name="${name}"]:checked`); return el?el.value:''; }
 
 // ── Guardar en Firebase ──
-async function guardarFicha(){
+async async function guardarFicha(){
   const btn=document.querySelector('.btn-save');
   btn.textContent='⏳ Guardando...'; btn.disabled=true;
   try{
@@ -535,7 +543,7 @@ async function guardarFicha(){
     data.clientes[idx].ficha=newFicha;
     // También actualizar campos de info general
     if(newFicha.correo) data.clientes[idx].correo=newFicha.correo;
-    if(newFicha.redes_ig) data.clientes[idx].ig=newFicha.redes_ig;
+    if(newFicha.ig) data.clientes[idx].ig=newFicha.ig;
     await fetch(DB,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     fichaData=newFicha;
     toast('✅ Ficha guardada exitosamente');
