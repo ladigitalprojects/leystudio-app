@@ -806,7 +806,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
     <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px;">
       <div class="fgrp"><label>Nombre</label><input type="text" id="e-cl-n"></div>
       <div class="fgrp"><label>Teléfono</label><div class="tel-wrap"><select class="tel-code" id="e-cl-telcode"><option value="+504">+504</option><option value="+1">+1</option><option value="+502">+502</option><option value="+503">+503</option><option value="+506">+506</option></select><input type="tel" class="tel-num" id="e-cl-tel" placeholder="9999-9999" maxlength="9"></div></div>
-      <div class="fgrp"><label>Instagram</label><input type="text" id="e-cl-ig"></div>
+      <div class="fgrp"><label>Instagram</label><input type="text" id="e-cl-ig"></div><div class="fgrp"><label>Correo</label><input type="email" id="e-cl-correo"></div>
       <div class="fgrp"><label>1ra Visita</label><input type="text" class="fpdate" id="e-cl-f"></div>
       <div class="fgrp"><label>Cumpleaños</label><input type="text" class="fpdate" id="e-cl-bday" placeholder="dd/mm/aaaa"></div>
       <div class="fgrp" style="grid-column:span 2"><label>Notas / Preferencias</label><input type="text" id="e-cl-notas" placeholder="Preferencias, alergias..."></div>
@@ -940,25 +940,31 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
 </div>
 <!-- MODAL CORREO CLIENTA -->
 <div class="modal-overlay" id="modal-correo">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:600px;max-height:92vh;overflow-y:auto">
     <div class="modal-title">Enviar correo<button class="modal-close" onclick="closeModal('modal-correo')">&#x2715;</button></div>
     <input type="hidden" id="mc-cl-id">
     <p id="mc-dest" style="font-size:12px;color:var(--gold-deep);font-weight:600;margin:0 0 12px"></p>
     <div class="fgrp" style="margin-bottom:10px"><label>Plantilla</label>
       <select id="mc-plantilla" onchange="aplicarPlantillaCorreo()"><option value="libre">Mensaje libre</option><option value="cumple">🎂 Feliz cumpleaños</option></select>
     </div>
-    <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="mc-asunto" placeholder="Asunto del correo"></div>
-    <div class="fgrp" style="margin-bottom:14px"><label>Mensaje</label><textarea id="mc-msg" rows="6" placeholder="Escribe el mensaje..." style="width:100%;box-sizing:border-box;resize:vertical"></textarea></div>
+    <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="mc-asunto" placeholder="Asunto del correo" oninput="actualizarPreviewCorreo()"></div>
+    <div class="fgrp" style="margin-bottom:8px"><label>Mensaje</label><textarea id="mc-msg" rows="6" placeholder="Escribe el mensaje..." style="width:100%;box-sizing:border-box;resize:vertical" oninput="actualizarPreviewCorreo()"></textarea></div>
+    <input type="hidden" id="mc-attach-cita">
+    <div id="mc-adjunto" style="display:none;font-size:12px;color:var(--gold-deep);font-weight:600;margin-bottom:8px">📎 Se adjuntará el recibo en PDF</div>
+    <div style="font-size:10px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:1px;margin:4px 0 6px">Vista previa</div>
+    <iframe id="mc-preview" style="width:100%;height:300px;border:1px solid var(--border);border-radius:10px;background:#F5EFE6;margin-bottom:12px"></iframe>
     <button class="add-btn" id="mc-btn" onclick="enviarCorreoCliente()">Enviar correo</button>
   </div>
 </div>
 <!-- MODAL CAMPAÑA -->
 <div class="modal-overlay" id="modal-campana">
-  <div class="modal" style="max-width:560px">
+  <div class="modal" style="max-width:620px;max-height:92vh;overflow-y:auto">
     <div class="modal-title">📣 Campaña por correo<button class="modal-close" onclick="closeModal('modal-campana')">&#x2715;</button></div>
     <p id="camp-info" style="font-size:12px;color:var(--gray);margin:0 0 12px"></p>
-    <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="camp-asunto" placeholder="Ej. ✨ Promo de junio en Ley Studio"></div>
-    <div class="fgrp" style="margin-bottom:14px"><label>Mensaje</label><textarea id="camp-msg" rows="7" placeholder="Texto de la promoción... Cada clienta recibirá su saludo personalizado al inicio." style="width:100%;box-sizing:border-box;resize:vertical"></textarea></div>
+    <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="camp-asunto" placeholder="Ej. ✨ Promo de junio en Ley Studio" oninput="actualizarPreviewCampana()"></div>
+    <div class="fgrp" style="margin-bottom:14px"><label>Mensaje</label><textarea id="camp-msg" rows="7" oninput="actualizarPreviewCampana()" placeholder="Texto de la promoción... Cada clienta recibirá su saludo personalizado al inicio." style="width:100%;box-sizing:border-box;resize:vertical"></textarea></div>
+    <div style="font-size:10px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:1px;margin:4px 0 6px">Vista previa (ejemplo con la primera clienta)</div>
+    <iframe id="camp-preview" style="width:100%;height:280px;border:1px solid var(--border);border-radius:10px;background:#F5EFE6;margin-bottom:12px"></iframe>
     <button class="add-btn" id="camp-btn" onclick="enviarCampana()">Enviar campaña</button>
     <div id="camp-prog" style="font-size:12px;color:var(--gold-deep);margin-top:10px;font-weight:600"></div>
   </div>
@@ -1331,6 +1337,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
         <div class="fgrp"><label>Nombre completo</label><input type="text" id="cl-n" placeholder="Nombre y apellido"></div>
         <div class="fgrp"><label>Teléfono</label><div class="tel-wrap"><select class="tel-code" id="cl-telcode"><option value="+504">+504</option><option value="+1">+1</option></select><input type="tel" class="tel-num" id="cl-tel" placeholder="9999-9999" maxlength="9"></div></div>
         <div class="fgrp"><label>Instagram</label><input type="text" id="cl-ig" placeholder="@usuario"></div>
+        <div class="fgrp"><label>Correo</label><input type="email" id="cl-correo" placeholder="correo@ejemplo.com"></div>
         <div class="fgrp"><label>Fecha 1ra visita</label><input type="text" class="fpdate" id="cl-f"></div>
         <div class="fgrp"><label>Cumpleaños</label><input type="text" class="fpdate" id="cl-bday"></div>
         <div class="fgrp span2" style="grid-column:span 2"><label>Notas / Preferencias</label><input type="text" id="cl-notas" placeholder="Preferencias, alergias..."></div>
@@ -2051,39 +2058,63 @@ function mailWrap(titulo,cuerpo){
 function _clienteCorreo(c){ return (c&&((c.ficha&&c.ficha.correo)||c.correo))||''; }
 function _fmtFechaLarga(f){ try{ return new Date(f+'T12:00:00').toLocaleDateString('es-HN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch(e){ return f; } }
 
-async function enviarRecordatorioCorreo(citaId){
-  const c=D.citas.find(x=>+x.id===+citaId); if(!c) return;
-  const cl=D.clientes.find(x=>x.nombre===c.clienta)||{};
-  const to=_clienteCorreo(cl);
-  if(!to){ toast('Esta clienta no tiene correo registrado','warn'); return; }
-  const svcs=(c.servicios||[]).map(s=>s.nombre).join(', ')||'tu servicio';
-  const cuerpo=`Hola <strong>${c.clienta.split(' ')[0]}</strong> 💅<br><br>Te recordamos tu cita en <strong>Ley Studio</strong>:<br><br>📅 <strong>${_fmtFechaLarga(c.fecha)}</strong><br>🕐 <strong>${c.hora||''}</strong><br>✨ ${svcs}<br><br>Si necesitas reprogramar, escríbenos por WhatsApp con gusto.<br><br>¡Te esperamos!`;
-  toast('Enviando correo...');
-  try{ await enviarCorreo(to,'Recordatorio de tu cita 💅 — Ley Studio',mailWrap('Recordatorio de cita',cuerpo)); toast('✉️ Recordatorio enviado a '+to); }
-  catch(e){ toast('⚠️ No se pudo enviar: '+e.message,'warn'); }
+function openMailComposer(cliente,opts){
+  opts=opts||{};
+  const to=_clienteCorreo(cliente);
+  if(!to){ toast('Esta clienta no tiene correo registrado. Edítala y agrégale su correo.','warn'); return; }
+  document.getElementById('mc-cl-id').value=cliente.id||0;
+  const dest=document.getElementById('mc-dest');
+  dest.textContent='Para: '+(cliente.nombre||'')+' · '+to;
+  dest.dataset.to=to;
+  document.getElementById('mc-attach-cita').value=opts.citaAdj||'';
+  document.getElementById('mc-adjunto').style.display=opts.citaAdj?'block':'none';
+  document.getElementById('mc-plantilla').value=opts.plantilla||'libre';
+  document.getElementById('mc-asunto').value=opts.asunto||'';
+  document.getElementById('mc-msg').value=opts.msg||'';
+  actualizarPreviewCorreo();
+  openModal('modal-correo');
+}
+function actualizarPreviewCorreo(){
+  const fr=document.getElementById('mc-preview'); if(!fr) return;
+  const asunto=document.getElementById('mc-asunto').value.trim()||'(Asunto)';
+  const msg=(document.getElementById('mc-msg').value||'').replace(/\n/g,'<br>')||'<em style="color:#9A8070">Escribe el mensaje…</em>';
+  fr.srcdoc=mailWrap(asunto,msg);
+}
+function actualizarPreviewCampana(){
+  const fr=document.getElementById('camp-preview'); if(!fr) return;
+  const asunto=document.getElementById('camp-asunto').value.trim()||'(Asunto)';
+  const primera=(D.clientes.find(c=>_clienteCorreo(c))||{nombre:'Clienta'});
+  const msg='Hola <strong>'+(primera.nombre||'Clienta').split(' ')[0]+'</strong>,<br><br>'+((document.getElementById('camp-msg').value||'').replace(/\n/g,'<br>')||'<em style="color:#9A8070">Escribe el mensaje…</em>');
+  fr.srcdoc=mailWrap(asunto,msg);
 }
 
-async function enviarReciboCorreo(citaId){
-  const r=_buildReciboDoc(citaId); if(!r) return;
-  const cl=D.clientes.find(x=>x.nombre===r.c.clienta)||{};
-  const to=_clienteCorreo(cl);
-  if(!to){ toast('Esta clienta no tiene correo registrado','warn'); return; }
-  const b64=r.doc.output('datauristring').split(',')[1];
-  const cuerpo=`Hola <strong>${r.c.clienta.split(' ')[0]}</strong>,<br><br>Adjuntamos el recibo de tu visita del <strong>${_fmtFechaLarga(r.c.fecha)}</strong>.<br><br>¡Gracias por confiar en Ley Studio! 💕`;
-  toast('Enviando recibo...');
-  try{ await enviarCorreo(to,'Tu recibo — Ley Studio',mailWrap('Recibo de tu visita',cuerpo),{name:r.filename,data:b64}); toast('✉️ Recibo enviado a '+to); }
-  catch(e){ toast('⚠️ No se pudo enviar: '+e.message,'warn'); }
+function enviarRecordatorioCorreo(citaId){
+  const c=D.citas.find(x=>+x.id===+citaId); if(!c) return;
+  const cl=D.clientes.find(x=>x.nombre===c.clienta);
+  if(!cl){ toast('No encontré la clienta de esta cita','warn'); return; }
+  const nom=(c.clienta||'').split(' ')[0];
+  const svcs=(c.servicios||[]).map(s=>s.nombre).join(', ')||'tu servicio';
+  openMailComposer(cl,{
+    asunto:'Recordatorio de tu cita 💅 — Ley Studio',
+    msg:'Hola '+nom+' 💅\n\nTe recordamos tu cita en Ley Studio:\n\n📅 '+_fmtFechaLarga(c.fecha)+'\n🕐 '+(c.hora||'')+'\n✨ '+svcs+'\n\nSi necesitas reprogramar, escríbenos por WhatsApp con gusto.\n\n¡Te esperamos!'
+  });
+}
+
+function enviarReciboCorreo(citaId){
+  const c=D.citas.find(x=>+x.id===+citaId); if(!c) return;
+  const cl=D.clientes.find(x=>x.nombre===c.clienta);
+  if(!cl){ toast('No encontré la clienta de esta cita','warn'); return; }
+  const nom=(c.clienta||'').split(' ')[0];
+  openMailComposer(cl,{
+    asunto:'Tu recibo — Ley Studio',
+    msg:'Hola '+nom+',\n\nAdjuntamos el recibo de tu visita del '+_fmtFechaLarga(c.fecha)+'.\n\n¡Gracias por confiar en Ley Studio! 💕',
+    citaAdj:String(c.id)
+  });
 }
 
 function openCorreoCliente(id){
   const c=D.clientes.find(x=>x.id===id); if(!c) return;
-  const to=_clienteCorreo(c);
-  if(!to){ toast('Esta clienta no tiene correo registrado. Agrégalo en Editar.','warn'); return; }
-  document.getElementById('mc-cl-id').value=id;
-  document.getElementById('mc-dest').textContent=c.nombre+' · '+to;
-  document.getElementById('mc-plantilla').value='libre';
-  aplicarPlantillaCorreo();
-  openModal('modal-correo');
+  openMailComposer(c,{});
 }
 function aplicarPlantillaCorreo(){
   const id=+document.getElementById('mc-cl-id').value;
@@ -2096,17 +2127,24 @@ function aplicarPlantillaCorreo(){
     document.getElementById('mc-asunto').value='';
     document.getElementById('mc-msg').value='';
   }
+  actualizarPreviewCorreo();
 }
 async function enviarCorreoCliente(){
-  const id=+document.getElementById('mc-cl-id').value;
-  const c=D.clientes.find(x=>x.id===id); if(!c) return;
+  const to=document.getElementById('mc-dest').dataset.to||'';
   const asunto=document.getElementById('mc-asunto').value.trim();
   const msg=document.getElementById('mc-msg').value.trim();
+  if(!to){ toast('Sin destinataria','warn'); return; }
   if(!asunto||!msg){ toast('Completa asunto y mensaje','warn'); return; }
+  let attachment=null;
+  const citaAdj=document.getElementById('mc-attach-cita').value;
+  if(citaAdj){
+    const r=_buildReciboDoc(+citaAdj);
+    if(r) attachment={name:r.filename,data:r.doc.output('datauristring').split(',')[1]};
+  }
   const btn=document.getElementById('mc-btn'); btn.disabled=true; btn.textContent='Enviando...';
   try{
-    await enviarCorreo(_clienteCorreo(c),asunto,mailWrap(asunto,msg.replace(/\n/g,'<br>')));
-    toast('✉️ Correo enviado');
+    await enviarCorreo(to,asunto,mailWrap(asunto,msg.replace(/\n/g,'<br>')),attachment);
+    toast('✉️ Correo enviado a '+to);
     closeModal('modal-correo');
   }catch(e){ toast('⚠️ No se pudo enviar: '+e.message,'warn'); }
   btn.disabled=false; btn.textContent='Enviar correo';
@@ -2849,11 +2887,12 @@ function addCliente(){
   D.clientes.push({id:nextId(D.clientes),nombre:n,
     tel:document.getElementById('cl-tel').value.trim(),
     ig:document.getElementById('cl-ig').value.trim(),
+    correo:document.getElementById('cl-correo').value.trim(),
     fecha:document.getElementById('cl-f').value||todayStr(),
     bday:document.getElementById('cl-bday').value||'',
     notas:document.getElementById('cl-notas').value.trim()});
   saveAndSync(); renderClientes(); actualizarDatalist();
-  ['cl-n','cl-tel','cl-ig','cl-bday','cl-notas'].forEach(fid=>{const e=document.getElementById(fid);if(e)e.value='';}); document.getElementById('cl-f').value=todayStr(); toggleForm('fcl'); toast('✅ Clienta registrada');
+  ['cl-n','cl-tel','cl-ig','cl-correo','cl-bday','cl-notas'].forEach(fid=>{const e=document.getElementById(fid);if(e)e.value='';}); document.getElementById('cl-f').value=todayStr(); toggleForm('fcl'); toast('✅ Clienta registrada');
 }
 function openEditCliente(id){
   const c=D.clientes.find(x=>x.id===id); if(!c) return;
@@ -2868,6 +2907,7 @@ function openEditCliente(id){
   const photoInp=document.getElementById('e-cl-photo-input'); if(photoInp) photoInp.dataset.newFoto='';
   document.getElementById('e-cl-tel').value=c.tel||'';
   document.getElementById('e-cl-ig').value=c.ig||'';
+  const eCor=document.getElementById('e-cl-correo'); if(eCor) eCor.value=c.correo||(c.ficha&&c.ficha.correo)||'';
   document.getElementById('e-cl-f').value=c.fecha||'';
   const eNotas=document.getElementById('e-cl-notas'); if(eNotas) eNotas.value=c.notas||'';
   document.getElementById('e-cl-bday').value=c.bday||'';
@@ -2894,6 +2934,7 @@ function saveEditCliente(){
   const telNum=document.getElementById('e-cl-tel').value.trim();
   c.tel=telNum?(telCode+' '+telNum):'';
   c.ig=document.getElementById('e-cl-ig').value.trim();
+  const eCor2=document.getElementById('e-cl-correo'); if(eCor2) c.correo=eCor2.value.trim();
   c.fecha=document.getElementById('e-cl-f').value;
   c.notas=(document.getElementById('e-cl-notas')?.value||'').trim();
   c.bday=document.getElementById('e-cl-bday').value||'';
