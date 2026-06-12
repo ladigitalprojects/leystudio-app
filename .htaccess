@@ -1,3 +1,8 @@
 RewriteEngine On
+
+# Bloquear acceso a .git, .github y archivos ocultos
+RedirectMatch 404 /\.git
+RedirectMatch 404 /\.github
+
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
