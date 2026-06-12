@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ley Studio · Nail Artist — Coming Soon</title>
 <meta name="description" content="Ley Studio — Nail Artist. Nuestra nueva página web está en camino. Síguenos en Instagram o agenda tu cita por WhatsApp.">
+<link rel="icon" type="image/png" href="assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
@@ -16,178 +17,166 @@
   --brown:#3D2B1F; --gray:#9A8070;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{height:100%;}
+html,body{min-height:100%;}
 body{
   font-family:'Montserrat',sans-serif;
   color:var(--brown);
-  overflow:hidden;
   background:var(--beige);
 }
 
-/* ── Fondo animado ── */
-.bg{
-  position:fixed; inset:0; z-index:0;
+/* ── Layout: dos secciones ── */
+.split{
+  display:grid;
+  grid-template-columns:45% 55%;
+  min-height:100dvh;
+  position:relative; z-index:2;
+}
+
+/* ── Sección logo ── */
+.panel-logo{
+  position:relative;
+  display:flex; align-items:center; justify-content:center;
+  padding:48px 32px;
   background:
-    radial-gradient(ellipse 80% 60% at 70% 15%, rgba(221,152,177,.20), transparent 60%),
-    radial-gradient(ellipse 70% 55% at 20% 85%, rgba(178,146,87,.16), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 85% 80%, rgba(237,224,200,.8), transparent 65%),
-    linear-gradient(160deg, #F8F3EA 0%, var(--beige) 45%, #F1E7D8 100%);
+    radial-gradient(ellipse 90% 70% at 50% 40%, rgba(237,224,200,.9), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(221,152,177,.14), transparent 60%),
+    linear-gradient(165deg, #FBF7EF 0%, var(--beige) 60%, #F0E6D6 100%);
+  overflow:hidden;
+}
+/* línea divisoria dorada */
+.panel-logo::after{
+  content:''; position:absolute; right:0; top:12%; bottom:12%;
+  width:1px;
+  background:linear-gradient(180deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+  opacity:.55;
+}
+.halo{
+  position:absolute; left:50%; top:50%;
+  width:min(72vmin,520px); height:min(72vmin,520px);
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:conic-gradient(from 0deg, transparent 0%, rgba(178,146,87,.14) 12%, transparent 26%, rgba(221,152,177,.13) 55%, transparent 70%, rgba(212,180,131,.16) 88%, transparent 100%);
+  animation:spin 26s linear infinite;
+  filter:blur(2px);
+}
+.halo::after{
+  content:''; position:absolute; inset:9%;
+  border-radius:50%;
+  border:1px solid rgba(178,146,87,.28);
+}
+.halo::before{
+  content:''; position:absolute; inset:16%;
+  border-radius:50%;
+  border:1px dashed rgba(178,146,87,.18);
+}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg);}}
+
+.logo-wrap{
+  position:relative;
+  display:flex; flex-direction:column; align-items:center;
+  opacity:0;
+  animation:reveal 1.5s cubic-bezier(.2,.7,.2,1) .2s forwards;
+}
+.logo-wrap img{
+  width:min(58vmin, 400px);
+  max-width:88%;
+  height:auto;
+  filter:drop-shadow(0 14px 38px rgba(169,136,77,.35));
+  animation:breathe 6s ease-in-out 1.8s infinite;
+}
+@keyframes breathe{
+  0%,100%{transform:translateY(0) scale(1); filter:drop-shadow(0 14px 38px rgba(169,136,77,.32));}
+  50%{transform:translateY(-10px) scale(1.015); filter:drop-shadow(0 24px 50px rgba(169,136,77,.45));}
+}
+@keyframes reveal{
+  from{opacity:0; transform:translateY(26px) scale(.94); filter:blur(8px);}
+  to{opacity:1; transform:translateY(0) scale(1); filter:blur(0);}
+}
+
+/* ── Sección coming soon ── */
+.panel-cs{
+  position:relative;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center;
+  padding:56px 36px;
+  background:
+    radial-gradient(ellipse 75% 55% at 75% 12%, rgba(221,152,177,.22), transparent 60%),
+    radial-gradient(ellipse 65% 50% at 15% 90%, rgba(178,146,87,.15), transparent 60%),
+    linear-gradient(200deg, #F9F4EB 0%, var(--beige) 50%, #F2E8D9 100%);
   animation:bgShift 16s ease-in-out infinite alternate;
+  overflow:hidden;
 }
 @keyframes bgShift{
   0%{filter:hue-rotate(0deg) brightness(1);}
   100%{filter:hue-rotate(-6deg) brightness(1.03);}
 }
-/* halo giratorio detrás del logo */
-.halo{
-  position:fixed; z-index:0; left:50%; top:44%;
-  width:min(78vmin,560px); height:min(78vmin,560px);
-  transform:translate(-50%,-50%);
-  border-radius:50%;
-  background:conic-gradient(from 0deg, transparent 0%, rgba(178,146,87,.12) 12%, transparent 26%, rgba(221,152,177,.12) 55%, transparent 70%, rgba(212,180,131,.14) 88%, transparent 100%);
-  animation:spin 26s linear infinite;
-  filter:blur(2px);
-}
-.halo::after{
-  content:''; position:absolute; inset:10%;
-  border-radius:50%;
-  border:1px solid rgba(178,146,87,.22);
-}
-@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg);}}
 
-/* ── Partículas doradas ── */
-.sparkle{
-  position:fixed; z-index:1;
-  width:6px; height:6px; border-radius:50%;
-  background:radial-gradient(circle, #E9D9A8 0%, var(--gold-lt) 45%, transparent 75%);
-  opacity:0;
-  animation:float var(--d,9s) linear var(--delay,0s) infinite;
-  left:var(--x,50%);
-  bottom:-4vh;
-}
-.sparkle.s2{width:4px;height:4px;}
-.sparkle.s3{width:9px;height:9px;filter:blur(1px);}
-@keyframes float{
-  0%{transform:translateY(0) scale(.6); opacity:0;}
-  12%{opacity:.85;}
-  60%{opacity:.55;}
-  100%{transform:translateY(-108vh) scale(1.15) translateX(4vw); opacity:0;}
-}
-
-/* ── Contenido ── */
-.wrap{
-  position:relative; z-index:2;
-  height:100%;
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  text-align:center;
-  padding:24px;
-}
-
-/* Monograma LS */
-.monogram{
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(96px, 22vmin, 190px);
-  line-height:.9;
-  font-weight:500;
-  color:var(--pink);
-  letter-spacing:-.04em;
-  text-shadow:0 4px 30px rgba(221,152,177,.35);
-  opacity:0;
-  animation:reveal 1.4s cubic-bezier(.2,.7,.2,1) .2s forwards;
-  position:relative;
-}
-.monogram em{font-style:normal; color:var(--pink-deep);}
-@keyframes reveal{
-  from{opacity:0; transform:translateY(26px) scale(.92); filter:blur(8px);}
-  to{opacity:1; transform:translateY(0) scale(1); filter:blur(0);}
-}
-
-.brand{
-  margin-top:6px;
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(26px, 6vmin, 44px);
-  font-weight:600;
-  letter-spacing:.42em;
-  text-indent:.42em;
-  color:var(--brown);
+.eyebrow{
+  font-size:clamp(10px,1.6vmin,12px);
+  letter-spacing:.55em; text-indent:.55em;
+  text-transform:uppercase;
+  color:var(--gold-deep);
+  font-weight:400;
   opacity:0;
   animation:reveal 1.2s ease .7s forwards;
 }
-.tagline{
-  margin-top:8px;
-  font-size:clamp(10px, 2vmin, 13px);
-  letter-spacing:.55em;
-  text-indent:.55em;
-  font-weight:400;
-  color:var(--gold-deep);
-  text-transform:uppercase;
-  opacity:0;
-  animation:reveal 1.2s ease 1s forwards;
-}
-
-/* divisor */
-.divider{
-  display:flex; align-items:center; gap:14px;
-  margin:26px 0 22px;
-  opacity:0;
-  animation:reveal 1.2s ease 1.25s forwards;
-}
-.divider .line{width:min(110px,22vw); height:1px; background:linear-gradient(90deg, transparent, var(--gold)); }
-.divider .line:last-child{background:linear-gradient(90deg, var(--gold), transparent);}
-.divider .gem{
-  width:7px; height:7px; transform:rotate(45deg);
-  background:var(--gold);
-  box-shadow:0 0 12px rgba(178,146,87,.7);
-  animation:pulse 2.4s ease-in-out infinite;
-}
-@keyframes pulse{0%,100%{box-shadow:0 0 6px rgba(178,146,87,.4);}50%{box-shadow:0 0 16px rgba(178,146,87,.95);}}
-
-/* Coming soon con brillo */
 .coming{
+  margin-top:18px;
   font-family:'Cormorant Garamond',serif;
   font-style:italic;
-  font-size:clamp(30px, 7vmin, 54px);
+  font-size:clamp(44px, 8.5vmin, 86px);
   font-weight:400;
-  letter-spacing:.14em;
+  line-height:1.05;
+  letter-spacing:.1em;
   background:linear-gradient(100deg, var(--brown) 35%, var(--gold-lt) 50%, var(--brown) 65%);
   background-size:240% 100%;
   -webkit-background-clip:text; background-clip:text;
   -webkit-text-fill-color:transparent; color:transparent;
-  animation:shimmer 4.2s ease-in-out 1.8s infinite, reveal 1.3s ease 1.45s forwards;
+  animation:shimmer 4.2s ease-in-out 1.8s infinite, reveal 1.3s ease .95s forwards;
   opacity:0;
 }
 @keyframes shimmer{0%{background-position:120% 0;}55%{background-position:-120% 0;}100%{background-position:-120% 0;}}
-.dots span{
-  display:inline-block;
-  animation:dot 1.6s ease-in-out infinite;
-}
+.dots span{display:inline-block; animation:dot 1.6s ease-in-out infinite;}
 .dots span:nth-child(2){animation-delay:.25s;}
 .dots span:nth-child(3){animation-delay:.5s;}
-@keyframes dot{0%,60%,100%{opacity:.15; transform:translateY(0);}30%{opacity:1; transform:translateY(-4px);}}
+@keyframes dot{0%,60%,100%{opacity:.15; transform:translateY(0);}30%{opacity:1; transform:translateY(-5px);}}
+
+.divider{
+  display:flex; align-items:center; gap:14px;
+  margin:30px 0 24px;
+  opacity:0;
+  animation:reveal 1.2s ease 1.2s forwards;
+}
+.divider .line{width:min(120px,20vw); height:1px; background:linear-gradient(90deg, transparent, var(--gold));}
+.divider .line:last-child{background:linear-gradient(90deg, var(--gold), transparent);}
+.divider .gem{
+  width:7px; height:7px; transform:rotate(45deg);
+  background:var(--gold);
+  animation:pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 6px rgba(178,146,87,.4);}50%{box-shadow:0 0 16px rgba(178,146,87,.95);}}
 
 .note{
-  margin-top:14px;
-  font-size:clamp(11px, 2.4vmin, 14px);
+  font-size:clamp(12px, 2.2vmin, 15px);
   font-weight:300;
-  letter-spacing:.08em;
+  letter-spacing:.06em;
   color:var(--gray);
-  max-width:520px;
-  line-height:1.7;
+  max-width:440px;
+  line-height:1.8;
+  opacity:0;
+  animation:reveal 1.3s ease 1.45s forwards;
+}
+
+.actions{
+  display:flex; gap:16px; flex-wrap:wrap; justify-content:center;
+  margin-top:34px;
   opacity:0;
   animation:reveal 1.3s ease 1.7s forwards;
 }
-
-/* ── Botones ── */
-.actions{
-  display:flex; gap:16px; flex-wrap:wrap; justify-content:center;
-  margin-top:30px;
-  opacity:0;
-  animation:reveal 1.3s ease 2s forwards;
-}
 .btn{
   display:inline-flex; align-items:center; gap:10px;
-  padding:13px 26px;
+  padding:14px 28px;
   border-radius:999px;
   border:1px solid var(--gold);
   background:rgba(253,248,242,.65);
@@ -208,19 +197,64 @@ body{
 .btn.ig:hover{border-color:var(--pink); box-shadow:0 10px 28px rgba(221,152,177,.4);}
 .btn.wa:hover{border-color:#5CA882; box-shadow:0 10px 28px rgba(92,168,130,.35);}
 
-footer{
-  position:fixed; bottom:18px; left:0; right:0;
-  text-align:center; z-index:2;
+.foot{
+  margin-top:46px;
   font-size:10.5px; letter-spacing:.22em; text-transform:uppercase;
   color:var(--gray);
   opacity:0;
-  animation:reveal 1.4s ease 2.3s forwards;
+  animation:reveal 1.4s ease 2s forwards;
 }
 
-@media (max-height:560px){
-  .divider{margin:14px 0 10px;}
-  .actions{margin-top:16px;}
-  footer{display:none;}
+/* ── Partículas doradas ── */
+.sparkle{
+  position:fixed; z-index:1;
+  width:6px; height:6px; border-radius:50%;
+  background:radial-gradient(circle, #E9D9A8 0%, var(--gold-lt) 45%, transparent 75%);
+  opacity:0;
+  animation:float var(--d,9s) linear var(--delay,0s) infinite;
+  left:var(--x,50%);
+  bottom:-4vh;
+  pointer-events:none;
+}
+.sparkle.s2{width:4px;height:4px;}
+.sparkle.s3{width:9px;height:9px;filter:blur(1px);}
+@keyframes float{
+  0%{transform:translateY(0) scale(.6); opacity:0;}
+  12%{opacity:.85;}
+  60%{opacity:.55;}
+  100%{transform:translateY(-108vh) scale(1.15) translateX(4vw); opacity:0;}
+}
+
+/* ── Responsive ── */
+@media (max-width:860px){
+  .split{
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto;
+  }
+  .panel-logo{
+    min-height:46dvh;
+    padding:42px 24px 30px;
+  }
+  .panel-logo::after{
+    top:auto; right:14%; left:14%; bottom:0;
+    width:auto; height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+  }
+  .logo-wrap img{width:min(52vmin,260px);}
+  .halo{width:min(80vmin,360px); height:min(80vmin,360px);}
+  .panel-cs{
+    min-height:54dvh;
+    padding:40px 22px 48px;
+    justify-content:flex-start;
+  }
+  .coming{font-size:clamp(38px,11vw,58px);}
+  .divider{margin:22px 0 18px;}
+  .actions{margin-top:26px; gap:12px;}
+  .btn{padding:12px 22px; font-size:12px;}
+  .foot{margin-top:34px;}
+}
+@media (max-width:380px){
+  .btn{width:100%; justify-content:center;}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01s!important; animation-delay:0s!important;}
@@ -230,38 +264,44 @@ footer{
 </head>
 <body>
 
-<div class="bg"></div>
-<div class="halo"></div>
+<div class="split">
+  <!-- Sección 1: Logo -->
+  <section class="panel-logo">
+    <div class="halo"></div>
+    <div class="logo-wrap">
+      <img src="assets/logo.png" alt="Ley Studio — Nail Artist">
+    </div>
+  </section>
 
-<div class="wrap">
-  <div class="monogram">L<em>S</em></div>
-  <div class="brand">LEY STUDIO</div>
-  <div class="tagline">Nail Artist</div>
+  <!-- Sección 2: Coming Soon -->
+  <section class="panel-cs">
+    <div class="eyebrow">Nuestra nueva web</div>
+    <h1 class="coming">Coming Soon<span class="dots"><span>.</span><span>.</span><span>.</span></span></h1>
 
-  <div class="divider">
-    <div class="line"></div><div class="gem"></div><div class="line"></div>
-  </div>
+    <div class="divider">
+      <div class="line"></div><div class="gem"></div><div class="line"></div>
+    </div>
 
-  <div class="coming">Coming Soon<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
-  <p class="note">Estamos creando algo hermoso para ti.<br>Mientras tanto, síguenos o agenda tu cita.</p>
+    <p class="note">Estamos creando algo hermoso para ti.<br>Mientras tanto, síguenos o agenda tu cita.</p>
 
-  <div class="actions">
-    <a class="btn ig" href="https://instagram.com/ley_studiohn" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.6" cy="6.4" r="1.2" fill="currentColor" stroke="none"/></svg>
-      @ley_studiohn
-    </a>
-    <a class="btn wa" href="https://wa.me/50494994709?text=Hola%20Ley%20Studio%2C%20quiero%20agendar%20una%20cita%20%F0%9F%92%85" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.4-3c-.3-.4 0-.5.1-.7l.4-.5c.1-.2.1-.3.2-.5 0-.2 0-.4-.1-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.5 1.1 2.7c.1.2 1.9 3 4.7 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>
-      WhatsApp
-    </a>
-  </div>
+    <div class="actions">
+      <a class="btn ig" href="https://instagram.com/ley_studiohn" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.6" cy="6.4" r="1.2" fill="currentColor" stroke="none"/></svg>
+        @ley_studiohn
+      </a>
+      <a class="btn wa" href="https://wa.me/50494994709?text=Hola%20Ley%20Studio%2C%20quiero%20agendar%20una%20cita%20%F0%9F%92%85" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.4-3c-.3-.4 0-.5.1-.7l.4-.5c.1-.2.1-.3.2-.5 0-.2 0-.4-.1-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.5 1.1 2.7c.1.2 1.9 3 4.7 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>
+        WhatsApp
+      </a>
+    </div>
+
+    <div class="foot">Ley Studio · Nail Artist · Honduras</div>
+  </section>
 </div>
 
-<footer>Ley Studio · Nail Artist · Honduras</footer>
-
 <script>
-// Partículas doradas generadas (ligeras, sin librerías)
-const N = window.innerWidth < 600 ? 14 : 26;
+// Partículas doradas (ligeras, sin librerías)
+const N = window.innerWidth < 600 ? 12 : 24;
 for(let i=0;i<N;i++){
   const s=document.createElement('div');
   s.className='sparkle'+(i%3===1?' s2':i%3===2?' s3':'');
