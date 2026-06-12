@@ -100,14 +100,20 @@ body{
 }
 
 /* ── Logo ── */
+.logo-wrap{
+  position:relative;
+  opacity:0;
+  animation:reveal 1.5s cubic-bezier(.2,.7,.2,1) .2s forwards;
+}
 .halo{
-  position:absolute; right:0; top:50%;
-  width:min(60vmin,460px); height:min(60vmin,460px);
-  transform:translate(12%,-50%);
+  position:absolute; left:50%; top:50%;
+  width:min(58vmin,470px); height:min(58vmin,470px);
+  transform:translate(-50%,-50%);
   border-radius:50%;
   background:conic-gradient(from 0deg, transparent 0%, rgba(178,146,87,.15) 12%, transparent 26%, rgba(221,152,177,.14) 55%, transparent 70%, rgba(212,180,131,.17) 88%, transparent 100%);
   animation:spin 26s linear infinite;
   filter:blur(2px);
+  pointer-events:none;
 }
 .halo::after{
   content:''; position:absolute; inset:9%;
@@ -119,13 +125,7 @@ body{
   border-radius:50%;
   border:1px dashed rgba(178,146,87,.18);
 }
-@keyframes spin{to{transform:translate(12%,-50%) rotate(360deg);}}
-
-.logo-wrap{
-  position:relative;
-  opacity:0;
-  animation:reveal 1.5s cubic-bezier(.2,.7,.2,1) .2s forwards;
-}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg);}}
 .logo-wrap img{
   width:min(48vmin, 360px);
   height:auto;
@@ -247,12 +247,7 @@ body{
     padding:56px 24px 6px;
   }
   .panel-logo::after{display:none;}   /* sin línea divisoria: fluye como una sola sección */
-  .halo{
-    right:50%; top:50%;
-    transform:translate(50%,-50%);
-    width:min(86vmin,340px); height:min(86vmin,340px);
-  }
-  @keyframes spin{to{transform:translate(50%,-50%) rotate(360deg);}}
+  .halo{width:min(86vmin,340px); height:min(86vmin,340px);}
   .logo-wrap img{width:min(50vmin,240px);}
   .panel-cs{
     align-items:center;
@@ -283,8 +278,8 @@ body{
 <div class="split">
   <!-- Sección 1: Logo -->
   <section class="panel-logo">
-    <div class="halo"></div>
     <div class="logo-wrap">
+      <div class="halo"></div>
       <img src="assets/logo.png" alt="Ley Studio — Nail Artist">
     </div>
   </section>
