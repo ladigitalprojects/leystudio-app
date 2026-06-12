@@ -21,41 +21,91 @@ html,body{min-height:100%;}
 body{
   font-family:'Montserrat',sans-serif;
   color:var(--brown);
-  background:var(--beige);
+  background:linear-gradient(165deg, #FBF7EF 0%, var(--beige) 55%, #F0E6D6 100%);
+  overflow-x:hidden;
 }
 
-/* ── Layout: dos secciones ── */
+/* ── Fondo animado de toda la página ── */
+.blob{
+  position:fixed; z-index:0; border-radius:50%;
+  filter:blur(70px); pointer-events:none;
+}
+.b1{
+  width:55vmax; height:55vmax; top:-18%; right:-14%;
+  background:radial-gradient(circle, rgba(221,152,177,.4), transparent 68%);
+  animation:drift1 16s ease-in-out infinite alternate;
+}
+.b2{
+  width:48vmax; height:48vmax; bottom:-20%; left:-12%;
+  background:radial-gradient(circle, rgba(212,180,131,.42), transparent 68%);
+  animation:drift2 19s ease-in-out infinite alternate;
+}
+.b3{
+  width:34vmax; height:34vmax; top:30%; left:30%;
+  background:radial-gradient(circle, rgba(237,224,200,.85), transparent 70%);
+  animation:drift3 14s ease-in-out infinite alternate;
+}
+@keyframes drift1{from{transform:translate(0,0) scale(1);}to{transform:translate(-9vw,9vh) scale(1.14);}}
+@keyframes drift2{from{transform:translate(0,0) scale(1.08);}to{transform:translate(8vw,-7vh) scale(.94);}}
+@keyframes drift3{from{transform:translate(0,0);}to{transform:translate(7vw,6vh) scale(1.18);}}
+
+/* ── Partículas doradas ── */
+.sparkle{
+  position:fixed; z-index:1;
+  width:7px; height:7px; border-radius:50%;
+  background:radial-gradient(circle, #F0E2B6 0%, var(--gold-lt) 45%, transparent 75%);
+  opacity:0;
+  animation:floatUp var(--d,9s) linear var(--delay,0s) infinite;
+  left:var(--x,50%);
+  bottom:-4vh;
+  pointer-events:none;
+}
+.sparkle.s2{width:5px;height:5px;}
+.sparkle.s3{width:11px;height:11px;filter:blur(1.5px);}
+@keyframes floatUp{
+  0%{transform:translateY(0) scale(.6); opacity:0;}
+  10%{opacity:.95;}
+  60%{opacity:.6;}
+  100%{transform:translateY(-110vh) scale(1.2) translateX(5vw); opacity:0;}
+}
+
+/* ── Layout: dos secciones pegadas al centro ── */
 .split{
-  display:grid;
-  grid-template-columns:45% 55%;
-  min-height:100dvh;
   position:relative; z-index:2;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  min-height:100dvh;
 }
-
-/* ── Sección logo ── */
 .panel-logo{
   position:relative;
-  display:flex; align-items:center; justify-content:center;
-  padding:48px 32px;
-  background:
-    radial-gradient(ellipse 90% 70% at 50% 40%, rgba(237,224,200,.9), transparent 70%),
-    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(221,152,177,.14), transparent 60%),
-    linear-gradient(165deg, #FBF7EF 0%, var(--beige) 60%, #F0E6D6 100%);
-  overflow:hidden;
+  display:flex; align-items:center; justify-content:flex-end;
+  padding:48px 64px 48px 24px;
 }
-/* línea divisoria dorada */
 .panel-logo::after{
-  content:''; position:absolute; right:0; top:12%; bottom:12%;
+  content:''; position:absolute; right:0; top:18%; bottom:18%;
   width:1px;
   background:linear-gradient(180deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
   opacity:.55;
 }
+.panel-cs{
+  position:relative;
+  display:flex; flex-direction:column;
+  align-items:flex-start; justify-content:center;
+  padding:56px 24px 56px 64px;
+}
+.cs-inner{
+  display:flex; flex-direction:column; align-items:center;
+  text-align:center;
+  max-width:480px;
+}
+
+/* ── Logo ── */
 .halo{
-  position:absolute; left:50%; top:50%;
-  width:min(72vmin,520px); height:min(72vmin,520px);
-  transform:translate(-50%,-50%);
+  position:absolute; right:0; top:50%;
+  width:min(60vmin,460px); height:min(60vmin,460px);
+  transform:translate(12%,-50%);
   border-radius:50%;
-  background:conic-gradient(from 0deg, transparent 0%, rgba(178,146,87,.14) 12%, transparent 26%, rgba(221,152,177,.13) 55%, transparent 70%, rgba(212,180,131,.16) 88%, transparent 100%);
+  background:conic-gradient(from 0deg, transparent 0%, rgba(178,146,87,.15) 12%, transparent 26%, rgba(221,152,177,.14) 55%, transparent 70%, rgba(212,180,131,.17) 88%, transparent 100%);
   animation:spin 26s linear infinite;
   filter:blur(2px);
 }
@@ -69,18 +119,17 @@ body{
   border-radius:50%;
   border:1px dashed rgba(178,146,87,.18);
 }
-@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg);}}
+@keyframes spin{to{transform:translate(12%,-50%) rotate(360deg);}}
 
 .logo-wrap{
   position:relative;
-  display:flex; flex-direction:column; align-items:center;
   opacity:0;
   animation:reveal 1.5s cubic-bezier(.2,.7,.2,1) .2s forwards;
 }
 .logo-wrap img{
-  width:min(58vmin, 400px);
-  max-width:88%;
+  width:min(48vmin, 360px);
   height:auto;
+  display:block;
   filter:drop-shadow(0 14px 38px rgba(169,136,77,.35));
   animation:breathe 6s ease-in-out 1.8s infinite;
 }
@@ -93,25 +142,7 @@ body{
   to{opacity:1; transform:translateY(0) scale(1); filter:blur(0);}
 }
 
-/* ── Sección coming soon ── */
-.panel-cs{
-  position:relative;
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  text-align:center;
-  padding:56px 36px;
-  background:
-    radial-gradient(ellipse 75% 55% at 75% 12%, rgba(221,152,177,.22), transparent 60%),
-    radial-gradient(ellipse 65% 50% at 15% 90%, rgba(178,146,87,.15), transparent 60%),
-    linear-gradient(200deg, #F9F4EB 0%, var(--beige) 50%, #F2E8D9 100%);
-  animation:bgShift 16s ease-in-out infinite alternate;
-  overflow:hidden;
-}
-@keyframes bgShift{
-  0%{filter:hue-rotate(0deg) brightness(1);}
-  100%{filter:hue-rotate(-6deg) brightness(1.03);}
-}
-
+/* ── Coming soon ── */
 .eyebrow{
   font-size:clamp(10px,1.6vmin,12px);
   letter-spacing:.55em; text-indent:.55em;
@@ -125,10 +156,11 @@ body{
   margin-top:18px;
   font-family:'Cormorant Garamond',serif;
   font-style:italic;
-  font-size:clamp(44px, 8.5vmin, 86px);
+  font-size:clamp(42px, 7.5vmin, 76px);
   font-weight:400;
   line-height:1.05;
   letter-spacing:.1em;
+  white-space:nowrap;
   background:linear-gradient(100deg, var(--brown) 35%, var(--gold-lt) 50%, var(--brown) 65%);
   background-size:240% 100%;
   -webkit-background-clip:text; background-clip:text;
@@ -137,14 +169,14 @@ body{
   opacity:0;
 }
 @keyframes shimmer{0%{background-position:120% 0;}55%{background-position:-120% 0;}100%{background-position:-120% 0;}}
-.dots span{display:inline-block; animation:dot 1.6s ease-in-out infinite;}
+.dots span{display:inline-block; animation:dotAnim 1.6s ease-in-out infinite;}
 .dots span:nth-child(2){animation-delay:.25s;}
 .dots span:nth-child(3){animation-delay:.5s;}
-@keyframes dot{0%,60%,100%{opacity:.15; transform:translateY(0);}30%{opacity:1; transform:translateY(-5px);}}
+@keyframes dotAnim{0%,60%,100%{opacity:.15; transform:translateY(0);}30%{opacity:1; transform:translateY(-5px);}}
 
 .divider{
   display:flex; align-items:center; gap:14px;
-  margin:30px 0 24px;
+  margin:28px 0 22px;
   opacity:0;
   animation:reveal 1.2s ease 1.2s forwards;
 }
@@ -162,7 +194,6 @@ body{
   font-weight:300;
   letter-spacing:.06em;
   color:var(--gray);
-  max-width:440px;
   line-height:1.8;
   opacity:0;
   animation:reveal 1.3s ease 1.45s forwards;
@@ -170,7 +201,7 @@ body{
 
 .actions{
   display:flex; gap:16px; flex-wrap:wrap; justify-content:center;
-  margin-top:34px;
+  margin-top:32px;
   opacity:0;
   animation:reveal 1.3s ease 1.7s forwards;
 }
@@ -198,71 +229,56 @@ body{
 .btn.wa:hover{border-color:#5CA882; box-shadow:0 10px 28px rgba(92,168,130,.35);}
 
 .foot{
-  margin-top:46px;
+  margin-top:42px;
   font-size:10.5px; letter-spacing:.22em; text-transform:uppercase;
   color:var(--gray);
   opacity:0;
   animation:reveal 1.4s ease 2s forwards;
 }
 
-/* ── Partículas doradas ── */
-.sparkle{
-  position:fixed; z-index:1;
-  width:6px; height:6px; border-radius:50%;
-  background:radial-gradient(circle, #E9D9A8 0%, var(--gold-lt) 45%, transparent 75%);
-  opacity:0;
-  animation:float var(--d,9s) linear var(--delay,0s) infinite;
-  left:var(--x,50%);
-  bottom:-4vh;
-  pointer-events:none;
-}
-.sparkle.s2{width:4px;height:4px;}
-.sparkle.s3{width:9px;height:9px;filter:blur(1px);}
-@keyframes float{
-  0%{transform:translateY(0) scale(.6); opacity:0;}
-  12%{opacity:.85;}
-  60%{opacity:.55;}
-  100%{transform:translateY(-108vh) scale(1.15) translateX(4vw); opacity:0;}
-}
-
-/* ── Responsive ── */
+/* ── Responsive: en móvil todo es UNA sección continua ── */
 @media (max-width:860px){
   .split{
     grid-template-columns:1fr;
     grid-template-rows:auto auto;
   }
   .panel-logo{
-    min-height:46dvh;
-    padding:42px 24px 30px;
+    justify-content:center;
+    padding:56px 24px 6px;
   }
-  .panel-logo::after{
-    top:auto; right:14%; left:14%; bottom:0;
-    width:auto; height:1px;
-    background:linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+  .panel-logo::after{display:none;}   /* sin línea divisoria: fluye como una sola sección */
+  .halo{
+    right:50%; top:50%;
+    transform:translate(50%,-50%);
+    width:min(86vmin,340px); height:min(86vmin,340px);
   }
-  .logo-wrap img{width:min(52vmin,260px);}
-  .halo{width:min(80vmin,360px); height:min(80vmin,360px);}
+  @keyframes spin{to{transform:translate(50%,-50%) rotate(360deg);}}
+  .logo-wrap img{width:min(50vmin,240px);}
   .panel-cs{
-    min-height:54dvh;
-    padding:40px 22px 48px;
+    align-items:center;
     justify-content:flex-start;
+    padding:18px 22px 52px;
   }
-  .coming{font-size:clamp(38px,11vw,58px);}
-  .divider{margin:22px 0 18px;}
-  .actions{margin-top:26px; gap:12px;}
+  .coming{font-size:clamp(36px,10.5vw,54px);}
+  .divider{margin:20px 0 16px;}
+  .actions{margin-top:24px; gap:12px;}
   .btn{padding:12px 22px; font-size:12px;}
-  .foot{margin-top:34px;}
+  .foot{margin-top:32px;}
 }
 @media (max-width:380px){
   .btn{width:100%; justify-content:center;}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01s!important; animation-delay:0s!important;}
-  .sparkle,.halo{display:none;}
+  .sparkle,.halo,.blob{display:none;}
 }
 </style>
 </head>
 <body>
+
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<div class="blob b3"></div>
 
 <div class="split">
   <!-- Sección 1: Logo -->
@@ -275,39 +291,41 @@ body{
 
   <!-- Sección 2: Coming Soon -->
   <section class="panel-cs">
-    <div class="eyebrow">Nuestra nueva web</div>
-    <h1 class="coming">Coming Soon<span class="dots"><span>.</span><span>.</span><span>.</span></span></h1>
+    <div class="cs-inner">
+      <div class="eyebrow">Nuestra nueva web</div>
+      <h1 class="coming">Coming Soon<span class="dots"><span>.</span><span>.</span><span>.</span></span></h1>
 
-    <div class="divider">
-      <div class="line"></div><div class="gem"></div><div class="line"></div>
+      <div class="divider">
+        <div class="line"></div><div class="gem"></div><div class="line"></div>
+      </div>
+
+      <p class="note">Estamos creando algo hermoso para ti.<br>Mientras tanto, síguenos o agenda tu cita.</p>
+
+      <div class="actions">
+        <a class="btn ig" href="https://instagram.com/ley_studiohn" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.6" cy="6.4" r="1.2" fill="currentColor" stroke="none"/></svg>
+          @ley_studiohn
+        </a>
+        <a class="btn wa" href="https://wa.me/50494994709?text=Hola%20Ley%20Studio%2C%20quiero%20agendar%20una%20cita%20%F0%9F%92%85" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.4-3c-.3-.4 0-.5.1-.7l.4-.5c.1-.2.1-.3.2-.5 0-.2 0-.4-.1-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.5 1.1 2.7c.1.2 1.9 3 4.7 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>
+          WhatsApp
+        </a>
+      </div>
+
+      <div class="foot">Ley Studio · Nail Artist · Honduras</div>
     </div>
-
-    <p class="note">Estamos creando algo hermoso para ti.<br>Mientras tanto, síguenos o agenda tu cita.</p>
-
-    <div class="actions">
-      <a class="btn ig" href="https://instagram.com/ley_studiohn" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.6" cy="6.4" r="1.2" fill="currentColor" stroke="none"/></svg>
-        @ley_studiohn
-      </a>
-      <a class="btn wa" href="https://wa.me/50494994709?text=Hola%20Ley%20Studio%2C%20quiero%20agendar%20una%20cita%20%F0%9F%92%85" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.4-3c-.3-.4 0-.5.1-.7l.4-.5c.1-.2.1-.3.2-.5 0-.2 0-.4-.1-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.5 1.1 2.7c.1.2 1.9 3 4.7 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>
-        WhatsApp
-      </a>
-    </div>
-
-    <div class="foot">Ley Studio · Nail Artist · Honduras</div>
   </section>
 </div>
 
 <script>
 // Partículas doradas (ligeras, sin librerías)
-const N = window.innerWidth < 600 ? 12 : 24;
+const N = window.innerWidth < 600 ? 16 : 30;
 for(let i=0;i<N;i++){
   const s=document.createElement('div');
   s.className='sparkle'+(i%3===1?' s2':i%3===2?' s3':'');
   s.style.setProperty('--x',(Math.random()*100)+'%');
-  s.style.setProperty('--d',(7+Math.random()*9)+'s');
-  s.style.setProperty('--delay',(Math.random()*10)+'s');
+  s.style.setProperty('--d',(6+Math.random()*8)+'s');
+  s.style.setProperty('--delay',(Math.random()*8)+'s');
   document.body.appendChild(s);
 }
 </script>
