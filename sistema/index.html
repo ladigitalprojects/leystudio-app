@@ -3174,7 +3174,7 @@ function renderFinanzas(){
       return true;
     })
     .sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
-  document.getElementById('fin-tb').innerHTML=list.map(m=>`
+  document.getElementById('fin-tb').innerHTML=(list.length?'':`<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:28px;font-size:13px">Sin movimientos en el período seleccionado. Usa los botones <strong>Semana</strong> / <strong>Todo</strong> o registra uno con <strong>+ Nuevo movimiento</strong>.</td></tr>`)+list.map(m=>`
     <tr>
       <td>${fmtD(m.fecha)}</td>
       <td><span class="badge ${m.tipo==='Ingreso'?'bb-pink':'bgo'}">${m.tipo==='Ingreso'?'Ingreso':'Gasto'}</span></td>
@@ -3913,7 +3913,7 @@ function renderDashboard(){
   const catL=Object.keys(catMap),catV=Object.values(catMap);
   if(cCat)cCat.destroy();
   cCat=new Chart(document.getElementById('cCat'),{type:'pie',
-    data:{labels:catL.length?catL:['Sin datos'],datasets:[{data:catV.length?catV:[1],backgroundColor:pieColors,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    data:{labels:catL.length?catL:['Sin datos'],datasets:[{data:catV.length?catV:[1],backgroundColor:catL.length?pieColors:['#EDE5D8'],borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'bottom',labels:{color:'#6B5040',font:{size:10},boxWidth:12,padding:10}},
         tooltip:{callbacks:{label:c=>`L. ${c.raw.toLocaleString('es-HN')}`}}}}});
@@ -3927,7 +3927,7 @@ function renderDashboard(){
   const pagoColors=['#B29257','#DD98B1','#D4B483','#E8C4D4','#A9884D'];
   if(cPago)cPago.destroy();
   cPago=new Chart(document.getElementById('cPago'),{type:'pie',
-    data:{labels:pagoL.length?pagoL:['Sin datos'],datasets:[{data:pagoV.length?pagoV:[1],backgroundColor:pagoColors,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    data:{labels:pagoL.length?pagoL:['Sin datos'],datasets:[{data:pagoV.length?pagoV:[1],backgroundColor:pagoL.length?pagoColors:['#EDE5D8'],borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'bottom',labels:{color:'#6B5040',font:{size:10},boxWidth:12,padding:10}},
         tooltip:{callbacks:{label:c=>`L. ${c.raw.toLocaleString('es-HN')}`}}}}});
