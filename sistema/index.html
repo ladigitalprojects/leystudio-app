@@ -4827,165 +4827,274 @@ function _buildChart(id, type, data, options){
 }
 
 function exportReportePDF(){
-  const {label}=_repDateRange();
+  const {label,from,to}=_repDateRange();
   toast('⏳ Generando reporte PDF...');
   setTimeout(()=>{
     try{
       const {jsPDF}=window.jspdf||jspdf;
       const doc=new jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
-      const W=210, H=297;
-      const PINK=[221,152,177], GOLD=[178,146,87], CREAM=[61,43,31], BEIGE=[253,248,242];
+      const W=210,H=297;
+      const PINK=[221,152,177],GOLD=[178,146,87],CREAM=[61,43,31],BEIGE=[253,248,242];
+      const GREEN=[39,174,96],RED=[231,76,60],GRAYT=[130,110,95];
+      const fmt=v=>'L. '+Number(v||0).toLocaleString('es-HN',{maximumFractionDigits:0});
 
-      // ── Fondo de página ──
-      doc.setFillColor(...BEIGE); doc.rect(0,0,W,H,'F');
-
-      // ── Header band ──
-      doc.setFillColor(...CREAM); doc.rect(0,0,W,28,'F');
-      // Logo
-      const logoEl=document.querySelector('.logo-img');
-      if(logoEl&&logoEl.src){ try{ doc.addImage(logoEl.src,'PNG',6,4,18,18); }catch(e){} }
-      // Título
-      doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(255,255,255);
-      doc.text('LEY STUDIO',30,13);
-      doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(...[PINK[0],PINK[1],PINK[2]]);
-      doc.text('NAIL ARTIST',30,18);
-      // Reporte label
-      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(255,255,255);
-      doc.text('REPORTE EJECUTIVO',110,13,'center');
-      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(200,190,180);
-      doc.text(label.toUpperCase(),110,18,'center');
-      // Fecha generación
-      doc.setFontSize(6); doc.setTextColor(160,150,140);
-      doc.text(`Generado: ${new Date().toLocaleDateString('es-HN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}`,W-8,24,'right');
-
-      // ── Franja decorativa dorada ──
-      doc.setFillColor(...GOLD); doc.rect(0,28,W,1.5,'F');
-
-      // ── KPIs ──
-      let y=36;
-      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...GOLD);
-      doc.text('RESUMEN DEL PERÍODO',14,y); y+=5;
-
-      const {from,to}=_repDateRange();
+      // ── Datos del período ──
       const movs=D.movimientos.filter(m=>m.fecha>=from&&m.fecha<=to);
       const citas=D.citas.filter(c=>(c.fecha||'')>=from&&(c.fecha||'')<=to);
       const ingresos=movs.filter(m=>m.tipo==='Ingreso').reduce((s,m)=>s+m.monto,0);
       const gastos=movs.filter(m=>m.tipo!=='Ingreso').reduce((s,m)=>s+m.monto,0);
       const utilidad=ingresos-gastos;
       const citasComp=citas.filter(c=>c.estado==='Completada').length;
+      const citasTot=citas.length;
       const nuevosCl=D.clientes.filter(c=>(c.fecha||'')>=from&&(c.fecha||'')<=to).length;
+      const ticketProm=citasComp>0?ingresos/citasComp:0;
 
+      // ── Período anterior (comparativa) ──
+      let pf,pt;
+      if(_repPeriod==='anio'){const py=+from.slice(0,4)-1;pf=py+'-01-01';pt=py+'-12-31';}
+      else{const yy=+from.slice(0,4),mm=+from.slice(5,7);const pm=mm===1?12:mm-1,py=mm===1?yy-1:yy;pf=py+'-'+String(pm).padStart(2,'0')+'-01';pt=py+'-'+String(pm).padStart(2,'0')+'-31';}
+      const pmovs=D.movimientos.filter(m=>m.fecha>=pf&&m.fecha<=pt);
+      const pIng=pmovs.filter(m=>m.tipo==='Ingreso').reduce((s,m)=>s+m.monto,0);
+      const pGas=pmovs.filter(m=>m.tipo!=='Ingreso').reduce((s,m)=>s+m.monto,0);
+      const pUti=pIng-pGas;
+      const delta=(cur,prev)=>prev!==0?((cur-prev)/Math.abs(prev)*100):null;
+
+      // ── Maquinaria de páginas ──
+      let y=0;
+      const pageBg=()=>{doc.setFillColor(...BEIGE);doc.rect(0,0,W,H,'F');};
+      const miniHeader=()=>{
+        doc.setFillColor(...CREAM);doc.rect(0,0,W,11,'F');
+        doc.setFillColor(...GOLD);doc.rect(0,11,W,0.8,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(255,255,255);
+        doc.text('LEY STUDIO',14,7);
+        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...PINK);
+        doc.text('REPORTE EJECUTIVO · '+label.toUpperCase(),W-14,7,'right');
+      };
+      const newPage=()=>{doc.addPage();pageBg();miniHeader();y=19;};
+      const ensure=h=>{if(y+h>H-16)newPage();};
+      const sec=t=>{ensure(12);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...GOLD);doc.text(t,14,y);doc.setDrawColor(...GOLD);doc.setLineWidth(0.3);doc.line(14,y+1.5,196,y+1.5);y+=7;};
+      const table=(cols,rows)=>{
+        ensure(12);
+        doc.setFillColor(...GOLD);doc.rect(14,y,182,6,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(255,255,255);
+        cols.forEach(c=>doc.text(c.h,c.align==='right'?c.x+c.w:c.x,y+4,c.align==='right'?{align:'right'}:undefined));
+        y+=6;
+        rows.forEach((r,i)=>{
+          ensure(6);
+          if(i%2===0){doc.setFillColor(248,244,240);doc.rect(14,y,182,5.5,'F');}
+          r.forEach((cell,j)=>{const c=cols[j];
+            doc.setFont('helvetica',c.bold?'bold':'normal');doc.setFontSize(7);
+            doc.setTextColor(...(c.color||CREAM));
+            doc.text(String(cell),c.align==='right'?c.x+c.w:c.x,y+3.8,c.align==='right'?{align:'right'}:undefined);
+          });
+          y+=5.5;
+        });
+        y+=5;
+      };
+
+      // ════ PÁGINA 1 ════
+      pageBg();
+      doc.setFillColor(...CREAM);doc.rect(0,0,W,28,'F');
+      const logoEl=document.querySelector('.logo-img');
+      if(logoEl&&logoEl.src){try{doc.addImage(logoEl.src,'PNG',6,4,18,18);}catch(e){}}
+      doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(255,255,255);
+      doc.text('LEY STUDIO',30,13);
+      doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(...PINK);
+      doc.text('NAIL ARTIST',30,18);
+      doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
+      doc.text('REPORTE EJECUTIVO',W-8,12,'right');
+      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(200,190,180);
+      doc.text(label.toUpperCase(),W-8,17,'right');
+      doc.setFontSize(6);doc.setTextColor(160,150,140);
+      doc.text('Generado: '+new Date().toLocaleDateString('es-HN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),W-8,23,'right');
+      doc.setFillColor(...GOLD);doc.rect(0,28,W,1.5,'F');
+      y=37;
+
+      // ── KPIs con comparativa ──
+      sec('RESUMEN DEL PERÍODO');
+      const dIng=delta(ingresos,pIng),dGas=delta(gastos,pGas),dUti=delta(utilidad,pUti);
+      const dTxt=(d,invert)=>{
+        if(d===null)return{t:'sin per. anterior',c:GRAYT};
+        const up=d>=0;
+        const good=invert?!up:up;
+        return{t:(up?'+':'-')+Math.abs(d).toFixed(0)+'% vs período anterior',c:good?GREEN:RED};
+      };
       const kpis=[
-        {l:'Ingresos',v:'L. '+Number(ingresos).toLocaleString('es-HN'),c:PINK},
-        {l:'Gastos',v:'L. '+Number(gastos).toLocaleString('es-HN'),c:GOLD},
-        {l:'Utilidad Neta',v:'L. '+Number(utilidad).toLocaleString('es-HN'),c:utilidad>=0?[39,174,96]:[231,76,60]},
-        {l:'Citas Completadas',v:String(citasComp),c:CREAM},
-        {l:'Clientas Nuevas',v:String(nuevosCl),c:PINK},
+        {l:'Ingresos',v:fmt(ingresos),c:PINK,d:dTxt(dIng,false)},
+        {l:'Gastos',v:fmt(gastos),c:GOLD,d:dTxt(dGas,true)},
+        {l:'Utilidad Neta',v:fmt(utilidad),c:utilidad>=0?GREEN:RED,d:dTxt(dUti,false)},
+        {l:'Citas Completadas',v:citasComp+' / '+citasTot,c:CREAM,d:null},
+        {l:'Ticket Promedio',v:fmt(ticketProm),c:PINK,d:null},
+        {l:'Clientas Nuevas',v:String(nuevosCl),c:GOLD,d:null},
       ];
-      const kW=36, kH=18, kGap=4;
+      const kW=57.3,kH=21,kGap=5;
       kpis.forEach((k,i)=>{
-        const kx=14+i*(kW+kGap);
-        doc.setFillColor(255,255,255); doc.roundedRect(kx,y,kW,kH,2,2,'F');
-        doc.setDrawColor(...GOLD); doc.setLineWidth(0.3); doc.roundedRect(kx,y,kW,kH,2,2,'S');
-        doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...k.c);
-        doc.text(k.v,kx+kW/2,y+9,'center');
-        doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(120,100,85);
-        doc.text(k.l,kx+kW/2,y+14,'center');
+        const kx=14+(i%3)*(kW+kGap), ky=y+Math.floor(i/3)*(kH+5);
+        doc.setFillColor(255,255,255);doc.roundedRect(kx,ky,kW,kH,2,2,'F');
+        doc.setDrawColor(...GOLD);doc.setLineWidth(0.3);doc.roundedRect(kx,ky,kW,kH,2,2,'S');
+        doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(...k.c);
+        doc.text(k.v,kx+kW/2,ky+9,'center');
+        doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(120,100,85);
+        doc.text(k.l.toUpperCase(),kx+kW/2,ky+13.5,'center');
+        if(k.d){doc.setFontSize(6);doc.setTextColor(...k.d.c);doc.text(k.d.t,kx+kW/2,ky+18,'center');}
       });
-      y+=kH+8;
+      y+=kH*2+5+9;
 
-      // ── Charts ──
-      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...GOLD);
-      doc.text('GRÁFICOS',14,y); y+=4;
-
+      // ── Gráficos ──
+      sec('GRÁFICOS DEL PERÍODO');
       const chartIds=['rep-chart-flujo','rep-chart-estados','rep-chart-svcs','rep-chart-pagos'];
-      const chartTitles=['Ingresos vs Gastos por Mes','Estado de Citas','Top Servicios','Formas de Pago'];
-      const cW=88, cH=52, cGap=6;
+      const chartTitles=['Ingresos vs Gastos (6 meses)','Estado de Citas','Top Servicios','Formas de Pago'];
+      const cW=88,cH=56,cGap=6;
       chartIds.forEach((id,i)=>{
         const canvas=document.getElementById(id);
-        if(!canvas) return;
+        if(!canvas)return;
         try{
           const img=canvas.toDataURL('image/png',0.95);
           const cx=14+(i%2)*(cW+cGap);
-          const cy=y+Math.floor(i/2)*(cH+8);
-          doc.setFillColor(255,255,255); doc.roundedRect(cx,cy,cW,cH,2,2,'F');
-          doc.setDrawColor(...GOLD); doc.setLineWidth(0.3); doc.roundedRect(cx,cy,cW,cH,2,2,'S');
+          const cy=y+Math.floor(i/2)*(cH+6);
+          doc.setFillColor(255,255,255);doc.roundedRect(cx,cy,cW,cH,2,2,'F');
+          doc.setDrawColor(...GOLD);doc.setLineWidth(0.3);doc.roundedRect(cx,cy,cW,cH,2,2,'S');
           doc.addImage(img,'PNG',cx+2,cy+8,cW-4,cH-10);
-          doc.setFont('helvetica','bold'); doc.setFontSize(6); doc.setTextColor(...CREAM);
+          doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...CREAM);
           doc.text(chartTitles[i],cx+cW/2,cy+5,'center');
         }catch(e){}
       });
-      y+=cH*2+8+12;
+      y+=cH*2+6+10;
+
+      // ════ PÁGINA 2: detalle operativo ════
+      newPage();
+
+      // ── Estadísticas de citas ──
+      sec('ESTADÍSTICAS DE CITAS');
+      const estados=[...new Set(citas.map(c=>c.estado||'Sin estado'))];
+      const estRows=estados.map(e=>{
+        const n=citas.filter(c=>(c.estado||'Sin estado')===e).length;
+        return[e,String(n),citasTot>0?Math.round(n/citasTot*100)+'%':'—'];
+      });
+      estRows.push(['TOTAL',String(citasTot),'100%']);
+      table([
+        {h:'ESTADO',x:16,w:80},
+        {h:'CANTIDAD',x:110,w:30,align:'right'},
+        {h:'PORCENTAJE',x:160,w:34,align:'right',bold:true,color:PINK},
+      ],estRows);
+      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...GRAYT);
+      ensure(6);
+      doc.text('Tasa de finalización: '+(citasTot>0?Math.round(citasComp/citasTot*100):0)+'%   ·   Ticket promedio por cita completada: '+fmt(ticketProm),14,y);
+      y+=8;
+
+      // ── Top servicios ──
+      sec('TOP SERVICIOS');
+      const svcMap={};
+      citas.filter(c=>c.estado==='Completada').forEach(c=>(c.servicios||[]).forEach(s=>{
+        if(!svcMap[s.nombre])svcMap[s.nombre]={n:0,ing:0};
+        svcMap[s.nombre].n++;svcMap[s.nombre].ing+=s.precio||0;
+      }));
+      const topSvcs=Object.entries(svcMap).sort((a,b)=>b[1].ing-a[1].ing).slice(0,10);
+      table([
+        {h:'#',x:16,w:8},
+        {h:'SERVICIO',x:26,w:90},
+        {h:'VECES',x:130,w:20,align:'right'},
+        {h:'INGRESOS',x:170,w:24,align:'right',bold:true,color:PINK},
+      ],topSvcs.length?topSvcs.map(([n,d],i)=>[i+1,n.length>48?n.slice(0,48)+'…':n,d.n,fmt(d.ing)]):[['—','Sin servicios en el período','','']]);
+
+      // ── Formas de pago ──
+      sec('FORMAS DE PAGO');
+      const pagoMap={};
+      movs.filter(m=>m.tipo==='Ingreso').forEach(m=>{pagoMap[m.pago||'Sin especificar']=(pagoMap[m.pago||'Sin especificar']||0)+m.monto;});
+      const pagos=Object.entries(pagoMap).sort((a,b)=>b[1]-a[1]);
+      table([
+        {h:'FORMA DE PAGO',x:16,w:80},
+        {h:'MONTO',x:130,w:30,align:'right',bold:true,color:PINK},
+        {h:'% DEL TOTAL',x:170,w:24,align:'right'},
+      ],pagos.length?pagos.map(([k,v])=>[k,fmt(v),ingresos>0?Math.round(v/ingresos*100)+'%':'—']):[['Sin ingresos en el período','','']]);
 
       // ── Top clientas ──
-      if(y>220){ doc.addPage(); doc.setFillColor(...BEIGE); doc.rect(0,0,W,H,'F'); y=14; }
-      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...GOLD);
-      doc.text('TOP CLIENTAS DEL PERÍODO',14,y); y+=5;
-      // Encabezado tabla
-      doc.setFillColor(...GOLD); doc.rect(14,y,180,6,'F');
-      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(255,255,255);
-      ['#','Clienta','Visitas','Total'].forEach((h,i)=>doc.text(h,[16,28,90,145,172][i],y+4));
-      y+=6;
+      sec('TOP CLIENTAS DEL PERÍODO');
       const clMap={};
       citas.filter(c=>c.estado==='Completada').forEach(c=>{
-        if(!clMap[c.clienta]) clMap[c.clienta]={visitas:0,total:0};
-        clMap[c.clienta].visitas++; clMap[c.clienta].total+=c.precioTotal||0;
+        if(!clMap[c.clienta])clMap[c.clienta]={visitas:0,total:0};
+        clMap[c.clienta].visitas++;clMap[c.clienta].total+=c.precioTotal||0;
       });
       const topCl=Object.entries(clMap).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
-      topCl.forEach(([nombre,d],i)=>{
-        if(i%2===0){ doc.setFillColor(248,244,240); doc.rect(14,y,180,5.5,'F'); }
-        doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...CREAM);
-        doc.text(String(i+1),16,y+4);
-        doc.text(nombre.length>35?nombre.substring(0,35)+'…':nombre,28,y+4);
-        doc.text(String(d.visitas),90,y+4);
-        doc.setFont('helvetica','bold'); doc.setTextColor(...PINK);
-        doc.text('L. '+Number(d.total).toLocaleString('es-HN'),145,y+4);
-        y+=5.5;
-      });
-      y+=6;
+      table([
+        {h:'#',x:16,w:8},
+        {h:'CLIENTA',x:26,w:75},
+        {h:'VISITAS',x:112,w:18,align:'right'},
+        {h:'PROMEDIO',x:150,w:22,align:'right'},
+        {h:'TOTAL',x:170,w:24,align:'right',bold:true,color:PINK},
+      ],topCl.length?topCl.map(([n,d],i)=>[i+1,n.length>38?n.slice(0,38)+'…':n,d.visitas,fmt(d.total/d.visitas),fmt(d.total)]):[['—','Sin citas completadas','','','']]);
 
-      // ── Categorías ──
-      if(y>220){ doc.addPage(); doc.setFillColor(...BEIGE); doc.rect(0,0,W,H,'F'); y=14; }
-      // Separador
-      doc.setFillColor(...GOLD); doc.rect(14,y,180,0.5,'F'); y+=5;
+      // ════ PÁGINA 3: finanzas detalladas ════
+      newPage();
+
+      // ── Categorías (dos columnas con barras) ──
+      sec('DESGLOSE POR CATEGORÍA');
       const drawCats=(title,tipo,startX,colW)=>{
-        // Fondo sección
-        doc.setFillColor(248,244,239); doc.roundedRect(startX,y-3,colW,7,1,1,'F');
-        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...GOLD);
+        doc.setFillColor(248,244,239);doc.roundedRect(startX,y-3,colW,7,1,1,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...GOLD);
         doc.text(title,startX+3,y+1.5);
         const cats={};
-        movs.filter(m=>m.tipo===tipo).forEach(m=>{cats[m.cat]=(cats[m.cat]||0)+m.monto;});
-        const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,6);
+        movs.filter(m=>m.tipo===tipo).forEach(m=>{cats[m.cat||'Sin categoría']=(cats[m.cat||'Sin categoría']||0)+m.monto;});
+        const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,8);
         const total=sorted.reduce((s,[,v])=>s+v,0);
         let cy2=y+9;
-        if(sorted.length===0){
-          doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(160,145,130);
+        if(!sorted.length){
+          doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(160,145,130);
           doc.text('Sin movimientos en el período',startX+3,cy2+2);
-        } else {
-          sorted.forEach(([cat,v])=>{
-            const pct=total>0?Math.round(v/total*100):0;
-            const barW=Math.max(1,(colW-6)*pct/100);
-            doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...CREAM);
-            doc.text(cat.length>18?cat.substring(0,18)+'…':cat,startX+3,cy2+2);
-            doc.setFont('helvetica','bold'); doc.setTextColor(tipo==='Ingreso'?PINK[0]:GOLD[0],tipo==='Ingreso'?PINK[1]:GOLD[1],tipo==='Ingreso'?PINK[2]:GOLD[2]);
-            doc.text('L.'+Number(v).toLocaleString('es-HN'),startX+colW-2,cy2+2,'right');
-            doc.setFillColor(225,218,210); doc.roundedRect(startX+3,cy2+3.5,colW-6,2.2,0.5,0.5,'F');
-            doc.setFillColor(...(tipo==='Ingreso'?PINK:GOLD)); doc.roundedRect(startX+3,cy2+3.5,barW,2.2,0.5,0.5,'F');
-            cy2+=8;
-          });
+          return cy2+8;
         }
+        sorted.forEach(([cat,v])=>{
+          const pct=total>0?Math.round(v/total*100):0;
+          const barW=Math.max(1,(colW-6)*pct/100);
+          doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...CREAM);
+          doc.text((cat.length>18?cat.slice(0,18)+'…':cat)+'  ('+pct+'%)',startX+3,cy2+2);
+          doc.setFont('helvetica','bold');doc.setTextColor(...(tipo==='Ingreso'?PINK:GOLD));
+          doc.text(fmt(v),startX+colW-2,cy2+2,'right');
+          doc.setFillColor(225,218,210);doc.roundedRect(startX+3,cy2+3.5,colW-6,2.2,0.5,0.5,'F');
+          doc.setFillColor(...(tipo==='Ingreso'?PINK:GOLD));doc.roundedRect(startX+3,cy2+3.5,barW,2.2,0.5,0.5,'F');
+          cy2+=8;
+        });
+        return cy2;
       };
-      const colW=85, gap=6;
-      drawCats('INGRESOS POR CATEGORÍA','Ingreso',14,colW);
-      drawCats('GASTOS POR CATEGORÍA','Gasto',14+colW+gap,colW);
+      const colW2=88,gap2=6;
+      const endL=drawCats('INGRESOS POR CATEGORÍA','Ingreso',14,colW2);
+      const endR=drawCats('GASTOS POR CATEGORÍA','Gasto',14+colW2+gap2,colW2);
+      y=Math.max(endL,endR)+8;
 
-      // ── Footer ──
-      doc.setFillColor(...CREAM); doc.rect(0,H-8,W,8,'F');
-      doc.setFillColor(...GOLD); doc.rect(0,H-8,W,1,'F');
-      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(200,190,180);
-      doc.text('Ley Studio · Nail Artist · Tegucigalpa · @ley_studiohn',W/2,H-3,'center');
+      // ── Detalle de movimientos ──
+      sec('DETALLE DE MOVIMIENTOS');
+      const movsSorted=[...movs].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+      const movRows=movsSorted.slice(0,30).map(m=>[
+        m.fecha||'—',
+        m.tipo||'—',
+        (m.cat||'—').length>24?(m.cat||'').slice(0,24)+'…':(m.cat||'—'),
+        m.pago||'—',
+        (m.tipo==='Ingreso'?'+':'-')+fmt(m.monto).replace('L. ','L.'),
+      ]);
+      table([
+        {h:'FECHA',x:16,w:22},
+        {h:'TIPO',x:44,w:20},
+        {h:'CATEGORÍA',x:70,w:60},
+        {h:'PAGO',x:132,w:28},
+        {h:'MONTO',x:170,w:24,align:'right',bold:true},
+      ],movRows.length?movRows:[['—','Sin movimientos','','','']]);
+      if(movsSorted.length>30){
+        doc.setFont('helvetica','italic');doc.setFontSize(6.5);doc.setTextColor(...GRAYT);
+        ensure(5);doc.text('… y '+(movsSorted.length-30)+' movimientos más en el período.',14,y);y+=6;
+      }
 
-      const fname=`LeyStudio_Reporte_${label.replace(/\s/g,'_')}.pdf`;
+      // ── Footer + numeración en todas las páginas ──
+      const nPages=doc.getNumberOfPages();
+      for(let i=1;i<=nPages;i++){
+        doc.setPage(i);
+        doc.setFillColor(...CREAM);doc.rect(0,H-9,W,9,'F');
+        doc.setFillColor(...GOLD);doc.rect(0,H-9,W,0.8,'F');
+        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(200,190,180);
+        doc.text('Ley Studio · Nail Artist · @ley_studiohn',14,H-3.5);
+        doc.text('Página '+i+' de '+nPages,W-14,H-3.5,'right');
+      }
+
+      const fname='LeyStudio_Reporte_'+label.replace(/\s/g,'_')+'.pdf';
       doc.save(fname);
       toast('📊 Reporte descargado: '+fname);
     } catch(e){ toast('⚠️ Error al generar reporte: '+e.message); console.error(e); }
