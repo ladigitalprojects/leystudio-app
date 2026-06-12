@@ -2689,10 +2689,11 @@ function canonVal(v){const k=_strip(v);if(!k)return '';return FICHA_ALIAS[k]||CA
 async function _fillFichaPDF(c, f, filename, flatten=false){
   if(!window.PDFLib||!window.PDFLib.PDFDocument) throw new Error('pdf-lib no cargado');
   const {PDFDocument} = window.PDFLib;
-  const resp = await fetch('/ficha_template.pdf?v=9&t=' + Date.now());
+  const resp = await fetch('/ficha_template.pdf?v=10&t=' + Date.now());
   if(!resp.ok) throw new Error('No se encontró ficha_template.pdf');
   const pdfDoc = await PDFDocument.load(await resp.arrayBuffer());
   const form = pdfDoc.getForm();
+  try{form.getTextField('observaciones').acroField.setDefaultAppearance('/Helv 9 Tf 0 g');}catch(e){}
   const txt=(n,v)=>{try{form.getTextField(n).setText(String(v||''));}catch(e){}};
   const chk=(n,on)=>{try{if(on)form.getCheckBox(n).check();else form.getCheckBox(n).uncheck();}catch(e){}};
   const has=(arr,v)=>(arr||[]).some(x=>x&&v&&_strip(canonVal(x))===_strip(v));
@@ -2707,6 +2708,7 @@ async function _fillFichaPDF(c, f, filename, flatten=false){
   // Firma: si es imagen (dataURL del canvas), incrustarla sobre el campo; nunca volcar base64 como texto
   if(f.firma&&/^data:image\/png/i.test(f.firma)){
     try{
+      txt('firma_cliente','');
       const png=await pdfDoc.embedPng(f.firma);
       const widget=form.getTextField('firma_cliente').acroField.getWidgets()[0];
       const rect=widget.getRectangle();
@@ -2745,6 +2747,8 @@ async function _fillFichaPDF(c, f, filename, flatten=false){
   ['Cuadrada','Coffin','Almond','Stiletto'].forEach((lbl,i)=>chk(`forma_${i+1}`,_strip(f.forma)===_strip(lbl)));
   ['#1','#2','#3','#4'].forEach((lbl,i)=>chk(`largo_${i+1}`,f.largo===lbl));
   ['Nuevo','Cliente Frecuente','Referido'].forEach((lbl,i)=>chk(`cliente_tipo_${i+1}`,canonVal(f.tipoVisita)===lbl));
+  // Regenerar apariencia de checkboxes (quita el fondo celeste original del template)
+  try{form.getFields().forEach(fl=>{try{if(fl instanceof window.PDFLib.PDFCheckBox)fl.updateAppearances();}catch(e){}});}catch(e){}
   // Aplanar: elimina toda interactividad del formulario
   if(flatten){
     try{ form.flatten(); }catch(e){}
