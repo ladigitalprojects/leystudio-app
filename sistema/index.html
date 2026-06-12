@@ -1850,7 +1850,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
     </div>
     <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px">
       <div class="fgrp"><label>Nombre</label><input type="text" id="cfg-name" value="Ley Studio"></div>
-      <div class="fgrp"><label>Instagram</label><input type="text" id="cfg-ig" value="@ley_studiohn"></div>
+      <div class="fgrp"><label>Instagram</label><input type="text" id="cfg-ig" value="@leystudiohn"></div>
       <div class="fgrp"><label>Teléfono</label><input type="text" id="cfg-tel" value="+504 9499-4709"></div>
       <div class="fgrp"><label>Ciudad</label><input type="text" id="cfg-city" value="Tegucigalpa"></div>
     </div>
@@ -1894,7 +1894,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
 </div>
 </div>
 </main>
-<footer>© 2026 <span>Ley Studio</span> · Nail Artist · Tegucigalpa · <span>@ley_studiohn</span> · +504 9499-4709</footer>
+<footer>© 2026 <span>Ley Studio</span> · Nail Artist · Tegucigalpa · <span>@leystudiohn</span> · +504 9499-4709</footer>
 
 <script>
 // ═══════════════════════════════════════════════════
@@ -2049,7 +2049,7 @@ function mailWrap(titulo,cuerpo,opts){
   const divider=w=>`<table cellpadding="0" cellspacing="0" align="center"><tr>${line(w)}<td style="padding:0 10px;color:#B29257;font-size:11px;line-height:1;">&#9670;</td>${line(w)}</tr></table>`;
   const ctaSolid=(url,txt)=>`<tr><td style="text-align:center;padding:6px 30px 30px;"><a href="${url}" style="display:inline-block;background:#B29257;color:#ffffff;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;padding:14px 34px;border-radius:999px;">${txt}</a></td></tr>`;
   const ctaOutline=(url,txt)=>`<tr><td style="text-align:center;padding:6px 30px 30px;"><a href="${url}" style="display:inline-block;background:transparent;color:#A9884D;border:2px solid #B29257;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;padding:12px 32px;border-radius:999px;">${txt}</a></td></tr>`;
-  const footer=`<tr><td style="padding:18px 30px 24px;border-top:1px solid #EDE0C8;text-align:center;color:#9C8E7A;font-size:11px;line-height:1.9;">Ley Studio &middot; Nail Artist &middot; Tegucigalpa<br>Instagram <a href="https://instagram.com/ley_studiohn" style="color:#A9884D;text-decoration:none;font-weight:bold;">@ley_studiohn</a> &middot; WhatsApp <a href="https://wa.me/50494994709" style="color:#A9884D;text-decoration:none;font-weight:bold;">+504 9499-4709</a></td></tr>`;
+  const footer=`<tr><td style="padding:18px 30px 24px;border-top:1px solid #EDE0C8;text-align:center;color:#9C8E7A;font-size:11px;line-height:1.9;">Ley Studio &middot; Nail Artist &middot; Tegucigalpa<br>Instagram <a href="https://instagram.com/leystudiohn" style="color:#A9884D;text-decoration:none;font-weight:bold;">@leystudiohn</a> &middot; WhatsApp <a href="https://wa.me/50494994709" style="color:#A9884D;text-decoration:none;font-weight:bold;">+504 9499-4709</a></td></tr>`;
   let inner='';
 
   if(v==='promo'){
@@ -2542,7 +2542,7 @@ function _buildReciboDoc(citaId){
   doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(...mdgray);
   doc.text('Gracias por tu visita!',W/2,y,{align:'center'}); y+=5;
   doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...gold);
-  doc.text('@ley_studiohn',W/2,y,{align:'center'});
+  doc.text('@leystudiohn',W/2,y,{align:'center'});
 
   // Borde inferior dorado
   doc.setFillColor(...gold); doc.rect(0,H-4,W,4,'F');
@@ -3457,7 +3457,7 @@ body{width:210mm;min-height:297mm;font-family:Arial,sans-serif;background:#F5EFE
   <div style="border-bottom:1px solid #ccc;margin-top:7px;min-height:9px"></div>
   <div style="border-bottom:1px solid #ccc;margin-top:7px;min-height:9px"></div>
 
-  <div style="position:absolute;bottom:6mm;left:0;right:0;text-align:center;font-size:6pt;color:${GRAY}">Ley Studio · Nail Artist · Tegucigalpa · @ley_studiohn</div>
+  <div style="position:absolute;bottom:6mm;left:0;right:0;text-align:center;font-size:6pt;color:${GRAY}">Ley Studio · Nail Artist · Tegucigalpa · @leystudiohn</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"><\/script>
@@ -4733,7 +4733,7 @@ ${linea}
 💳 *Pago:* ${c.pago}
 ${linea}
 ¡Gracias por visitarnos! 🖤✨
-Síguenos: *@ley_studiohn*
+Síguenos: *@leystudiohn*
 ${linea}`;
 
   // Open WA modal with invoice
@@ -4775,7 +4775,7 @@ const WA_TEMPLATES = [
     label: 'Gracias Post-Servicio',
     color: 'var(--pink)',
     build: (nombre, servicio) =>
-      `Hola ${nombre} 🌟\n\n¡Gracias por visitarnos hoy en *Ley Studio*! Esperamos que hayas amado tu resultado 💅✨\n\nSi te gustó el servicio, nos ayudarías mucho compartiendo una foto y etiquetándonos en Instagram *@ley_studiohn* 📸\n\n¡Hasta la próxima! 🖤`
+      `Hola ${nombre} 🌟\n\n¡Gracias por visitarnos hoy en *Ley Studio*! Esperamos que hayas amado tu resultado 💅✨\n\nSi te gustó el servicio, nos ayudarías mucho compartiendo una foto y etiquetándonos en Instagram *@leystudiohn* 📸\n\n¡Hasta la próxima! 🖤`
   },
   {
     id: 'reactivacion',
@@ -5534,7 +5534,7 @@ function exportReportePDF(){
         doc.setFillColor(...CREAM);doc.rect(0,H-9,W,9,'F');
         doc.setFillColor(...GOLD);doc.rect(0,H-9,W,0.8,'F');
         doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(200,190,180);
-        doc.text('Ley Studio · Nail Artist · @ley_studiohn',14,H-3.5);
+        doc.text('Ley Studio · Nail Artist · @leystudiohn',14,H-3.5);
         doc.text('Página '+i+' de '+nPages,W-14,H-3.5,'right');
       }
 
