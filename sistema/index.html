@@ -672,6 +672,7 @@ body.dark-mode #modal-ficha .modal{background:var(--card);}
 body.dark-mode #modal-ficha input[type=checkbox],body.dark-mode #modal-ficha input[type=radio]{background:#1c1c1c!important;}
 body.dark-mode #modal-ficha input[type=checkbox]:checked,body.dark-mode #modal-ficha input[type=radio]:checked{background:var(--pink)!important;}
 body.dark-mode #modal-ficha tbody td:first-child{background:#222;}
+#modal-campana input[type=checkbox]{accent-color:var(--gold);width:15px;height:15px;}
 #modal-ficha .adm-sub-lbl{font-size:10px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin:4px 0 10px;text-align:center;}
 #modal-ficha .adm-nails{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
 #modal-ficha .adm-nail{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;}
@@ -945,7 +946,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
     <input type="hidden" id="mc-cl-id">
     <p id="mc-dest" style="font-size:12px;color:var(--gold-deep);font-weight:600;margin:0 0 12px"></p>
     <div class="fgrp" style="margin-bottom:10px"><label>Plantilla</label>
-      <select id="mc-plantilla" onchange="aplicarPlantillaCorreo()"><option value="libre">Mensaje libre</option><option value="cumple">🎂 Feliz cumpleaños</option><option value="promo10">✨ Promo 10% junio</option><option value="marca">💅 Conoce Ley Studio</option><option value="extranamos">💖 Te extrañamos</option></select>
+      <select id="mc-plantilla" onchange="aplicarPlantillaCorreo()"><option value="libre">Mensaje libre</option><option value="cumple">🎂 Feliz cumpleaños</option><option value="promo10">✨ Promo 10% junio</option><option value="marca">💅 Conoce Ley Studio</option><option value="extranamos">💖 Te extrañamos</option><option value="bienvenida">🌟 Bienvenida (clientas nuevas)</option></select>
       <input type="hidden" id="mc-hero" value="">
     </div>
     <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="mc-asunto" placeholder="Asunto del correo" oninput="actualizarPreviewCorreo()"></div>
@@ -961,9 +962,18 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
 <div class="modal-overlay" id="modal-campana">
   <div class="modal" style="max-width:620px;max-height:92vh;overflow-y:auto">
     <div class="modal-title">📣 Campaña por correo<button class="modal-close" onclick="closeModal('modal-campana')">&#x2715;</button></div>
-    <p id="camp-info" style="font-size:12px;color:var(--gray);margin:0 0 12px"></p>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 6px">
+      <span style="font-size:10px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:1px">Destinatarias</span>
+      <span style="display:flex;gap:6px">
+        <button type="button" class="hbtn hbtn-outline" style="font-size:10px;padding:3px 10px" onclick="campSel(true)">Todas</button>
+        <button type="button" class="hbtn hbtn-outline" style="font-size:10px;padding:3px 10px" onclick="campSel(false)">Ninguna</button>
+      </span>
+    </div>
+    <div id="camp-lista" style="max-height:150px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:#fff;margin-bottom:10px"></div>
+    <div class="fgrp" style="margin-bottom:8px"><label>Agregar otros correos (no clientas, separados por coma)</label><input type="text" id="camp-extra" placeholder="correo1@gmail.com, correo2@yahoo.com" oninput="actualizarCampCount()"></div>
+    <p id="camp-info" style="font-size:12px;color:var(--gold-deep);font-weight:700;margin:0 0 12px"></p>
     <div class="fgrp" style="margin-bottom:10px"><label>Plantilla</label>
-      <select id="camp-plantilla" onchange="aplicarPlantillaCampana()"><option value="libre">Mensaje libre</option><option value="promo10">✨ Promo 10% junio</option><option value="marca">💅 Conoce Ley Studio</option><option value="extranamos">💖 Te extrañamos</option></select>
+      <select id="camp-plantilla" onchange="aplicarPlantillaCampana()"><option value="libre">Mensaje libre</option><option value="promo10">✨ Promo 10% junio</option><option value="marca">💅 Conoce Ley Studio</option><option value="extranamos">💖 Te extrañamos</option><option value="bienvenida">🌟 Bienvenida (clientas nuevas)</option></select>
       <input type="hidden" id="camp-hero" value="">
     </div>
     <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="camp-asunto" placeholder="Ej. ✨ Promo de junio en Ley Studio" oninput="actualizarPreviewCampana()"></div>
@@ -2209,9 +2219,12 @@ function aplicarPlantillaCorreo(){
   const c=D.clientes.find(x=>x.id===id)||{nombre:''};
   const nom=(c.nombre||'').split(' ')[0];
   const plan=document.getElementById('mc-plantilla').value;
-  const _variantes={promo10:'promo',marca:'marca',extranamos:'carta',cumple:'cumple'};
+  const _variantes={promo10:'promo',marca:'marca',extranamos:'carta',cumple:'cumple',bienvenida:'marca'};
   document.getElementById('mc-hero').value=_variantes[plan]||'';
-  if(plan==='marca'){
+  if(plan==='bienvenida'){
+    document.getElementById('mc-asunto').value='Te damos la bienvenida a Ley Studio';
+    document.getElementById('mc-msg').value='Hola '+(nom||'')+(nom?',':'')+'\n\nGracias por tu interés en Ley Studio, tu nuevo espacio de nail art en Tegucigalpa.\n\nCada visita con nosotras es una experiencia: evaluación personalizada de tus uñas, materiales premium y diseños hechos a tu medida.\n\nEn tu primera visita queremos consentirte: menciona este correo al agendar y recibe una atención especial de bienvenida.\n\nNos encantará conocerte.';
+  } else if(plan==='marca'){
     document.getElementById('mc-asunto').value='💅 El arte de tus uñas — Ley Studio';
     document.getElementById('mc-msg').value='Hola '+nom+' 💅\n\nEn Ley Studio cada visita es un ritual: evaluamos tus uñas, usamos materiales de primera y creamos diseños hechos a tu medida.\n\nAcrílicas, soft gel, manicura rusa, pedicure spa y nail art personalizado — todo en un espacio pensado para que te relajes mientras te consentimos.\n\nTu próxima manicura favorita te está esperando.';
   } else if(plan==='extranamos'){
@@ -2252,9 +2265,12 @@ async function enviarCorreoCliente(){
 
 function aplicarPlantillaCampana(){
   const plan=document.getElementById('camp-plantilla').value;
-  const _variantesC={promo10:'promo',marca:'marca',extranamos:'carta',cumple:'cumple'};
+  const _variantesC={promo10:'promo',marca:'marca',extranamos:'carta',cumple:'cumple',bienvenida:'marca'};
   document.getElementById('camp-hero').value=_variantesC[plan]||'';
-  if(plan==='marca'){
+  if(plan==='bienvenida'){
+    document.getElementById('camp-asunto').value='Te damos la bienvenida a Ley Studio';
+    document.getElementById('camp-msg').value='Gracias por tu interés en Ley Studio, tu nuevo espacio de nail art en Tegucigalpa.\n\nCada visita con nosotras es una experiencia: evaluación personalizada de tus uñas, materiales premium y diseños hechos a tu medida.\n\nEn tu primera visita queremos consentirte: menciona este correo al agendar y recibe una atención especial de bienvenida.\n\nNos encantará conocerte.';
+  } else if(plan==='marca'){
     document.getElementById('camp-asunto').value='💅 El arte de tus uñas — Ley Studio';
     document.getElementById('camp-msg').value='En Ley Studio cada visita es un ritual: evaluamos tus uñas, usamos materiales de primera y creamos diseños hechos a tu medida.\n\nAcrílicas, soft gel, manicura rusa, pedicure spa y nail art personalizado — todo en un espacio pensado para que te relajes mientras te consentimos.\n\nTu próxima manicura favorita te está esperando.';
   } else if(plan==='extranamos'){
@@ -2271,30 +2287,52 @@ function aplicarPlantillaCampana(){
 }
 function openCampana(){
   const dest=D.clientes.filter(c=>_clienteCorreo(c));
-  document.getElementById('camp-info').textContent=dest.length+' clientas con correo recibirán este mensaje ('+(D.clientes.length-dest.length)+' sin correo registrado).';
+  const cont=document.getElementById('camp-lista');
+  cont.innerHTML=dest.length?dest.map(c=>{
+    const mail=_clienteCorreo(c);
+    return `<label style="display:flex;align-items:center;gap:8px;font-size:12.5px;padding:4px 2px;cursor:pointer"><input type="checkbox" class="camp-dest" checked data-email="${mail}" data-nombre="${(c.nombre||'').replace(/"/g,'&quot;')}" onchange="actualizarCampCount()"> <strong style="color:var(--cream)">${c.nombre}</strong> <span style="color:var(--gray);font-size:11.5px">· ${mail}</span></label>`;
+  }).join(''):'<div style="color:var(--gray);font-size:12px;padding:4px 2px">Ninguna clienta tiene correo registrado — puedes agregar correos manualmente abajo.</div>';
+  document.getElementById('camp-extra').value='';
   document.getElementById('camp-prog').textContent='';
+  actualizarCampCount();
   openModal('modal-campana');
+}
+function campSel(v){ document.querySelectorAll('.camp-dest').forEach(cb=>cb.checked=v); actualizarCampCount(); }
+function _campDestinatarios(){
+  const list=[];
+  document.querySelectorAll('.camp-dest:checked').forEach(cb=>list.push({to:cb.dataset.email,nombre:cb.dataset.nombre||''}));
+  (document.getElementById('camp-extra').value||'').split(/[,;\s]+/).forEach(e=>{
+    e=e.trim().toLowerCase();
+    if(e&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)&&!list.some(x=>(x.to||'').toLowerCase()===e)) list.push({to:e,nombre:''});
+  });
+  return list;
+}
+function actualizarCampCount(){
+  const n=_campDestinatarios().length;
+  document.getElementById('camp-info').textContent=n?('Se enviará a '+n+' destinatari'+(n===1?'a':'as')+'.'):'Selecciona al menos una destinataria o agrega un correo.';
 }
 async function enviarCampana(){
   const asunto=document.getElementById('camp-asunto').value.trim();
   const msg=document.getElementById('camp-msg').value.trim();
   if(!asunto||!msg){ toast('Completa asunto y mensaje','warn'); return; }
-  const dest=D.clientes.filter(c=>_clienteCorreo(c));
-  if(!dest.length){ toast('Ninguna clienta tiene correo registrado','warn'); return; }
-  if(!confirm('¿Enviar esta campaña a '+dest.length+' clientas?')) return;
+  const dest=_campDestinatarios();
+  if(!dest.length){ toast('Selecciona al menos una destinataria o agrega un correo','warn'); return; }
+  if(!confirm('¿Enviar esta campaña a '+dest.length+' destinatari'+(dest.length===1?'a':'as')+'?')) return;
   const btn=document.getElementById('camp-btn'); btn.disabled=true;
   const prog=document.getElementById('camp-prog');
-  let ok=0,fail=0;
+  const _vv=document.getElementById('camp-hero').value;
+  let ok=0,fail=0; const fallidos=[];
   for(let i=0;i<dest.length;i++){
-    const c=dest[i];
-    prog.textContent='Enviando '+(i+1)+' de '+dest.length+'…';
-    const _vv=document.getElementById('camp-hero').value;
-    const cuerpo='Hola <strong>'+(c.nombre||'').split(' ')[0]+'</strong>'+(_vv==='carta'?',':' 💅')+'<br><br>'+msg.replace(/\n/g,'<br>');
-    try{ await enviarCorreo(_clienteCorreo(c),asunto,mailWrap(asunto,cuerpo,{variant:document.getElementById('camp-hero').value})); ok++; }
-    catch(e){ fail++; }
+    const d=dest[i];
+    prog.textContent='Enviando '+(i+1)+' de '+dest.length+'… ('+d.to+')';
+    const nom=(d.nombre||'').split(' ')[0];
+    const saludo=nom?('Hola <strong>'+nom+'</strong>'+(_vv==='carta'?',':' 💅')):(_vv==='carta'?'Hola,':'¡Hola! 💅');
+    const cuerpo=saludo+'<br><br>'+msg.replace(/\n/g,'<br>');
+    try{ await enviarCorreo(d.to,asunto,mailWrap(asunto,cuerpo,{variant:_vv})); ok++; }
+    catch(e){ fail++; fallidos.push(d.to); }
     await new Promise(r=>setTimeout(r,800));
   }
-  prog.textContent='Listo: '+ok+' enviados'+(fail?(', '+fail+' fallidos'):'')+'.';
+  prog.textContent='Listo: '+ok+' enviados'+(fail?(' · fallidos: '+fallidos.join(', ')):'.');
   btn.disabled=false;
   toast('📣 Campaña: '+ok+' correos enviados'+(fail?(', '+fail+' fallidos'):''));
 }
