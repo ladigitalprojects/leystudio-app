@@ -945,7 +945,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
     <input type="hidden" id="mc-cl-id">
     <p id="mc-dest" style="font-size:12px;color:var(--gold-deep);font-weight:600;margin:0 0 12px"></p>
     <div class="fgrp" style="margin-bottom:10px"><label>Plantilla</label>
-      <select id="mc-plantilla" onchange="aplicarPlantillaCorreo()"><option value="libre">Mensaje libre</option><option value="cumple">🎂 Feliz cumpleaños</option><option value="promo10">✨ Promo 10% junio</option></select>
+      <select id="mc-plantilla" onchange="aplicarPlantillaCorreo()"><option value="libre">Mensaje libre</option><option value="cumple">🎂 Feliz cumpleaños</option><option value="promo10">✨ Promo 10% junio</option><option value="marca">💅 Conoce Ley Studio</option><option value="extranamos">💖 Te extrañamos</option></select>
       <input type="hidden" id="mc-hero" value="">
     </div>
     <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="mc-asunto" placeholder="Asunto del correo" oninput="actualizarPreviewCorreo()"></div>
@@ -963,7 +963,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
     <div class="modal-title">📣 Campaña por correo<button class="modal-close" onclick="closeModal('modal-campana')">&#x2715;</button></div>
     <p id="camp-info" style="font-size:12px;color:var(--gray);margin:0 0 12px"></p>
     <div class="fgrp" style="margin-bottom:10px"><label>Plantilla</label>
-      <select id="camp-plantilla" onchange="aplicarPlantillaCampana()"><option value="libre">Mensaje libre</option><option value="promo10">✨ Promo 10% junio</option></select>
+      <select id="camp-plantilla" onchange="aplicarPlantillaCampana()"><option value="libre">Mensaje libre</option><option value="promo10">✨ Promo 10% junio</option><option value="marca">💅 Conoce Ley Studio</option><option value="extranamos">💖 Te extrañamos</option></select>
       <input type="hidden" id="camp-hero" value="">
     </div>
     <div class="fgrp" style="margin-bottom:10px"><label>Asunto</label><input type="text" id="camp-asunto" placeholder="Ej. ✨ Promo de junio en Ley Studio" oninput="actualizarPreviewCampana()"></div>
@@ -2055,10 +2055,13 @@ function mailWrap(titulo,cuerpo,opts){
     <tr><td style="padding:26px 30px 0;">
       <h2 style="margin:0;color:#A9884D;font-size:20px;font-weight:600;font-family:Georgia,'Times New Roman',serif;">${titulo}</h2>
     </td></tr>`;
-  const cta=opts.hero?`
+  const ctaUrl=opts.hero
+    ?'https://wa.me/50494994709?text=Hola%20Ley%20Studio%2C%20quiero%20agendar%20mi%20cita%20con%20el%2010%25%20de%20descuento%20%F0%9F%92%85'
+    :'https://wa.me/50494994709?text=Hola%20Ley%20Studio%2C%20quiero%20agendar%20una%20cita%20%F0%9F%92%85';
+  const cta=opts.cta===false?'':`
     <tr><td style="text-align:center;padding:6px 30px 30px;">
-      <a href="https://wa.me/50494994709?text=Hola%20Ley%20Studio%2C%20quiero%20agendar%20mi%20cita%20con%20el%2010%25%20de%20descuento%20%F0%9F%92%85" style="display:inline-block;background:#B29257;color:#ffffff;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;padding:14px 34px;border-radius:999px;">Agendar mi cita</a>
-    </td></tr>`:'';
+      <a href="${ctaUrl}" style="display:inline-block;background:#B29257;color:#ffffff;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;padding:14px 34px;border-radius:999px;">Agendar mi cita</a>
+    </td></tr>`;
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5EFE6;font-family:Arial,Helvetica,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5EFE6;padding:26px 0;"><tr><td align="center">
     <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:94%;background:#FDF8F2;border:1px solid #B29257;border-radius:18px;overflow:hidden;">
@@ -2152,7 +2155,13 @@ function aplicarPlantillaCorreo(){
   const nom=(c.nombre||'').split(' ')[0];
   const plan=document.getElementById('mc-plantilla').value;
   document.getElementById('mc-hero').value=plan==='promo10'?'1':'';
-  if(plan==='promo10'){
+  if(plan==='marca'){
+    document.getElementById('mc-asunto').value='💅 El arte de tus uñas — Ley Studio';
+    document.getElementById('mc-msg').value='Hola '+nom+' 💅\n\nEn Ley Studio cada visita es un ritual: evaluamos tus uñas, usamos materiales de primera y creamos diseños hechos a tu medida.\n\nAcrílicas, soft gel, manicura rusa, pedicure spa y nail art personalizado — todo en un espacio pensado para que te relajes mientras te consentimos.\n\nTu próxima manicura favorita te está esperando.';
+  } else if(plan==='extranamos'){
+    document.getElementById('mc-asunto').value='Te extrañamos en Ley Studio 💖';
+    document.getElementById('mc-msg').value='Hola '+nom+' 💖\n\nHa pasado un tiempo desde tu última visita y tus uñas nos hacen falta.\n\nQueremos verte de nuevo: escríbenos y te apartamos un espacio esta semana en tu horario favorito.\n\nTu lugar en Ley Studio sigue siendo tuyo.';
+  } else if(plan==='promo10'){
     document.getElementById('mc-asunto').value='✨ 10% de descuento en todo — junio en Ley Studio';
     document.getElementById('mc-msg').value='Hola '+nom+' 💅\n\nJunio llegó con regalo: durante todo el mes tenemos 10% de descuento en TODOS nuestros servicios.\n\nAcrílicas, soft gel, manicura rusa, pedicure spa… lo que tus uñas pidan, con tu descuento aplicado.\n\nLos cupos vuelan: agenda tu cita por WhatsApp y ven a consentirte.';
   } else if(plan==='cumple'){
@@ -2188,7 +2197,13 @@ async function enviarCorreoCliente(){
 function aplicarPlantillaCampana(){
   const plan=document.getElementById('camp-plantilla').value;
   document.getElementById('camp-hero').value=plan==='promo10'?'1':'';
-  if(plan==='promo10'){
+  if(plan==='marca'){
+    document.getElementById('camp-asunto').value='💅 El arte de tus uñas — Ley Studio';
+    document.getElementById('camp-msg').value='En Ley Studio cada visita es un ritual: evaluamos tus uñas, usamos materiales de primera y creamos diseños hechos a tu medida.\n\nAcrílicas, soft gel, manicura rusa, pedicure spa y nail art personalizado — todo en un espacio pensado para que te relajes mientras te consentimos.\n\nTu próxima manicura favorita te está esperando.';
+  } else if(plan==='extranamos'){
+    document.getElementById('camp-asunto').value='Te extrañamos en Ley Studio 💖';
+    document.getElementById('camp-msg').value='Ha pasado un tiempo desde tu última visita y tus uñas nos hacen falta.\n\nQueremos verte de nuevo: escríbenos y te apartamos un espacio esta semana en tu horario favorito.\n\nTu lugar en Ley Studio sigue siendo tuyo.';
+  } else if(plan==='promo10'){
     document.getElementById('camp-asunto').value='✨ 10% de descuento en todo — junio en Ley Studio';
     document.getElementById('camp-msg').value='Junio llegó con regalo: durante todo el mes tenemos 10% de descuento en TODOS nuestros servicios.\n\nAcrílicas, soft gel, manicura rusa, pedicure spa… lo que tus uñas pidan, con tu descuento aplicado.\n\nLos cupos vuelan: agenda tu cita por WhatsApp y ven a consentirte.';
   } else {
