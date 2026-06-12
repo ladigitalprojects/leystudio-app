@@ -637,6 +637,39 @@ footer span{color:var(--gold);}
 .pass-eye:hover{color:var(--gold);}
 .forgot-link{color:var(--gold);font-size:12px;text-align:right;cursor:pointer;background:none;border:none;padding:0;margin-top:-2px;opacity:.8;}
 .forgot-link:hover{opacity:1;text-decoration:underline;}
+/* ── Modal Ficha Técnica: look del formulario de clienta ── */
+#modal-ficha .modal{background:linear-gradient(180deg,#FDF8F2 0%,#FAF3E9 100%);border:1px solid var(--gold);}
+#modal-ficha .cfg-block-title{display:flex;align-items:center;gap:12px;text-align:center;justify-content:center;color:var(--gold-deep);letter-spacing:2.5px;font-size:12px;text-transform:uppercase;}
+#modal-ficha .cfg-block-title::before,#modal-ficha .cfg-block-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold));}
+#modal-ficha .cfg-block-title::after{background:linear-gradient(90deg,var(--gold),transparent);}
+#modal-ficha input[type=checkbox],#modal-ficha input[type=radio]{
+  appearance:none;-webkit-appearance:none;width:17px;height:17px;flex-shrink:0;
+  border:1.5px solid var(--gold);border-radius:5px;background:#fff;cursor:pointer;
+  position:relative;transition:all .2s;margin:0;
+}
+#modal-ficha input[type=radio]{border-radius:50%;}
+#modal-ficha input[type=checkbox]:hover,#modal-ficha input[type=radio]:hover{border-color:var(--pink);box-shadow:0 0 0 3px rgba(221,152,177,.15);}
+#modal-ficha input[type=checkbox]:checked,#modal-ficha input[type=radio]:checked{
+  background:linear-gradient(135deg,var(--pink),#CF8AA3)!important;border-color:var(--pink)!important;
+  box-shadow:0 2px 8px rgba(221,152,177,.4);
+}
+#modal-ficha input[type=checkbox]:checked::after{
+  content:'';position:absolute;left:5px;top:1.5px;width:4px;height:8px;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);
+}
+#modal-ficha input[type=radio]:checked::after{content:'';position:absolute;inset:4px;border-radius:50%;background:#fff;}
+#modal-ficha label{cursor:pointer;}
+#modal-ficha label:hover{color:var(--gold-deep);}
+#modal-ficha thead tr{background:#F6EEDF!important;}
+#modal-ficha th{color:var(--gold-deep)!important;text-transform:uppercase;font-size:10px!important;letter-spacing:1px;border-color:#E8DACE!important;}
+#modal-ficha td{border-color:#EDE2D2!important;}
+#modal-ficha tbody td:first-child{background:#FBF4EA;}
+#modal-ficha input[type=text],#modal-ficha input[type=email],#modal-ficha input[type=tel],#modal-ficha select,#modal-ficha textarea{border-radius:10px;}
+body.dark-mode #modal-ficha .modal{background:var(--card);}
+body.dark-mode #modal-ficha input[type=checkbox],body.dark-mode #modal-ficha input[type=radio]{background:#1c1c1c!important;}
+body.dark-mode #modal-ficha input[type=checkbox]:checked,body.dark-mode #modal-ficha input[type=radio]:checked{background:var(--pink)!important;}
+body.dark-mode #modal-ficha tbody td:first-child{background:#222;}
+
 #reset-box{display:none;margin-top:12px;}
 #reset-box.open{display:block;}.modal-overlay.open{display:flex!important;}
 
@@ -816,6 +849,7 @@ footer span{color:var(--gold);}
       </div>
     </div>
     <div class="cfg-block-title" style="margin-bottom:8px">MEDIDAS</div>
+    <div style="text-align:center;margin:4px 0 10px"><img src="../assets/manos.png" alt="" style="width:min(200px,55vw);height:auto"></div>
     <div style="overflow-x:auto;margin-bottom:16px">
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead><tr style="background:var(--card)">
