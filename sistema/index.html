@@ -2105,17 +2105,22 @@ function mailWrap(titulo,cuerpo,opts){
       ${ctaOutline(URL_GEN,'Agendar mi cita')}
       ${footer}`;
   } else if(v==='cumple'){
-    // ── CUMPLEAÑOS: festiva con destellos ──
+    // ── CUMPLEAÑOS: elegante con cupón de regalo ──
     inner=`
-      <tr><td style="padding:26px 30px 0;text-align:center;color:#B29257;font-size:17px;letter-spacing:8px;">&#10022; &#10023; &#10022; &#10023; &#10022;</td></tr>
-      <tr><td style="padding:14px 30px 4px;text-align:center;"><img src="${LOGO}" alt="Ley Studio" width="110" style="width:110px;max-width:48%;height:auto;display:inline-block;"></td></tr>
-      <tr><td style="text-align:center;padding:14px 30px 0;">
-        <div style="font-size:50px;line-height:1;">&#127874;</div>
-        <div style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:36px;color:#A9884D;margin-top:10px;line-height:1.2;">&iexcl;Feliz cumplea&ntilde;os!</div>
-        <div style="margin:16px 0 0;">${divider(70)}</div>
+      <tr><td style="padding:28px 30px 8px;text-align:center;background:#F8F1E5;"><img src="${LOGO}" alt="Ley Studio" width="120" style="width:120px;max-width:50%;height:auto;display:inline-block;"></td></tr>
+      <tr><td style="background:#F8F1E5;padding:0 0 20px;text-align:center;">${divider(80)}</td></tr>
+      <tr><td style="text-align:center;padding:28px 30px 0;">
+        <div style="font-size:11px;letter-spacing:5px;color:#B29257;text-transform:uppercase;">Hoy celebramos</div>
+        <div style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:42px;color:#A9884D;margin:12px 0 4px;line-height:1.15;">Feliz cumplea&ntilde;os</div>
+        <div style="margin-top:14px;">${divider(60)}</div>
       </td></tr>
-      <tr><td style="padding:18px 36px 8px;"><div style="color:#4A4A4A;font-size:15px;line-height:1.8;text-align:center;">${cuerpo}</div></td></tr>
-      <tr><td style="padding:0 30px 16px;text-align:center;color:#B29257;font-size:13px;letter-spacing:6px;">&#10023; &#10022; &#10023;</td></tr>
+      <tr><td style="padding:18px 36px 6px;"><div style="color:#4A4A4A;font-size:15px;line-height:1.8;text-align:center;">${cuerpo}</div></td></tr>
+      <tr><td style="padding:10px 36px 14px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1.5px dashed #B29257;border-radius:12px;background:#F8F1E5;"><tr><td style="padding:18px 20px;text-align:center;">
+          <div style="font-size:11px;letter-spacing:4px;color:#B29257;text-transform:uppercase;">Regalo de cumplea&ntilde;os</div>
+          <div style="font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#4A4A4A;margin-top:8px;line-height:1.5;">Un detalle especial te espera<br>en tu visita de este mes</div>
+        </td></tr></table>
+      </td></tr>
       ${ctaSolid(URL_GEN,'Reclamar mi detalle')}
       ${footer}`;
   } else {
@@ -2166,7 +2171,8 @@ function actualizarPreviewCampana(){
   const fr=document.getElementById('camp-preview'); if(!fr) return;
   const asunto=document.getElementById('camp-asunto').value.trim()||'(Asunto)';
   const primera=(D.clientes.find(c=>_clienteCorreo(c))||{nombre:'Clienta'});
-  const msg='Hola <strong>'+(primera.nombre||'Clienta').split(' ')[0]+'</strong> 💅<br><br>'+((document.getElementById('camp-msg').value||'').replace(/\n/g,'<br>')||'<em style="color:#9A8070">Escribe el mensaje…</em>');
+  const _v=document.getElementById('camp-hero').value;
+  const msg='Hola <strong>'+(primera.nombre||'Clienta').split(' ')[0]+'</strong>'+(_v==='carta'?',':' 💅')+'<br><br>'+((document.getElementById('camp-msg').value||'').replace(/\n/g,'<br>')||'<em style="color:#9A8070">Escribe el mensaje…</em>');
   fr.srcdoc=mailWrap(asunto,msg,{variant:document.getElementById('camp-hero').value});
 }
 
@@ -2209,14 +2215,14 @@ function aplicarPlantillaCorreo(){
     document.getElementById('mc-asunto').value='💅 El arte de tus uñas — Ley Studio';
     document.getElementById('mc-msg').value='Hola '+nom+' 💅\n\nEn Ley Studio cada visita es un ritual: evaluamos tus uñas, usamos materiales de primera y creamos diseños hechos a tu medida.\n\nAcrílicas, soft gel, manicura rusa, pedicure spa y nail art personalizado — todo en un espacio pensado para que te relajes mientras te consentimos.\n\nTu próxima manicura favorita te está esperando.';
   } else if(plan==='extranamos'){
-    document.getElementById('mc-asunto').value='Te extrañamos en Ley Studio 💖';
-    document.getElementById('mc-msg').value='Hola '+nom+' 💖\n\nHa pasado un tiempo desde tu última visita y tus uñas nos hacen falta.\n\nQueremos verte de nuevo: escríbenos y te apartamos un espacio esta semana en tu horario favorito.\n\nTu lugar en Ley Studio sigue siendo tuyo.';
+    document.getElementById('mc-asunto').value='Te extrañamos en Ley Studio';
+    document.getElementById('mc-msg').value='Hola '+nom+',\n\nHa pasado un tiempo desde tu última visita y tus uñas nos hacen falta.\n\nQueremos verte de nuevo: escríbenos y te apartamos un espacio esta semana en tu horario favorito.\n\nTu lugar en Ley Studio sigue siendo tuyo.';
   } else if(plan==='promo10'){
     document.getElementById('mc-asunto').value='✨ 10% de descuento en todo — junio en Ley Studio';
     document.getElementById('mc-msg').value='Hola '+nom+' 💅\n\nJunio llegó con regalo: durante todo el mes tenemos 10% de descuento en TODOS nuestros servicios.\n\nAcrílicas, soft gel, manicura rusa, pedicure spa… lo que tus uñas pidan, con tu descuento aplicado.\n\nLos cupos vuelan: agenda tu cita por WhatsApp y ven a consentirte.';
   } else if(plan==='cumple'){
     document.getElementById('mc-asunto').value='¡Feliz cumpleaños, '+nom+'! 🎂💅';
-    document.getElementById('mc-msg').value='¡Feliz cumpleaños, '+nom+'! 🎉\n\nEn Ley Studio queremos celebrarte: este mes tienes un detalle especial esperándote en tu próxima visita.\n\nAgenda tu cita por WhatsApp y ven a consentirte. 💕';
+    document.getElementById('mc-msg').value='Hola '+nom+',\n\nEn Ley Studio queremos celebrarte como te mereces.\n\nAgenda tu cita de este mes y déjanos consentirte en tu día.';
   } else {
     document.getElementById('mc-asunto').value='';
     document.getElementById('mc-msg').value='';
@@ -2252,7 +2258,7 @@ function aplicarPlantillaCampana(){
     document.getElementById('camp-asunto').value='💅 El arte de tus uñas — Ley Studio';
     document.getElementById('camp-msg').value='En Ley Studio cada visita es un ritual: evaluamos tus uñas, usamos materiales de primera y creamos diseños hechos a tu medida.\n\nAcrílicas, soft gel, manicura rusa, pedicure spa y nail art personalizado — todo en un espacio pensado para que te relajes mientras te consentimos.\n\nTu próxima manicura favorita te está esperando.';
   } else if(plan==='extranamos'){
-    document.getElementById('camp-asunto').value='Te extrañamos en Ley Studio 💖';
+    document.getElementById('camp-asunto').value='Te extrañamos en Ley Studio';
     document.getElementById('camp-msg').value='Ha pasado un tiempo desde tu última visita y tus uñas nos hacen falta.\n\nQueremos verte de nuevo: escríbenos y te apartamos un espacio esta semana en tu horario favorito.\n\nTu lugar en Ley Studio sigue siendo tuyo.';
   } else if(plan==='promo10'){
     document.getElementById('camp-asunto').value='✨ 10% de descuento en todo — junio en Ley Studio';
@@ -2282,7 +2288,8 @@ async function enviarCampana(){
   for(let i=0;i<dest.length;i++){
     const c=dest[i];
     prog.textContent='Enviando '+(i+1)+' de '+dest.length+'…';
-    const cuerpo='Hola <strong>'+(c.nombre||'').split(' ')[0]+'</strong> 💅<br><br>'+msg.replace(/\n/g,'<br>');
+    const _vv=document.getElementById('camp-hero').value;
+    const cuerpo='Hola <strong>'+(c.nombre||'').split(' ')[0]+'</strong>'+(_vv==='carta'?',':' 💅')+'<br><br>'+msg.replace(/\n/g,'<br>');
     try{ await enviarCorreo(_clienteCorreo(c),asunto,mailWrap(asunto,cuerpo,{variant:document.getElementById('camp-hero').value})); ok++; }
     catch(e){ fail++; }
     await new Promise(r=>setTimeout(r,800));
