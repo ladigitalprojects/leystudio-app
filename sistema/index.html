@@ -2398,6 +2398,12 @@ async function pushToCloud(){
       await authedFetch(FIREBASE_BASE + '/pub.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(pubAll)});
     }catch(e){ /* sin red o sin sesión: seguimos con datos locales */ }
     const body = JSON.stringify(D);
+    const sizeKB = Math.round(body.length / 1024);
+    if(sizeKB > 8000){
+      setSyncStatus('sync-err');
+      toast(`❌ Datos demasiado grandes (${sizeKB}KB). Elimina algunas fotos de servicios.`, 'warn');
+      return false;
+    }
     const r = await authedFetch(FIREBASE_URL, {
       method: 'PUT',
       headers: {'Content-Type':'application/json'},
@@ -2414,13 +2420,15 @@ async function pushToCloud(){
   } catch(e){
     setSyncStatus('sync-err');
     toast('❌ Error de red al subir: ' + e.message, 'warn');
+  } finally {
+    isSyncing = false;
   }
-  isSyncing = false;
   return success;
 }
 
 async function pullFromCloud(){
   setSyncStatus('sync-busy');
+  let needsRender = false;
   try{
     const r = await authedFetch(FIREBASE_URL);
     if(r.ok){
@@ -2432,14 +2440,16 @@ async function pullFromCloud(){
           Object.assign(D, remote);
           saveLocal();
           actualizarDatalist();
+          needsRender = true;
         }
       }
       // Merge fichas actualizadas por clientas en /pub
-      await _mergePubFichas();
+      const pubUpdated = await _mergePubFichas();
+      if(pubUpdated && !needsRender){ renderClientes(); } // render mínimo si solo cambiaron fichas
       setSyncStatus('sync-ok');
     } else { setSyncStatus('sync-err'); }
   } catch(e){ setSyncStatus('sync-err'); }
-  renderAll();
+  if(needsRender) renderAll();
 }
 
 // Merge de fichas desde /pub.json (actualizadas por la clienta desde ficha.html)
@@ -3985,7 +3995,7 @@ function svcCarouselNav(dir){
 }
 function svcFotoFromInput(evt){
   const file=evt.target.files[0]; if(!file)return;
-  compressImage(file,900,0.8).then(b64=>{
+  compressImage(file,500,0.65).then(b64=>{
     if(!D.svcExtra)D.svcExtra={};
     if(!D.svcExtra[_fichaKey])D.svcExtra[_fichaKey]={};
     const extra=D.svcExtra[_fichaKey];
@@ -3995,7 +4005,7 @@ function svcFotoFromInput(evt){
     delete extra.foto; // migrate to array
     _svcCarouselIdx=fotos.length-1;
     saveAndSync(); renderSvcCarousel(fotos); renderSvcCatGrid(); toast('✅ Foto agregada');
-  });
+  }).catch(e=>{ toast('❌ No se pudo procesar la imagen: '+e.message,'warn'); });
 }
 function deleteSvcCurrentPhoto(){
   if(!D.svcExtra||!D.svcExtra[_fichaKey])return;
@@ -4803,8 +4813,7 @@ function saveUsuario(){
     if(pass) u.password = hashPass(pass);
     toast('✅ Usuario actualizado');
   }
-  saveLocal();
-  pushToCloud();
+  saveAndSync();
   closeModal('modal-user');
   // Ensure panel stays visible and list refreshes
   setTimeout(()=>{
@@ -4819,8 +4828,7 @@ function deleteUsuario(){
   if(id===1){ toast('No puedes eliminar el admin principal','warn'); return; }
   if(!confirm('¿Eliminar este usuario?')) return;
   D.usuarios = D.usuarios.filter(u => u.id !== id);
-  saveLocal();
-  pushToCloud();
+  saveAndSync();
   closeModal('modal-user');
   renderUsuarios();
   toast('Usuario eliminado');
@@ -4830,8 +4838,7 @@ function delUsuarioDirecto(id){
   if(id===1){ toast('No puedes eliminar el admin principal','warn'); return; }
   if(!confirm('¿Eliminar este usuario?')) return;
   D.usuarios = D.usuarios.filter(u => u.id !== id);
-  saveLocal();
-  pushToCloud();
+  saveAndSync();
   renderUsuarios();
   toast('Usuario eliminado');
 }
@@ -5967,7 +5974,7 @@ document.addEventListener('input', function(e){
   });
   // Polling: revisar fichas actualizadas por clientas cada 60 segundos
   setInterval(async()=>{
-    if(!currentUser) return;
+    if(!currentUser || isSyncing) return;
     const updated = await _mergePubFichas();
     if(updated){ renderClientes(); toast('✨ Ficha de clienta actualizada'); }
   }, 60000);
@@ -6003,15 +6010,18 @@ function showEmptyState(){
 init();
 
 // ─── IMAGE COMPRESSION ───────────────────────────
-function compressImage(file, maxW=700, quality=0.75){
-  return new Promise(resolve=>{
+function compressImage(file, maxW=500, quality=0.65){
+  return new Promise((resolve, reject)=>{
     const reader=new FileReader();
+    reader.onerror=()=>reject(new Error('No se pudo leer el archivo'));
     reader.onload=e=>{
       const img=new Image();
+      img.onerror=()=>reject(new Error('Imagen inválida o no compatible'));
       img.onload=()=>{
         const ratio=Math.min(1,maxW/img.width);
         const canvas=document.createElement('canvas');
-        canvas.width=img.width*ratio; canvas.height=img.height*ratio;
+        canvas.width=Math.round(img.width*ratio);
+        canvas.height=Math.round(img.height*ratio);
         canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
         resolve(canvas.toDataURL('image/jpeg',quality));
       };
@@ -6109,14 +6119,16 @@ function uploadSvcFoto(key){
   inp.type='file'; inp.accept='image/*';
   inp.onchange=async()=>{
     if(!inp.files[0]) return;
-    const b64=await compressImage(inp.files[0]);
-    if(!D.svcExtra) D.svcExtra={};
-    if(!D.svcExtra[key]) D.svcExtra[key]={};
-    const _ex=D.svcExtra[key];
-    const _fotos=_ex.fotos||(_ex.foto?[_ex.foto]:[]);
-    _fotos.push(b64); _ex.fotos=_fotos; delete _ex.foto;
-    saveAndSync(); renderServiciosCatalogo();
-    toast('✅ Foto del servicio guardada');
+    try{
+      const b64=await compressImage(inp.files[0],500,0.65);
+      if(!D.svcExtra) D.svcExtra={};
+      if(!D.svcExtra[key]) D.svcExtra[key]={};
+      const _ex=D.svcExtra[key];
+      const _fotos=_ex.fotos||(_ex.foto?[_ex.foto]:[]);
+      _fotos.push(b64); _ex.fotos=_fotos; delete _ex.foto;
+      saveAndSync(); renderServiciosCatalogo();
+      toast('✅ Foto del servicio guardada');
+    }catch(e){ toast('❌ No se pudo procesar la imagen: '+e.message,'warn'); }
   };
   inp.click();
 }
