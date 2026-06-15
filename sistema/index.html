@@ -1438,7 +1438,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
   <div class="table-card">
     <div class="th">
       <div class="tt">Inventario</div>
-      <button class="add-btn" onclick="toggleForm('fi')">+ Nuevo producto</button></div>
+      <button class="add-btn" onclick="resetInvForm();toggleForm('fi')">+ Nuevo producto</button></div>
 
     <div class="form-box" id="fi"><div class="form-box-inner"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)"><span id="fi-title" style="font-size:15px;font-weight:800;color:var(--cream)">Nuevo Producto</span><button onclick="resetInvForm();toggleForm('fi')" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&#x2715;</button></div>
       <input type="hidden" id="i-edit-id" value="">
@@ -2434,10 +2434,37 @@ async function pullFromCloud(){
           actualizarDatalist();
         }
       }
+      // Merge fichas actualizadas por clientas en /pub
+      await _mergePubFichas();
       setSyncStatus('sync-ok');
     } else { setSyncStatus('sync-err'); }
   } catch(e){ setSyncStatus('sync-err'); }
   renderAll();
+}
+
+// Merge de fichas desde /pub.json (actualizadas por la clienta desde ficha.html)
+async function _mergePubFichas(){
+  try{
+    const rr = await authedFetch(FIREBASE_BASE + '/pub.json');
+    if(!rr.ok) return false;
+    const pub = await rr.json();
+    if(!pub) return false;
+    let updated = false;
+    Object.entries(pub).forEach(([tok,p])=>{
+      if(!p || !p.ficha || !p.ficha.fechaActualizacion) return;
+      const lc = (D.clientes||[]).find(x=>x && x.fichaToken===tok);
+      if(!lc) return;
+      const lf = lc.ficha && lc.ficha.fechaActualizacion;
+      if(!lf || new Date(p.ficha.fechaActualizacion) > new Date(lf)){
+        lc.ficha = p.ficha;
+        if(p.correo) lc.correo = p.correo;
+        if(p.ig) lc.ig = p.ig;
+        updated = true;
+      }
+    });
+    if(updated){ saveLocal(); }
+    return updated;
+  }catch(e){ return false; }
 }
 
 
@@ -3724,19 +3751,27 @@ function delInv(id){
 }
 function openEditInv(id){
   const item=D.inventario.find(x=>x.id===id); if(!item)return;
-  document.getElementById('i-edit-id').value=id;
-  document.getElementById('i-n').value=item.nombre||'';
-  document.getElementById('i-cat').value=item.cat||'Acrílicos';
-  document.getElementById('i-s').value=item.stock||0;
-  document.getElementById('i-m').value=item.min||1;
-  document.getElementById('i-u').value=item.unidad||'';
-  document.getElementById('i-p').value=item.precio||0;
-  document.getElementById('i-prov').value=item.proveedor||'';
-  document.getElementById('i-f').value=item.fecha||'';
+  // Cambiar título y botón ANTES de abrir (no se resetean por toggleForm)
   document.getElementById('fi-title').textContent='Editar Producto';
   const btn=document.getElementById('fi-save-btn');
   btn.textContent='Actualizar'; btn.onclick=saveEditInv;
+  // Abrir formulario (toggleForm resetea los campos internamente)
   toggleForm('fi');
+  // Llenar campos DESPUÉS del reset de toggleForm
+  document.getElementById('i-edit-id').value=id;
+  document.getElementById('i-n').value=item.nombre||'';
+  document.getElementById('i-cat').value=item.cat||'Acrílicos';
+  document.getElementById('i-s').value=item.stock!=null?item.stock:0;
+  document.getElementById('i-m').value=item.min!=null?item.min:1;
+  document.getElementById('i-u').value=item.unidad||'';
+  document.getElementById('i-p').value=item.precio!=null?item.precio:0;
+  document.getElementById('i-prov').value=item.proveedor||'';
+  // El campo de fecha usa flatpickr que se reinicia en 80ms, setear después
+  setTimeout(()=>{
+    const fEl=document.getElementById('i-f');
+    if(fEl&&fEl._flatpickr) fEl._flatpickr.setDate(item.fecha||'',true);
+    else if(fEl) fEl.value=item.fecha||'';
+  },120);
 }
 function saveEditInv(){
   const id=+document.getElementById('i-edit-id').value;
@@ -5930,6 +5965,12 @@ document.addEventListener('input', function(e){
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='visible' && currentUser) pullFromCloud();
   });
+  // Polling: revisar fichas actualizadas por clientas cada 60 segundos
+  setInterval(async()=>{
+    if(!currentUser) return;
+    const updated = await _mergePubFichas();
+    if(updated){ renderClientes(); toast('✨ Ficha de clienta actualizada'); }
+  }, 60000);
   // Pull from cloud and update badge
   pullFromCloud().then(()=>{
     const b=document.getElementById('cloud-status-badge');
