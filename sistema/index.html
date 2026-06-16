@@ -40,7 +40,7 @@ body.dark-mode .tab.active svg{stroke:var(--gold);}
 /* Tables */
 body.dark-mode th{color:var(--gold)!important;border-bottom-color:#2a2a2a!important;}
 body.dark-mode td{color:#fdfbf7!important;background:#1a1a1a!important;}
-body.dark-mode td:first-child{background:#fff;color:#888;}
+body.dark-mode td:first-child{background:rgba(221,152,177,.05)!important;color:var(--pink)!important;}
 body.dark-mode tbody tr:nth-child(even) td{background:#1a1a1a!important;}
 body.dark-mode tbody tr:hover td{background:#222!important;}
 /* Cards */
@@ -1865,7 +1865,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
       <div class="fgrp"><label>Teléfono</label><input type="text" id="cfg-tel" value="+504 9499-4709"></div>
       <div class="fgrp"><label>Ciudad</label><input type="text" id="cfg-city" value="Tegucigalpa"></div>
     </div>
-    <button class="btn-pri" style="margin-top:14px" onclick="toast('Información guardada')">Guardar cambios</button>
+    <button class="btn-pri" style="margin-top:14px" onclick="saveCfgNegocio()">Guardar cambios</button>
   </div>
 
   <!-- ── Usuarios (admin only) ── -->
@@ -2644,7 +2644,7 @@ function descargarReciboPDF(citaId){
   toast('Recibo descargado');
 }
 
-let D={citas:[],clientes:[],movimientos:[],inventario:[],catalogoCustom:[],usuarios:[]};
+let D={citas:[],clientes:[],movimientos:[],inventario:[],catalogoCustom:[],usuarios:[],svcExtra:{},config:{}};
 let SHEETS_URL='';
 
 function loadLocal(){
@@ -2658,6 +2658,21 @@ function loadLocal(){
 }
 function saveLocal(){ try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){} }
 
+function saveCfgNegocio(){
+  if(!D.config) D.config={};
+  D.config.nombre=document.getElementById('cfg-name').value.trim();
+  D.config.ig=document.getElementById('cfg-ig').value.trim();
+  D.config.tel=document.getElementById('cfg-tel').value.trim();
+  D.config.ciudad=document.getElementById('cfg-city').value.trim();
+  saveAndSync(); toast('✅ Información del negocio guardada');
+}
+function loadCfgNegocio(){
+  if(!D.config) return;
+  const map={'cfg-name':'nombre','cfg-ig':'ig','cfg-tel':'tel','cfg-city':'ciudad'};
+  Object.entries(map).forEach(([id,key])=>{
+    const el=document.getElementById(id); if(el&&D.config[key]) el.value=D.config[key];
+  });
+}
 async function resetAllData(){
   if(!confirm('⚠️ ¿Borrar TODOS los datos de prueba?\n\nSe eliminarán todas las citas, clientes, finanzas e inventario tanto en local como en la nube.\n\nEsta acción no se puede deshacer.')) return;
   // Conservar solo los usuarios actuales
@@ -2797,9 +2812,10 @@ let toastT;
 function toast(msg,type='ok'){
   const el=document.getElementById('toast');
   el.textContent=msg;
-  el.style.background=type==='ok'?'var(--card)':'var(--card)';
+  el.style.background=type==='ok'?'var(--card)':'rgba(169,136,77,.12)';
   el.style.color=type==='ok'?'var(--cream)':'var(--gold-deep)';
   el.style.borderColor=type==='ok'?'var(--gold)':'var(--gold-deep)';
+  el.style.fontWeight=type==='ok'?'400':'600';
   el.classList.add('show'); clearTimeout(toastT);
   toastT=setTimeout(()=>el.classList.remove('show'),3200);
 }
@@ -2977,7 +2993,7 @@ function addCita(){
     id:nextId(D.citas),
     fecha:document.getElementById('c-f').value||todayStr(),
     hora:document.getElementById('c-h').value,
-    clienta,tel:document.getElementById('c-tel').value.trim(),
+    clienta,tel:(document.getElementById('c-telcode')?.value||'+504')+' '+document.getElementById('c-tel').value.trim(),
     servicios,precioTotal,descuento,
     pago:document.getElementById('c-pago').value,
     estado:document.getElementById('c-estado').value,
@@ -4145,20 +4161,6 @@ function addNewCat(){
 
 
 
-function addCustomSvc(){
-  const catSel=document.getElementById('sv-cat').value;
-  const catCustom=document.getElementById('sv-cat-custom').value.trim();
-  const cat=catSel==='__nueva__'?catCustom:catSel;
-  const nombre=document.getElementById('sv-nombre').value.trim();
-  const precio=+document.getElementById('sv-precio').value||0;
-  const nota=document.getElementById('sv-nota').value.trim();
-  if(!nombre||!cat){toast('Completa categoría y nombre','warn');return;}
-  if(!D.catalogoCustom) D.catalogoCustom=[];
-  D.catalogoCustom.push({id:nextId(D.catalogoCustom),cat,nombre,precio,nota,custom:true});
-  saveAndSync(); renderServicios(); initSvcDropdown(); toggleForm('fsvc');
-  document.getElementById('sv-nombre').value=''; document.getElementById('sv-precio').value='';
-  toast('✅ Servicio agregado al catálogo');
-}
 
 
 function delCustomSvc(id){
@@ -4377,7 +4379,7 @@ function renderDashboard(){
 
   // Métodos de pago
   const pagoMap={};
-  D.movimientos.filter(m=>m.tipo==='ingreso'&&fInRng(m.fecha)).forEach(m=>{
+  D.movimientos.filter(m=>m.tipo==='Ingreso'&&fInRng(m.fecha)).forEach(m=>{
     const k=m.pago||'Otro'; pagoMap[k]=(pagoMap[k]||0)+(m.monto||0);
   });
   const pagoL=Object.keys(pagoMap); const pagoV=Object.values(pagoMap);
@@ -4483,7 +4485,7 @@ function saveEditCita(){
   c.fecha=document.getElementById('e-cit-f').value||c.fecha;
   c.hora=document.getElementById('e-cit-h').value||c.hora;
   c.clienta=document.getElementById('e-cit-cl').value.trim()||c.clienta;
-  c.tel=document.getElementById('e-cit-tel').value.trim();
+  c.tel=(document.getElementById('e-cit-telcode')?.value||'+504')+' '+document.getElementById('e-cit-tel').value.trim();
   c.pago=document.getElementById('e-cit-pago').value;
   c.estado=document.getElementById('e-cit-estado').value;
   c.notas=document.getElementById('e-cit-notas').value.trim();
@@ -4492,7 +4494,11 @@ function saveEditCita(){
   const descuentoEdit=parseFloat(document.getElementById('e-cit-desc')?.value)||0;
   c.descuento=descuentoEdit;
   c.precioTotal=Math.max(0,subtotalEdit-descuentoEdit);
-  if(c.estado==='Completada'&&prevEstado!=='Completada') autoRegistrarIngreso(c);
+  if(c.estado==='Completada'){
+    const movExist=D.movimientos.find(m=>m.citaId===c.id);
+    if(movExist){ movExist.monto=c.precioTotal; movExist.pago=c.pago==='Por cobrar'?'Efectivo':c.pago; }
+    else { autoRegistrarIngreso(c); }
+  }
   saveAndSync(); renderAll();
   closeModal('modal-cita'); toast('✅ Cita actualizada');
 }
@@ -5292,7 +5298,7 @@ function renderReportes(){
 
   // ── KPIs ──
   const ingresos=movs.filter(m=>m.tipo==='Ingreso').reduce((s,m)=>s+m.monto,0);
-  const gastos=movs.filter(m=>m.tipo!=='Ingreso').reduce((s,m)=>s+m.monto,0);
+  const gastos=movs.filter(m=>m.tipo==='Gasto').reduce((s,m)=>s+m.monto,0);
   const utilidad=ingresos-gastos;
   const citasComp=citas.filter(c=>c.estado==='Completada').length;
   const citasTot=citas.length;
@@ -5321,7 +5327,7 @@ function renderReportes(){
     months6.push({key,label:d.toLocaleDateString('es-HN',{month:'short'})});
   }
   const flujoIng=months6.map(({key})=>D.movimientos.filter(m=>m.tipo==='Ingreso'&&(m.fecha||'').startsWith(key)).reduce((s,m)=>s+m.monto,0));
-  const flujoGas=months6.map(({key})=>D.movimientos.filter(m=>m.tipo!=='Ingreso'&&(m.fecha||'').startsWith(key)).reduce((s,m)=>s+m.monto,0));
+  const flujoGas=months6.map(({key})=>D.movimientos.filter(m=>m.tipo==='Gasto'&&(m.fecha||'').startsWith(key)).reduce((s,m)=>s+m.monto,0));
   _buildChart('rep-chart-flujo','bar',{
     labels:months6.map(m=>m.label),
     datasets:[
@@ -5422,7 +5428,7 @@ function exportReportePDF(){
       const movs=D.movimientos.filter(m=>m.fecha>=from&&m.fecha<=to);
       const citas=D.citas.filter(c=>(c.fecha||'')>=from&&(c.fecha||'')<=to);
       const ingresos=movs.filter(m=>m.tipo==='Ingreso').reduce((s,m)=>s+m.monto,0);
-      const gastos=movs.filter(m=>m.tipo!=='Ingreso').reduce((s,m)=>s+m.monto,0);
+      const gastos=movs.filter(m=>m.tipo==='Gasto').reduce((s,m)=>s+m.monto,0);
       const utilidad=ingresos-gastos;
       const citasComp=citas.filter(c=>c.estado==='Completada').length;
       const citasTot=citas.length;
@@ -5435,7 +5441,7 @@ function exportReportePDF(){
       else{const yy=+from.slice(0,4),mm=+from.slice(5,7);const pm=mm===1?12:mm-1,py=mm===1?yy-1:yy;pf=py+'-'+String(pm).padStart(2,'0')+'-01';pt=py+'-'+String(pm).padStart(2,'0')+'-31';}
       const pmovs=D.movimientos.filter(m=>m.fecha>=pf&&m.fecha<=pt);
       const pIng=pmovs.filter(m=>m.tipo==='Ingreso').reduce((s,m)=>s+m.monto,0);
-      const pGas=pmovs.filter(m=>m.tipo!=='Ingreso').reduce((s,m)=>s+m.monto,0);
+      const pGas=pmovs.filter(m=>m.tipo==='Gasto').reduce((s,m)=>s+m.monto,0);
       const pUti=pIng-pGas;
       const delta=(cur,prev)=>prev!==0?((cur-prev)/Math.abs(prev)*100):null;
 
@@ -5953,6 +5959,7 @@ function appBoot(){
   actualizarDatalist();
   initMesFilter();
   renderAll();
+  loadCfgNegocio();
   // Restaurar último tab activo
   try{ const lt=localStorage.getItem('ls_last_tab'); if(lt && lt!=='dashboard') showTab(lt); }catch(e){}
   ['c-f','m-f','i-f','cl-f'].forEach(id=>{const el=document.getElementById(id); if(el) el.value=todayStr();});
