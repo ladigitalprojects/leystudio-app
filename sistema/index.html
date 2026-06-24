@@ -2445,7 +2445,12 @@ async function pullFromCloud(){
       await _mergePubFichas();
       setSyncStatus('sync-ok');
     } else { setSyncStatus('sync-err'); }
-  } catch(e){ setSyncStatus('sync-err'); }
+  } catch(e){
+    setSyncStatus('sync-err');
+    if(e && e.message && e.message.includes('sesión')){
+      toast('⚠️ Sesión Firebase expirada. Cierra sesión y vuelve a ingresar.','warn');
+    }
+  }
   renderAll();
 }
 
@@ -5998,17 +6003,33 @@ document.addEventListener('input', function(e){
 }
 
 function showEmptyState(){
-  const existing = document.getElementById('empty-banner');
-  if(existing) return;
+  document.querySelectorAll('.empty-banner').forEach(e=>e.remove());
   const banner = document.createElement('div');
-  banner.id = 'empty-banner';
-  banner.style.cssText = 'background:var(--card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:8px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;';
+  banner.className = 'empty-banner';
+  banner.style.cssText = 'background:var(--card);border:1px solid var(--border);border-left:4px solid var(--gold-deep);border-radius:8px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;';
   banner.innerHTML = `
-    <span style="font-size:13px;color:#888;">Sin datos locales. Sincroniza para cargar tus datos desde la nube.</span>
-    <button class="hbtn hbtn-gold" onclick="syncNow();document.getElementById('empty-banner')?.remove();">Sincronizar ahora</button>
+    <span style="font-size:13px;color:var(--gold-deep);font-weight:600;">⚠️ Sin conexión con Firebase. Los datos no están cargados.</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="hbtn hbtn-gold" onclick="syncNow();document.querySelectorAll('.empty-banner').forEach(e=>e.remove());">🔄 Sincronizar ahora</button>
+      <button class="hbtn" onclick="logout()" style="background:none;border:1px solid var(--border);color:var(--gray)">↩ Volver a iniciar sesión</button>
+    </div>
   `;
-  const main = document.getElementById('tab-dashboard');
-  if(main) main.insertBefore(banner, main.firstChild);
+  // Insertar en TODOS los tabs visibles, no solo dashboard
+  ['tab-dashboard','tab-citas','tab-clientes','tab-finanzas','tab-inventario'].forEach(id=>{
+    const tab = document.getElementById(id);
+    if(tab){
+      const clone = banner.cloneNode(true);
+      clone.className = 'empty-banner';
+      tab.insertBefore(clone, tab.firstChild);
+    }
+  });
+  // Atar botones de los clones
+  document.querySelectorAll('.empty-banner button:first-child').forEach(btn=>{
+    btn.onclick=()=>{ syncNow(); document.querySelectorAll('.empty-banner').forEach(e=>e.remove()); };
+  });
+  document.querySelectorAll('.empty-banner button:last-child').forEach(btn=>{
+    btn.onclick=logout;
+  });
 }
 
 init();
