@@ -2437,6 +2437,11 @@ async function pullFromCloud(){
         const localTotal  = D.citas.length + D.clientes.length + D.movimientos.length;
         if(remoteTotal >= localTotal){
           Object.assign(D, remote);
+          // Sanear arrays: eliminar entradas nulas que Firebase puede introducir
+          D.citas=(D.citas||[]).filter(Boolean);
+          D.clientes=(D.clientes||[]).filter(Boolean);
+          D.movimientos=(D.movimientos||[]).filter(Boolean);
+          D.inventario=(D.inventario||[]).filter(Boolean);
           saveLocal();
           actualizarDatalist();
         }
@@ -2653,6 +2658,11 @@ function loadLocal(){
   try{
     const s=localStorage.getItem(KEY);
     if(s) Object.assign(D,JSON.parse(s));
+    // Sanear arrays: eliminar entradas nulas
+    D.citas=(D.citas||[]).filter(Boolean);
+    D.clientes=(D.clientes||[]).filter(Boolean);
+    D.movimientos=(D.movimientos||[]).filter(Boolean);
+    D.inventario=(D.inventario||[]).filter(Boolean);
     SHEETS_URL=localStorage.getItem('leystudio_sheets_url')||'';
     if(SHEETS_URL){const el=document.getElementById('cfg-url');if(el)el.value=SHEETS_URL;}
   }catch(e){}
@@ -2920,6 +2930,7 @@ function renderCitas(){
   const q=(document.getElementById('s-citas').value||'').toLowerCase();
   const ef=document.getElementById('f-est-c').value;
   const list=[...D.citas]
+    .filter(c=>c && c.clienta)
     .filter(c=>{
       const svcsStr=(c.servicios||[]).map(s=>s.nombre).join(' ').toLowerCase();
       return(!q||c.clienta.toLowerCase().includes(q)||svcsStr.includes(q))&&(!ef||c.estado===ef);
@@ -3034,7 +3045,7 @@ function clSortBy(col){
 }
 function renderClientes(){
   const q=(document.getElementById('s-cl').value||'').toLowerCase();
-  let list=D.clientes.filter(c=>!q||c.nombre.toLowerCase().includes(q));
+  let list=D.clientes.filter(c=>c && c.nombre).filter(c=>!q||c.nombre.toLowerCase().includes(q));
   // Ordenar
   list=[...list].sort((a,b)=>{
     const st_a=_clSort.col==='visitas'||_clSort.col==='total'?clientStats(a.nombre):null;
@@ -5690,10 +5701,11 @@ function exportReportePDF(){
 }
 
 function renderAll(){
-  renderDashboard();renderCitas();renderClientes();
-  renderFinanzas();renderInventario();renderServicios();
-  initSvcCatFilter();renderUsuarios();
-  _updateNotifBadge();
+  const _safe=(fn)=>{ try{fn();}catch(e){console.error('[renderAll]',fn.name,e);} };
+  _safe(renderDashboard);_safe(renderCitas);_safe(renderClientes);
+  _safe(renderFinanzas);_safe(renderInventario);_safe(renderServicios);
+  _safe(initSvcCatFilter);_safe(renderUsuarios);
+  _safe(_updateNotifBadge);
 }
 
 
