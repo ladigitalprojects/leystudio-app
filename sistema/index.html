@@ -3142,7 +3142,15 @@ function openEditCliente(id){
   if(c.foto){img.src=c.foto;img.style.display='block';ph.style.display='none';}
   else{img.style.display='none';ph.style.display='flex';ph.textContent=(c.nombre||'?').split(' ').slice(0,2).map(x=>x[0]||'').join('').toUpperCase()||'?';}
   const photoInp=document.getElementById('e-cl-photo-input'); if(photoInp) photoInp.dataset.newFoto='';
-  document.getElementById('e-cl-tel').value=c.tel||'';
+  // Separar código de país y número local al cargar
+  const _telParts=(c.tel||'').match(/^(\+\d+)\s+(.+)$/);
+  if(_telParts){
+    const selCode=document.getElementById('e-cl-telcode');
+    if(selCode) selCode.value=_telParts[1];
+    document.getElementById('e-cl-tel').value=_telParts[2];
+  } else {
+    document.getElementById('e-cl-tel').value=c.tel||'';
+  }
   document.getElementById('e-cl-ig').value=c.ig||'';
   const eCor=document.getElementById('e-cl-correo'); if(eCor) eCor.value=c.correo||(c.ficha&&c.ficha.correo)||'';
   document.getElementById('e-cl-f').value=c.fecha||'';
@@ -3169,7 +3177,9 @@ function saveEditCliente(){
   c.nombre=document.getElementById('e-cl-n').value.trim()||c.nombre;
   const telCode=document.getElementById('e-cl-telcode')?.value||'+504';
   const telNum=document.getElementById('e-cl-tel').value.trim();
-  c.tel=telNum?(telCode+' '+telNum):'';
+  // Evitar doble código (ej: "+504 +504 9528-5902") — solo el número local va en telNum
+  const telNumClean=telNum.replace(/^\+\d+\s+/,'');
+  c.tel=telNumClean?(telCode+' '+telNumClean):telNum?(telCode+' '+telNum):'';
   c.ig=document.getElementById('e-cl-ig').value.trim();
   const eCor2=document.getElementById('e-cl-correo'); if(eCor2) c.correo=eCor2.value.trim();
   c.fecha=document.getElementById('e-cl-f').value;
