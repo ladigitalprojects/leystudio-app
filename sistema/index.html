@@ -2065,7 +2065,11 @@ async function authedFetch(url, opts){
   const t = await fbToken();
   if(!t) throw new Error('Sin sesión de Firebase');
   const sep = url.includes('?') ? '&' : '?';
-  return fetch(url + sep + 'auth=' + t, opts);
+  // Timeout de 15s: sin esto, una red colgada dejaba la sincronización atascada para siempre
+  const ctrl = new AbortController();
+  const tm = setTimeout(()=>ctrl.abort(), 15000);
+  try{ return await fetch(url + sep + 'auth=' + t, {...(opts||{}), signal: ctrl.signal}); }
+  finally{ clearTimeout(tm); }
 }
 
 // ── Tokens de ficha pública ──
@@ -2401,9 +2405,9 @@ function setSyncStatus(s){
 }
 
 async function pushToCloud(){
-  if(isSyncing){ toast('⏳ Sync en progreso...','warn'); return false; }
+  if(isSyncing){ clearTimeout(syncDebounce); syncDebounce=setTimeout(()=>pushToCloud(),3000); return false; }
   const localTotal = D.citas.length + D.clientes.length + D.movimientos.length;
-  if(localTotal === 0){ toast('⚠️ Sin datos locales para subir','warn'); return false; }
+  if(localTotal === 0){ return false; } // guardia silenciosa: nunca subir un estado vacío que borre la nube
   isSyncing = true;
   setSyncStatus('sync-busy');
   let success = false;
@@ -2466,21 +2470,14 @@ async function pullFromCloud(){
     const r = await authedFetch(FIREBASE_URL);
     if(r.ok){
       const remote = await r.json();
-      if(remote && remote.citas && remote.citas.length > 0){
-        const remoteTotal = (remote.citas||[]).length + (remote.clientes||[]).length + (remote.movimientos||[]).length;
-        const localTotal  = D.citas.length + D.clientes.length + D.movimientos.length;
-        if(remoteTotal >= localTotal){
-          Object.assign(D, remote);
-          // Sanear arrays: eliminar entradas nulas que Firebase puede introducir
-          D.citas=(D.citas||[]).filter(Boolean);
-          D.clientes=(D.clientes||[]).filter(Boolean);
-          D.movimientos=(D.movimientos||[]).filter(Boolean);
-          D.inventario=(D.inventario||[]).filter(Boolean);
-          normalizarBdays();
-          limpiarIngresosPrematuros();
-          saveLocal();
-          actualizarDatalist();
-        }
+      if(remote){
+        mergeRemoteData(remote);
+        normalizarBdays();
+        limpiarIngresosPrematuros();
+        saveLocal();
+        actualizarDatalist();
+        // Converger la nube con el resultado del merge (no pierde nada: es la unión)
+        clearTimeout(syncDebounce); syncDebounce=setTimeout(()=>pushToCloud(),1500);
       }
       // Merge fichas actualizadas por clientas en /pub
       await _mergePubFichas();
@@ -2757,7 +2754,10 @@ function limpiarIngresosPrematuros(){
     if(!m) return false;
     if(!m.citaId || m.tipo!=='Ingreso') return true;
     const c=(D.citas||[]).find(x=>x&&+x.id===+m.citaId);
-    return !(c && c.pago==='Por cobrar');
+    // Un ingreso automático solo es válido si su cita existe, está Completada y ya fue cobrada
+    const valido = c && c.estado==='Completada' && c.pago!=='Por cobrar';
+    if(!valido) _tomb('movimientos',m.id);
+    return valido;
   });
 }
 function loadLocal(){
@@ -2776,7 +2776,63 @@ function loadLocal(){
   }catch(e){}
   // No seed automático — la nube es la fuente de verdad
 }
-function saveLocal(){ try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){} }
+function saveLocal(){
+  try{ localStorage.setItem(KEY,JSON.stringify(D)); }
+  catch(e){
+    console.error('saveLocal falló:',e);
+    if(!window.__slWarned){ window.__slWarned=1; toast('⚠️ No se pudo guardar en este dispositivo (espacio lleno). Verifica las fotos.','warn'); }
+  }
+}
+// ── Sincronización segura: merge por registro ──
+// Cada registro lleva _ts (última modificación). Los borrados dejan "lápida" en D.tomb
+// para que no resuciten al sincronizar con otro dispositivo.
+function _touch(r){ if(r) r._ts=Date.now(); return r; }
+function _tomb(col,id){
+  D.tomb=D.tomb||{};
+  D.tomb[col]=D.tomb[col]||{};
+  D.tomb[col][String(id)]=Date.now();
+}
+function _pruneTombs(){
+  const lim=Date.now()-120*86400000; // 120 días
+  Object.values(D.tomb||{}).forEach(t=>{ if(t&&typeof t==='object') Object.keys(t).forEach(k=>{ if(t[k]<lim) delete t[k]; }); });
+}
+function _mergeColl(localArr,remoteArr,tombCol){
+  const map=new Map();
+  (remoteArr||[]).filter(x=>x&&x.id!=null).forEach(r=>map.set(String(r.id),r));
+  (localArr||[]).filter(x=>x&&x.id!=null).forEach(l=>{
+    const r=map.get(String(l.id));
+    if(!r||(l._ts||0)>=(r._ts||0)) map.set(String(l.id),l); // en empate gana lo local (no perder ediciones propias)
+  });
+  const out=[];
+  map.forEach((rec,id)=>{
+    const tt=tombCol&&tombCol[id];
+    if(tt && tt>=(rec._ts||0)) return; // borrado más reciente que el registro
+    out.push(rec);
+  });
+  return out.sort((a,b)=>(+a.id||0)-(+b.id||0));
+}
+function mergeRemoteData(remote){
+  if(!remote) return;
+  // Firebase puede devolver objetos en lugar de arrays
+  ['citas','clientes','movimientos','inventario'].forEach(k=>{
+    if(remote[k] && !Array.isArray(remote[k])) remote[k]=Object.values(remote[k]);
+  });
+  // Combinar lápidas de ambos lados (gana la más reciente)
+  const tomb={};
+  ['citas','clientes','movimientos','inventario'].forEach(k=>{
+    tomb[k]={...(((D.tomb||{})[k])||{})};
+    const rt=(((remote.tomb||{})[k])||{});
+    Object.keys(rt).forEach(id=>{ if(!tomb[k][id]||rt[id]>tomb[k][id]) tomb[k][id]=rt[id]; });
+  });
+  D.tomb=tomb;
+  D.citas      =_mergeColl(D.citas,      remote.citas,      tomb.citas);
+  D.clientes   =_mergeColl(D.clientes,   remote.clientes,   tomb.clientes);
+  D.movimientos=_mergeColl(D.movimientos,remote.movimientos,tomb.movimientos);
+  D.inventario =_mergeColl(D.inventario, remote.inventario, tomb.inventario);
+  // Colecciones menores: remoto gana si existe (bajo riesgo de conflicto)
+  ['catalogoCustom','usuarios','svcExtra','config'].forEach(k=>{ if(remote[k]!=null) D[k]=remote[k]; });
+  _pruneTombs();
+}
 
 function saveCfgNegocio(){
   if(!D.config) D.config={};
@@ -2926,10 +2982,27 @@ function autoRegistrarIngreso(cita,fechaCobro){
     desc:svcsStr+' – '+cita.clienta,
     monto:cita.precioTotal||0,
     pago:cita.pago,
-    ref:'CI-'+String(id).padStart(3,'0'),citaId:cita.id
+    ref:'CI-'+String(id).padStart(3,'0'),citaId:cita.id,_ts:Date.now()
   });
   return true;
 }
+// Errores JS visibles (máx. 1 aviso cada 6s) — evita fallos silenciosos al guardar
+window.addEventListener('error',function(e){
+  try{
+    if(window.__errT && Date.now()-window.__errT<6000) return;
+    window.__errT=Date.now();
+    toast('⚠️ Error interno: '+String(e.message||'').slice(0,70)+' — recarga si algo quedó pegado','warn');
+  }catch(_){}
+});
+window.addEventListener('unhandledrejection',function(e){
+  try{
+    const msg=String((e.reason&&e.reason.message)||e.reason||'');
+    if(/abort/i.test(msg)) return; // timeouts de red ya se manejan
+    if(window.__errT && Date.now()-window.__errT<6000) return;
+    window.__errT=Date.now();
+    toast('⚠️ Error: '+msg.slice(0,70),'warn');
+  }catch(_){}
+});
 let toastT;
 function toast(msg,type='ok'){
   const el=document.getElementById('toast');
@@ -3125,7 +3198,7 @@ function addCita(){
     servicios,precioTotal,descuento,
     pago:document.getElementById('c-pago').value,
     estado:document.getElementById('c-estado').value,
-    notas:document.getElementById('c-notas').value.trim(),origen:'manual'
+    notas:document.getElementById('c-notas').value.trim(),origen:'manual',_ts:Date.now()
   };
   D.citas.push(c);
   if(c.estado==='Completada'){
@@ -3143,7 +3216,7 @@ function addCita(){
 }
 function completarCita(id){
   const c=D.citas.find(x=>x.id===id); if(!c) return;
-  c.estado='Completada';
+  c.estado='Completada'; _touch(c);
   if(c.pago==='Por cobrar'){
     saveAndSync(); renderAll();
     toast('✅ Cita completada — pendiente de cobro. Usa el botón 💰 al recibir el pago','warn');
@@ -3168,10 +3241,10 @@ function openCobro(id){
 function confirmarCobro(){
   const id=+document.getElementById('cb-cita-id').value;
   const c=D.citas.find(x=>+x.id===+id); if(!c) return;
-  c.pago=document.getElementById('cb-pago').value;
+  c.pago=document.getElementById('cb-pago').value; _touch(c);
   const fecha=document.getElementById('cb-fecha').value||todayStr();
   const mov=D.movimientos.find(m=>+m.citaId===+c.id);
-  if(mov){ mov.pago=c.pago; mov.monto=c.precioTotal||0; mov.fecha=fecha; }
+  if(mov){ mov.pago=c.pago; mov.monto=c.precioTotal||0; mov.fecha=fecha; _touch(mov); }
   else autoRegistrarIngreso(c,fecha);
   saveAndSync(); renderAll();
   closeModal('modal-cobro');
@@ -3179,7 +3252,10 @@ function confirmarCobro(){
 }
 function delCita(id){
   if(!confirm('¿Eliminar esta cita?')) return;
+  _tomb('citas',id);
   D.citas=D.citas.filter(c=>c.id!==id);
+  const movLig=D.movimientos.find(m=>+m.citaId===+id && m.tipo==='Ingreso');
+  if(movLig){ _tomb('movimientos',movLig.id); D.movimientos=D.movimientos.filter(m=>m!==movLig); }
   saveAndSync(); renderAll();
 }
 
@@ -3275,7 +3351,7 @@ function addCliente(){
     correo:document.getElementById('cl-correo').value.trim(),
     fecha:document.getElementById('cl-f').value||todayStr(),
     bday:_normBday(document.getElementById('cl-bday').value||''),
-    notas:document.getElementById('cl-notas').value.trim()});
+    notas:document.getElementById('cl-notas').value.trim(),_ts:Date.now()});
   saveAndSync(); renderClientes(); actualizarDatalist();
   ['cl-n','cl-tel','cl-ig','cl-correo','cl-bday','cl-notas'].forEach(fid=>{const e=document.getElementById(fid);if(e)e.value='';}); document.getElementById('cl-f').value=todayStr(); toggleForm('fcl'); toast('✅ Clienta registrada');
 }
@@ -3335,12 +3411,14 @@ function saveEditCliente(){
   c.bday=_normBday(document.getElementById('e-cl-bday').value||'');
   const photoInp=document.getElementById('e-cl-photo-input');
   if(photoInp?.dataset.newFoto) c.foto=photoInp.dataset.newFoto;
+  _touch(c);
   saveAndSync(); renderClientes(); actualizarDatalist();
   closeModal('modal-cl'); toast('Clienta actualizada');
 }
 function deleteCliente(){
   const id=+document.getElementById('e-cl-id').value;
   if(!confirm('¿Eliminar esta clienta? Sus citas no se eliminarán.')) return;
+  _tomb('clientes',id);
   D.clientes=D.clientes.filter(c=>c.id!==id);
   saveAndSync(); renderClientes(); actualizarDatalist();
   closeModal('modal-cl'); toast('✅ Clienta eliminada');
@@ -3840,7 +3918,7 @@ function addMovimiento(){
     monto:+document.getElementById('m-monto').value||0,
     pago:document.getElementById('m-pago').value,
     ref:document.getElementById('m-ref').value.trim(),
-    citaId:null};
+    citaId:null,_ts:Date.now()};
   if(!m.desc){toast('Ingresa la descripción','warn');return;}
   D.movimientos.push(m); saveAndSync(); renderFinanzas(); renderDashboard();
   toggleForm('fm'); document.getElementById('m-desc').value=''; document.getElementById('m-monto').value='';
@@ -3848,6 +3926,7 @@ function addMovimiento(){
 }
 function delMov(id){
   if(!confirm('¿Eliminar?'))return;
+  _tomb('movimientos',id);
   D.movimientos=D.movimientos.filter(m=>m.id!==id); saveAndSync(); renderFinanzas(); renderDashboard();
 }
 // ── Detalle de un movimiento + enlace a su cita ──
@@ -3984,18 +4063,19 @@ function addInventario(){
     unidad:document.getElementById('i-u').value||'Unidad',
     precio:+document.getElementById('i-p').value||0,
     proveedor:document.getElementById('i-prov').value.trim(),
-    fecha:document.getElementById('i-f').value||todayStr()});
+    fecha:document.getElementById('i-f').value||todayStr(),_ts:Date.now()});
   saveAndSync(); renderInventario(); renderDashboard(); toggleForm('fi');
   document.getElementById('i-n').value=''; toast('✅ Producto agregado');
 }
 function adjStock(id,delta){
   const item=D.inventario.find(i=>i.id===id); if(!item)return;
-  item.stock=Math.max(0,item.stock+delta); saveAndSync(); renderInventario(); renderDashboard();
+  item.stock=Math.max(0,item.stock+delta); _touch(item); saveAndSync(); renderInventario(); renderDashboard();
   if(invSt(item)==='empty') toast('🚨 '+item.nombre+' agotado','warn');
   else if(invSt(item)==='low') toast('⚠ '+item.nombre+' stock bajo','warn');
 }
 function delInv(id){
   if(!confirm('¿Eliminar?'))return;
+  _tomb('inventario',id);
   D.inventario=D.inventario.filter(i=>i.id!==id); saveAndSync(); renderInventario();
 }
 function openEditInv(id){
@@ -4036,6 +4116,7 @@ function saveEditInv(){
   item.precio=+document.getElementById('i-p').value||0;
   item.proveedor=document.getElementById('i-prov').value.trim();
   item.fecha=document.getElementById('i-f').value||todayStr();
+  _touch(item);
   saveAndSync(); renderInventario(); renderDashboard();
   resetInvForm(); toggleForm('fi'); toast('✅ Producto actualizado');
 }
@@ -4717,10 +4798,19 @@ function saveEditCita(){
   const descuentoEdit=parseFloat(document.getElementById('e-cit-desc')?.value)||0;
   c.descuento=descuentoEdit;
   c.precioTotal=Math.max(0,subtotalEdit-descuentoEdit);
+  _touch(c);
   if(c.estado==='Completada'){
     const movExist=D.movimientos.find(m=>+m.citaId===+c.id);
-    if(movExist){ movExist.monto=c.precioTotal; if(c.pago!=='Por cobrar') movExist.pago=c.pago; }
+    if(movExist){ movExist.monto=c.precioTotal; if(c.pago!=='Por cobrar') movExist.pago=c.pago; _touch(movExist); }
     else { autoRegistrarIngreso(c); }
+  } else {
+    // Cancelada / No Show / Confirmada: el ingreso ligado ya no corresponde
+    const movLig=D.movimientos.find(m=>+m.citaId===+c.id && m.tipo==='Ingreso');
+    if(movLig){
+      _tomb('movimientos',movLig.id);
+      D.movimientos=D.movimientos.filter(m=>m!==movLig);
+      toast('Ingreso ligado eliminado — la cita ya no está completada','warn');
+    }
   }
   saveAndSync(); renderAll();
   closeModal('modal-cita'); toast('✅ Cita actualizada');
@@ -4751,12 +4841,14 @@ function saveEditMov(){
   m.desc=document.getElementById('e-mov-desc').value.trim()||m.desc;
   m.monto=+document.getElementById('e-mov-monto').value||0;
   m.ref=document.getElementById('e-mov-ref').value.trim();
+  _touch(m);
   saveAndSync(); renderFinanzas(); renderDashboard();
   closeModal('modal-mov'); toast('✅ Movimiento actualizado');
 }
 function deleteMovModal(){
   const id=+document.getElementById('e-mov-id').value;
   if(!confirm('¿Eliminar este movimiento?'))return;
+  _tomb('movimientos',id);
   D.movimientos=D.movimientos.filter(m=>m.id!==id);
   saveAndSync(); renderFinanzas(); renderDashboard();
   closeModal('modal-mov'); toast('Movimiento eliminado');
