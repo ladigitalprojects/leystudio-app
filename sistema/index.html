@@ -2475,6 +2475,7 @@ async function pullFromCloud(){
           D.clientes=(D.clientes||[]).filter(Boolean);
           D.movimientos=(D.movimientos||[]).filter(Boolean);
           D.inventario=(D.inventario||[]).filter(Boolean);
+          normalizarBdays();
           saveLocal();
           actualizarDatalist();
         }
@@ -2634,10 +2635,10 @@ function _buildReciboDoc(citaId){
   }
 
   // ── Título ──
-  doc.setFont('helvetica','bold'); doc.setFontSize(21); doc.setTextColor(...brown);
-  doc.text('RECIBO',ML,32,{charSpace:2.8});
+  doc.setFont('helvetica','bold'); doc.setFontSize(15.5); doc.setTextColor(...brown);
+  doc.text('FACTURA PROFORMA',ML,32,{charSpace:2});
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...soft);
-  doc.text('Recibo N° '+String(c.id).padStart(4,'0'),ML,40);
+  doc.text('Proforma N° '+String(c.id).padStart(4,'0'),ML,40);
   const fLarga=(typeof _fmtFechaLarga==='function')?_fmtFechaLarga(c.fecha):fmtD(c.fecha);
   doc.text(fLarga+(c.hora?('  ·  '+c.hora):''),ML,45.5);
 
@@ -2720,14 +2721,14 @@ function _buildReciboDoc(citaId){
   doc.setFont('helvetica','normal'); doc.setFontSize(6.8); doc.setTextColor(...gold);
   doc.text('@leystudiohn  ·  +504 9499-4709  ·  Tegucigalpa, Honduras',W/2,H-11.5,{align:'center'});
 
-  const filename=`LeyStudio_Recibo_${c.clienta.replace(/\s/g,'_')}_${c.fecha}.pdf`;
+  const filename=`LeyStudio_Proforma_${c.clienta.replace(/\s/g,'_')}_${c.fecha}.pdf`;
   return {doc, c, filename};
 }
 function descargarReciboPDF(citaId){
   try{
     const r=_buildReciboDoc(citaId); if(!r) return;
     r.doc.save(r.filename);
-    toast('Recibo descargado');
+    toast('Factura proforma descargada');
   }catch(e){
     console.error('Error generando recibo PDF:',e);
     toast('⚠️ Error al generar el recibo','warn');
@@ -2737,6 +2738,16 @@ function descargarReciboPDF(citaId){
 let D={citas:[],clientes:[],movimientos:[],inventario:[],catalogoCustom:[],usuarios:[],svcExtra:{},config:{}};
 let SHEETS_URL='';
 
+// Normalizar cumpleaños: acepta "DD/MM/AAAA" (entrada manual) y lo convierte a "AAAA-MM-DD"
+function _normBday(b){
+  if(!b) return '';
+  const m=String(b).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+  return b;
+}
+function normalizarBdays(){
+  (D.clientes||[]).forEach(c=>{ if(c&&c.bday) c.bday=_normBday(c.bday); });
+}
 function loadLocal(){
   try{
     const s=localStorage.getItem(KEY);
@@ -2746,6 +2757,7 @@ function loadLocal(){
     D.clientes=(D.clientes||[]).filter(Boolean);
     D.movimientos=(D.movimientos||[]).filter(Boolean);
     D.inventario=(D.inventario||[]).filter(Boolean);
+    normalizarBdays();
     SHEETS_URL=localStorage.getItem('leystudio_sheets_url')||'';
     if(SHEETS_URL){const el=document.getElementById('cfg-url');if(el)el.value=SHEETS_URL;}
   }catch(e){}
@@ -3030,7 +3042,7 @@ function renderCitas(){
     const cobrarBtn = (c.estado==='Completada' && c.pago==='Por cobrar')
       ? `<button class="action-icon-btn action-cobrar" onclick="openCobro(${c.id})" title="Registrar cobro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15.5 9.5c0-1.4-1.6-2.5-3.5-2.5s-3.5 1.1-3.5 2.5 1.2 2 3.5 2.5c2.3.5 3.5 1.1 3.5 2.5s-1.6 2.5-3.5 2.5-3.5-1.1-3.5-2.5"/></svg></button>`
       : '';
-    return`<tr id="cita-row-${c.id}">
+    return`<tr id="cita-row-${c.id}" onclick="openEditCita(${c.id})" style="cursor:pointer">
       <td style="color:var(--pink);font-weight:700;font-size:12px">${i+1}</td>
       <td>${fmtD(c.fecha)}</td><td>${c.hora||'—'}</td>
       <td><strong>${c.clienta}</strong><br><small style="color:var(--gray);font-size:11px">${c.tel}</small></td>
@@ -3039,7 +3051,7 @@ function renderCitas(){
       <td>${c.pago==='Por cobrar'?'<span class="badge bgo">Por cobrar</span>':c.pago}</td>
       <td>${estadoBadge(c.estado)}</td>
       <td style="color:var(--gray);font-size:12px">${c.notas||'—'}</td>
-      <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:8px 4px">
+      <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:8px 4px" onclick="event.stopPropagation()">
         ${accionBtn}${cobrarBtn}
         <button class="action-icon-btn action-msg" onclick="openWAcita(${c.id})" title="Mensaje"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button><button class="action-icon-btn" onclick="openCorreoCita(${c.id})" style="height:34px;width:34px;color:#CF8AA3" title="Enviar correo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button>
         <button class="action-icon-btn action-edit" onclick="openEditCita(${c.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
@@ -3058,7 +3070,7 @@ function renderCitas(){
       :`<button class="action-icon-btn action-pdf" onclick="descargarReciboPDF(${c.id})" title="PDF" style="height:34px;width:34px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`)
       +((c.estado==='Completada' && c.pago==='Por cobrar')
       ?`<button class="action-icon-btn action-cobrar" onclick="openCobro(${c.id})" title="Registrar cobro" style="height:34px;width:34px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15.5 9.5c0-1.4-1.6-2.5-3.5-2.5s-3.5 1.1-3.5 2.5 1.2 2 3.5 2.5c2.3.5 3.5 1.1 3.5 2.5s-1.6 2.5-3.5 2.5-3.5-1.1-3.5-2.5"/></svg></button>`:'');
-    return`<div class="mob-card" id="cita-card-${c.id}">
+    return`<div class="mob-card" id="cita-card-${c.id}" onclick="openEditCita(${c.id})">
       <div class="mob-card-top">
         <div class="mob-date-badge">
           <div style="font-size:22px;font-weight:800;color:var(--cream);line-height:1">${cd||'—'}</div>
@@ -3073,7 +3085,7 @@ function renderCitas(){
       <hr class="mob-card-divider">
       <div class="mob-card-bottom">
         <div style="font-size:20px;font-weight:800;color:var(--pink)">${fmtM(c.precioTotal||0)}</div>
-        <div class="mob-actions">
+        <div class="mob-actions" onclick="event.stopPropagation()">
           ${accion}
           <button class="action-icon-btn action-msg" onclick="openWAcita(${c.id})" style="height:34px;width:34px" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button><button class="action-icon-btn" onclick="openCorreoCita(${c.id})" style="height:34px;width:34px;color:#CF8AA3" title="Enviar correo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button>
           <button class="action-icon-btn action-edit" onclick="openEditCita(${c.id})" style="height:34px;width:34px" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
@@ -3191,13 +3203,13 @@ function renderClientes(){
       if(m===nm) return ' <span title="Cumpleaños este mes" style="color:#f39c12;font-size:11px">🎁</span>';
       return '';
     })();
-    return`<tr>
+    return`<tr id="cliente-row-${c.id}" onclick="openEditCliente(${c.id})" style="cursor:pointer">
       <td>${_renderAvatar(c,34)}</td><td>${i+1}</td><td><strong>${c.nombre}</strong>${bdayBadge}</td>
       <td>${c.tel}</td><td>${fmtD(c.fecha)}</td>
       <td><span class="badge bgo">${st.visitas}</span></td>
       <td><strong style="color:var(--pink)">${fmtM(st.total)}</strong></td>
       <td style="max-width:200px;font-size:11px">${st.ultimoSvc.length>45?st.ultimoSvc.substring(0,45)+'…':st.ultimoSvc}</td>
-      <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:10px 4px"><button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn" onclick="openCorreoCliente(${c.id})" title="Enviar correo" style="color:#CF8AA3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button><button class="action-icon-btn action-pdf" onclick="openFicha(${c.id})" title="Ficha técnica"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button><button class="action-icon-btn" onclick="copiarEnlaceCliente(${c.id})" title="Copiar enlace de ficha" style="color:var(--gold)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></button><button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td></tr>`;
+      <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:10px 4px" onclick="event.stopPropagation()"><button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn" onclick="openCorreoCliente(${c.id})" title="Enviar correo" style="color:#CF8AA3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button><button class="action-icon-btn action-pdf" onclick="openFicha(${c.id})" title="Ficha técnica"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button><button class="action-icon-btn" onclick="copiarEnlaceCliente(${c.id})" title="Copiar enlace de ficha" style="color:var(--gold)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></button><button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td></tr>`;
   }).join('');
   // ── Mobile cards ──
   const _clMob=document.getElementById('cl-mob');
@@ -3215,7 +3227,7 @@ function renderClientes(){
     const avatarHtml=c.foto
       ?`<img src="${c.foto}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--gold)">`
       :`<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-deep));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;flex-shrink:0">${initials}</div>`;
-    return`<div class="mob-card">
+    return`<div class="mob-card" id="cliente-card-${c.id}" onclick="openEditCliente(${c.id})">
       <div class="mob-card-top">
         ${avatarHtml}
         <div style="flex:1;min-width:0">
@@ -3230,7 +3242,7 @@ function renderClientes(){
       <hr class="mob-card-divider">
       <div class="mob-card-bottom">
         <div style="font-size:11px;color:var(--gray);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${st.ultimoSvc||'Sin servicios'}</div>
-        <div class="mob-actions">
+        <div class="mob-actions" onclick="event.stopPropagation()">
           <button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" style="height:34px;width:34px" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn" onclick="openCorreoCliente(${c.id})" title="Enviar correo" style="color:#CF8AA3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button>
           <button class="action-icon-btn action-pdf" onclick="openFicha(${c.id})" style="height:34px;width:34px" title="Ficha técnica"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>
           <button class="action-icon-btn" onclick="copiarEnlaceCliente(${c.id})" style="height:34px;width:34px;color:var(--gold)" title="Copiar enlace de ficha"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></button>
@@ -3249,7 +3261,7 @@ function addCliente(){
     ig:document.getElementById('cl-ig').value.trim(),
     correo:document.getElementById('cl-correo').value.trim(),
     fecha:document.getElementById('cl-f').value||todayStr(),
-    bday:document.getElementById('cl-bday').value||'',
+    bday:_normBday(document.getElementById('cl-bday').value||''),
     notas:document.getElementById('cl-notas').value.trim()});
   saveAndSync(); renderClientes(); actualizarDatalist();
   ['cl-n','cl-tel','cl-ig','cl-correo','cl-bday','cl-notas'].forEach(fid=>{const e=document.getElementById(fid);if(e)e.value='';}); document.getElementById('cl-f').value=todayStr(); toggleForm('fcl'); toast('✅ Clienta registrada');
@@ -3307,7 +3319,7 @@ function saveEditCliente(){
   const eCor2=document.getElementById('e-cl-correo'); if(eCor2) c.correo=eCor2.value.trim();
   c.fecha=document.getElementById('e-cl-f').value;
   c.notas=(document.getElementById('e-cl-notas')?.value||'').trim();
-  c.bday=document.getElementById('e-cl-bday').value||'';
+  c.bday=_normBday(document.getElementById('e-cl-bday').value||'');
   const photoInp=document.getElementById('e-cl-photo-input');
   if(photoInp?.dataset.newFoto) c.foto=photoInp.dataset.newFoto;
   saveAndSync(); renderClientes(); actualizarDatalist();
