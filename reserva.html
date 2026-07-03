@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reserva tu cita · Ley Studio</title>
+<link rel="icon" href="/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pink:#DD98B1;--pink-dk:#c4809d;--gold:#B29257;--gold-dk:#A9884D;
+  --brown:#3D2B1F;--bg:#FDF8F2;--border:rgba(178,146,87,.28);--soft:#6e584a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Inter',sans-serif;background:var(--bg);color:var(--brown);min-height:100vh;
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(221,152,177,.28), transparent 42%),
+    radial-gradient(circle at 0% 100%, rgba(221,152,177,.22), transparent 45%),
+    radial-gradient(circle at 15% 5%, rgba(238,196,210,.18), transparent 30%);
+  background-attachment:fixed;
+  padding:24px 16px 60px;
+}
+.wrap{max-width:560px;margin:0 auto}
+.logo{display:block;width:110px;margin:6px auto 2px}
+.tagline{text-align:center;font-family:'Playfair Display',serif;font-style:italic;color:var(--gold-dk);font-size:14px;margin-bottom:4px}
+h1{font-family:'Playfair Display',serif;font-size:30px;color:var(--pink);text-align:center;line-height:1.15;margin-bottom:6px}
+.sub{text-align:center;font-size:12.5px;color:var(--soft);margin-bottom:22px}
+.steps{display:flex;justify-content:center;gap:6px;margin-bottom:22px}
+.step-dot{width:34px;height:4px;border-radius:2px;background:rgba(178,146,87,.25);transition:.3s}
+.step-dot.on{background:var(--pink)}
+.card{background:rgba(255,255,255,.82);backdrop-filter:blur(4px);border:1px solid var(--border);border-radius:16px;padding:20px 18px;margin-bottom:16px;box-shadow:0 4px 18px rgba(178,146,87,.08)}
+.sec-title{font-size:12px;font-weight:800;color:var(--gold-dk);text-transform:uppercase;letter-spacing:1.6px;text-align:center;margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+.cat-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 4px;cursor:pointer;border-bottom:1px dashed var(--border);font-weight:700;font-size:13.5px;color:var(--brown)}
+.cat-hdr .arr{color:var(--gold);transition:.25s;font-size:12px}
+.cat-hdr.open .arr{transform:rotate(90deg)}
+.cat-body{display:none;padding:4px 0 8px}
+.cat-body.open{display:block}
+.svc{display:flex;align-items:flex-start;gap:10px;padding:8px 4px;cursor:pointer;border-radius:8px}
+.svc:hover{background:rgba(221,152,177,.07)}
+.svc input{margin-top:3px;accent-color:var(--pink);width:16px;height:16px;flex-shrink:0}
+.svc .n{flex:1;font-size:13px;line-height:1.35}
+.svc .meta{font-size:11px;color:var(--gold-dk);margin-top:2px}
+.svc .p{font-weight:800;color:var(--pink);font-size:13px;white-space:nowrap}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;-webkit-overflow-scrolling:touch}
+.chip{flex-shrink:0;border:1.5px solid var(--border);background:#fff;border-radius:12px;padding:8px 12px;text-align:center;cursor:pointer;min-width:64px;transition:.15s}
+.chip .d1{font-size:10px;font-weight:700;color:var(--gold-dk);text-transform:uppercase}
+.chip .d2{font-size:19px;font-weight:800;line-height:1.1}
+.chip .d3{font-size:10px;color:var(--soft)}
+.chip.sel{border-color:var(--pink);background:rgba(221,152,177,.12)}
+.chip.sel .d2{color:var(--pink-dk)}
+.hours{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px;margin-top:6px}
+.hour{border:1.5px solid var(--border);background:#fff;border-radius:10px;padding:9px 4px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.hour.sel{border-color:var(--pink);background:var(--pink);color:#fff}
+.fgrp{margin-bottom:12px}
+.fgrp label{display:block;font-size:10.5px;font-weight:800;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.fgrp input,.fgrp textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;font-size:14px;font-family:inherit;color:var(--brown);background:#fff;outline:none}
+.fgrp input:focus,.fgrp textarea:focus{border-color:var(--pink)}
+.total-bar{position:sticky;bottom:12px;background:#fff;border:1.5px solid rgba(221,152,177,.5);border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 6px 24px rgba(61,43,31,.12)}
+.total-bar .t1{font-size:11px;color:var(--soft)}
+.total-bar .t2{font-size:18px;font-weight:800;color:var(--pink)}
+.btn{border:none;border-radius:12px;padding:13px 22px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;letter-spacing:.5px;transition:.15s}
+.btn-p{background:linear-gradient(135deg,var(--gold),var(--gold-dk));color:#fff}
+.btn-p:disabled{opacity:.45;cursor:not-allowed}
+.btn-s{background:transparent;color:var(--gold-dk);border:1.5px solid var(--border)}
+.btn-row{display:flex;gap:10px;justify-content:space-between;margin-top:6px}
+.resumen{background:rgba(221,152,177,.08);border:1px solid rgba(221,152,177,.35);border-radius:12px;padding:14px;font-size:13px;line-height:1.8;margin-bottom:14px}
+.hidden{display:none!important}
+.err{color:#b03050;font-size:12px;margin-top:6px;min-height:15px;text-align:center}
+.ok-icon{font-size:52px;text-align:center;margin:8px 0}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--pink);border-radius:50%;margin:40px auto;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.footer{text-align:center;font-size:11px;color:var(--gold-dk);margin-top:26px;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <img class="logo" src="/assets/logo.png" alt="Ley Studio">
+  <div class="tagline">El arte está en los detalles</div>
+  <h1>Reserva tu cita</h1>
+  <div class="sub">Elige tus servicios, el día y la hora — te confirmamos por WhatsApp 💅</div>
+  <div class="steps"><div class="step-dot on" id="sd1"></div><div class="step-dot" id="sd2"></div><div class="step-dot" id="sd3"></div></div>
+
+  <div id="loading" class="card"><div class="spinner"></div><div style="text-align:center;font-size:13px;color:var(--soft)">Cargando disponibilidad…</div></div>
+
+  <!-- PASO 1: Servicios -->
+  <div id="paso1" class="hidden">
+    <div class="card">
+      <div class="sec-title">1 · Elige tus servicios</div>
+      <div id="cat-list"></div>
+    </div>
+    <div class="total-bar">
+      <div><div class="t1" id="tb-info">Selecciona al menos un servicio</div><div class="t2" id="tb-total"></div></div>
+      <button class="btn btn-p" id="btn-p1" disabled onclick="irPaso(2)">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 2: Fecha y hora -->
+  <div id="paso2" class="hidden">
+    <div class="card">
+      <div class="sec-title">2 · Elige día y hora</div>
+      <div class="chips" id="dias"></div>
+      <div id="horas-wrap">
+        <div style="font-size:11px;font-weight:800;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.8px;margin:8px 0 2px">Horas disponibles</div>
+        <div class="hours" id="horas"></div>
+        <div class="err" id="err2"></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-s" onclick="irPaso(1)">← Servicios</button>
+      <button class="btn btn-p" id="btn-p2" disabled onclick="irPaso(3)">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PASO 3: Datos -->
+  <div id="paso3" class="hidden">
+    <div class="card">
+      <div class="sec-title">3 · Tus datos</div>
+      <div class="resumen" id="resumen"></div>
+      <div class="fgrp"><label>Tu nombre completo</label><input type="text" id="f-nombre" maxlength="60" placeholder="Nombre y apellido"></div>
+      <div class="fgrp"><label>WhatsApp</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" value="+504" disabled style="width:70px;text-align:center;background:rgba(178,146,87,.08)">
+          <input type="tel" id="f-tel" maxlength="9" placeholder="9999-9999" inputmode="numeric" style="flex:1">
+        </div>
+      </div>
+      <div class="fgrp"><label>Nota (opcional)</label><textarea id="f-nota" rows="2" maxlength="200" placeholder="Diseño que tienes en mente, referencia, etc."></textarea></div>
+      <div class="err" id="err3"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-s" onclick="irPaso(2)">← Día y hora</button>
+      <button class="btn btn-p" id="btn-enviar" onclick="enviar()">Solicitar reserva 💅</button>
+    </div>
+  </div>
+
+  <!-- ÉXITO -->
+  <div id="exito" class="hidden">
+    <div class="card" style="text-align:center">
+      <div class="ok-icon">🎀</div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--pink);margin-bottom:8px">¡Solicitud enviada!</div>
+      <div style="font-size:13.5px;color:var(--soft);line-height:1.7" id="exito-msg"></div>
+      <div style="margin-top:16px;font-size:12px;color:var(--gold-dk)">Te escribiremos por WhatsApp para confirmar tu cita ✨</div>
+    </div>
+  </div>
+
+  <div class="footer">Ley Studio · Nail Artist · Tegucigalpa<br>@leystudiohn · +504 9499-4709</div>
+</div>
+
+<script>
+const FB='https://ley-studio-b069e-default-rtdb.firebaseio.com';
+let CATALOGO=[], CFG={ini:'08:00',fin:'17:00',paso:30,cerrados:[0],ventana:21}, AGENDA={};
+let sel=new Set(), fechaSel='', horaSel='';
+
+const $=id=>document.getElementById(id);
+const money=n=>'L. '+Number(n||0).toLocaleString('es-HN');
+const durFmt=d=>d>=60?Math.floor(d/60)+'h'+(d%60?' '+(d%60)+'min':''):d+'min';
+const hm=h=>{const p=String(h||'0:0').split(':');return (+p[0])*60+(+p[1]);};
+const mh=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+
+async function init(){
+  try{
+    const [cat,cfg,ag]=await Promise.all([
+      fetch(FB+'/reservas/catalogo.json').then(r=>r.json()),
+      fetch(FB+'/reservas/config.json').then(r=>r.json()),
+      fetch(FB+'/reservas/agenda.json').then(r=>r.json())
+    ]);
+    CATALOGO=(cat||[]).filter(Boolean);
+    if(cfg) CFG={...CFG,...cfg};
+    AGENDA=ag||{};
+    if(!CATALOGO.length) throw new Error('catálogo vacío');
+    renderCatalogo();
+    $('loading').classList.add('hidden');
+    $('paso1').classList.remove('hidden');
+  }catch(e){
+    $('loading').innerHTML='<div style="text-align:center;padding:20px;font-size:13.5px;color:var(--soft)">😔 No pudimos cargar la disponibilidad.<br>Escríbenos por WhatsApp al <strong>+504 9499-4709</strong> y con gusto te agendamos.</div>';
+  }
+}
+
+function renderCatalogo(){
+  const cats={};
+  CATALOGO.forEach((s,i)=>{ (cats[s.cat||'Otros']=cats[s.cat||'Otros']||[]).push({...s,_i:i}); });
+  $('cat-list').innerHTML=Object.entries(cats).map(([cat,svcs],ci)=>`
+    <div class="cat-hdr ${ci===0?'open':''}" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+      <span>${esc(cat)} <span style="color:var(--gold-dk);font-weight:400;font-size:11px">(${svcs.length})</span></span><span class="arr">▶</span>
+    </div>
+    <div class="cat-body ${ci===0?'open':''}">
+      ${svcs.map(s=>`<label class="svc"><input type="checkbox" onchange="togSvc(${s._i},this.checked)">
+        <span class="n">${esc(s.n)}<div class="meta">⏱ ${durFmt(s.d||60)}</div></span>
+        <span class="p">${money(s.p)}</span></label>`).join('')}
+    </div>`).join('');
+}
+function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function togSvc(i,on){ on?sel.add(i):sel.delete(i); pintarTotal(); }
+function selSvcs(){ return [...sel].map(i=>CATALOGO[i]); }
+function totDur(){ return selSvcs().reduce((s,x)=>s+(x.d||60),0)||60; }
+function totPrecio(){ return selSvcs().reduce((s,x)=>s+(Number(x.p)||0),0); }
+function pintarTotal(){
+  const n=sel.size;
+  $('tb-info').textContent=n?`${n} servicio${n>1?'s':''} · ~${durFmt(totDur())}`:'Selecciona al menos un servicio';
+  $('tb-total').textContent=n?money(totPrecio()):'';
+  $('btn-p1').disabled=!n;
+}
+
+function irPaso(p){
+  ['paso1','paso2','paso3'].forEach((id,i)=>$(id).classList.toggle('hidden',i!==p-1));
+  [1,2,3].forEach(i=>$('sd'+i).classList.toggle('on',i<=p));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(p===2) renderDias();
+  if(p===3) renderResumen();
+}
+
+function renderDias(){
+  const dias=[]; const hoy=new Date();
+  const nombres=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  for(let i=0;i<(CFG.ventana||21);i++){
+    const d=new Date(hoy); d.setDate(d.getDate()+i);
+    if((CFG.cerrados||[]).includes(d.getDay())) continue;
+    const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    dias.push({iso,dn:nombres[d.getDay()],num:d.getDate(),mes:meses[d.getMonth()]});
+  }
+  $('dias').innerHTML=dias.map(d=>`<div class="chip ${d.iso===fechaSel?'sel':''}" onclick="selDia('${d.iso}',this)">
+    <div class="d1">${d.dn}</div><div class="d2">${d.num}</div><div class="d3">${d.mes}</div></div>`).join('');
+  if(!fechaSel && dias.length) selDia(dias[0].iso, $('dias').children[0]);
+  else renderHoras();
+}
+function selDia(iso,el){
+  fechaSel=iso; horaSel=''; $('btn-p2').disabled=true;
+  document.querySelectorAll('#dias .chip').forEach(c=>c.classList.remove('sel'));
+  if(el) el.classList.add('sel');
+  renderHoras();
+}
+function renderHoras(){
+  const dur=totDur();
+  const ini=hm(CFG.ini||'08:00'), fin=hm(CFG.fin||'17:00'), paso=CFG.paso||30;
+  const ocup=(AGENDA[fechaSel]||[]).map(o=>({i:hm(o.h),f:hm(o.h)+(o.d||60)}));
+  const hoyIso=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')+'-'+String(new Date().getDate()).padStart(2,'0');
+  const ahora=new Date().getHours()*60+new Date().getMinutes();
+  const libres=[];
+  for(let t=ini; t+dur<=fin; t+=paso){
+    if(fechaSel===hoyIso && t<=ahora+60) continue; // hoy: al menos 1h de anticipación
+    const choca=ocup.some(o=>t<o.f && o.i<t+dur);
+    if(!choca) libres.push(t);
+  }
+  $('horas').innerHTML=libres.length
+    ?libres.map(t=>`<div class="hour ${mh(t)===horaSel?'sel':''}" onclick="selHora('${mh(t)}',this)">${mh(t)}</div>`).join('')
+    :'<div style="grid-column:1/-1;font-size:13px;color:var(--soft);padding:10px 0">Ese día ya no tiene espacios para la duración de tus servicios 😔 — prueba otro día.</div>';
+  $('err2').textContent='';
+}
+function selHora(h,el){
+  horaSel=h;
+  document.querySelectorAll('#horas .hour').forEach(x=>x.classList.remove('sel'));
+  el.classList.add('sel');
+  $('btn-p2').disabled=false;
+}
+
+function renderResumen(){
+  const f=new Date(fechaSel+'T12:00:00');
+  const fLarga=f.toLocaleDateString('es-HN',{weekday:'long',day:'numeric',month:'long'});
+  $('resumen').innerHTML=`
+    <strong style="color:var(--pink-dk)">Tu reserva:</strong><br>
+    ${selSvcs().map(s=>'· '+esc(s.n)).join('<br>')}<br>
+    <span style="color:var(--gold-dk)">📅 ${fLarga} · ${horaSel} · ~${durFmt(totDur())}</span><br>
+    <strong>Total estimado: <span style="color:var(--pink-dk)">${money(totPrecio())}</span></strong>`;
+}
+
+$('f-tel')?.addEventListener('input',e=>{
+  let v=e.target.value.replace(/\D/g,'').slice(0,8);
+  if(v.length>4) v=v.slice(0,4)+'-'+v.slice(4);
+  e.target.value=v;
+});
+
+async function enviar(){
+  const nombre=$('f-nombre').value.trim();
+  const tel=$('f-tel').value.trim();
+  const err=$('err3');
+  if(nombre.length<3){ err.textContent='Escribe tu nombre completo.'; return; }
+  if(tel.replace(/\D/g,'').length!==8){ err.textContent='Escribe tu WhatsApp de 8 dígitos.'; return; }
+  err.textContent='';
+  const btn=$('btn-enviar'); btn.disabled=true; btn.textContent='Enviando…';
+  const payload={
+    nombre, tel:'+504 '+tel,
+    fecha:fechaSel, hora:horaSel,
+    servicios:selSvcs().map(s=>({n:s.n,p:Number(s.p)||0,d:s.d||60})),
+    total:totPrecio(), dur:totDur(),
+    nota:$('f-nota').value.trim().slice(0,200),
+    creado:new Date().toISOString()
+  };
+  try{
+    const r=await fetch(FB+'/reservas/solicitudes.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    ['paso1','paso2','paso3'].forEach(id=>$(id).classList.add('hidden'));
+    $('exito').classList.remove('hidden');
+    const f=new Date(fechaSel+'T12:00:00');
+    $('exito-msg').innerHTML=`Recibimos tu solicitud para el <strong>${f.toLocaleDateString('es-HN',{weekday:'long',day:'numeric',month:'long'})}</strong> a las <strong>${horaSel}</strong>.`;
+    window.scrollTo({top:0,behavior:'smooth'});
+  }catch(e){
+    err.textContent='No se pudo enviar 😔 — intenta de nuevo o escríbenos por WhatsApp.';
+    btn.disabled=false; btn.textContent='Solicitar reserva 💅';
+  }
+}
+init();
+</script>
+</body>
+</html>

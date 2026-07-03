@@ -1746,6 +1746,15 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
     </div>
   </div>
 
+  <!-- Solicitudes de reserva online -->
+  <div class="card" id="reservas-sol-card" style="margin-bottom:16px;display:none">
+    <div class="card-header">
+      <span class="card-title">🌸 Solicitudes de reserva online</span>
+      <button class="wa-btn" onclick="_pullSolicitudes(true)">Actualizar</button>
+    </div>
+    <div id="reservas-sol" style="margin-top:12px"></div>
+  </div>
+
   <div class="notif-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
 
     <!-- Recordatorios de mañana -->
@@ -1909,6 +1918,20 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
       <button class="hbtn hbtn-outline" onclick="probarConexion()">Probar conexión</button>
       <button class="hbtn hbtn-outline" onclick="exportJSON()">Exportar backup</button>
       <label class="hbtn hbtn-outline" style="cursor:pointer">Importar backup<input type="file" accept=".json" style="display:none" onchange="doImport(event)"></label>
+    </div>
+    <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--gold-deep);margin-bottom:8px">🌸 RESERVA ONLINE</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <input type="text" value="https://leystudiohn.com/reserva.html" readonly id="cfg-rlink" style="flex:1;min-width:220px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--gray-dk);background:#fff">
+        <button class="hbtn hbtn-gold" style="font-size:11px;padding:6px 12px" onclick="navigator.clipboard.writeText(document.getElementById('cfg-rlink').value).then(()=>toast('🔗 Enlace copiado'))">Copiar enlace</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div><label style="font-size:10px;font-weight:700;color:var(--gold-deep)">ABRE</label><br><input type="time" id="cfg-rini" value="08:00" style="border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:12px;font-family:inherit"></div>
+        <div><label style="font-size:10px;font-weight:700;color:var(--gold-deep)">CIERRA</label><br><input type="time" id="cfg-rfin" value="17:00" style="border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:12px;font-family:inherit"></div>
+        <div><label style="font-size:10px;font-weight:700;color:var(--gold-deep)">DÍAS A FUTURO</label><br><input type="number" id="cfg-rven" value="21" min="7" max="60" style="width:70px;border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:12px;font-family:inherit"></div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding-bottom:8px"><input type="checkbox" id="cfg-rdom"> Abre domingos</label>
+        <button class="hbtn hbtn-gold" style="font-size:11px;padding:7px 14px" onclick="saveCfgReserva()">Guardar horario</button>
+      </div>
     </div>
     <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
@@ -2506,6 +2529,7 @@ async function pushToCloud(){
     if(r.ok){
       setSyncStatus('sync-ok');
       success = true;
+      _pushReservasMirror(); // actualizar espejo público de reservas (no bloquea)
     } else {
       const txt = await r.text().catch(()=>'');
       setSyncStatus('sync-err');
@@ -2537,6 +2561,7 @@ async function pullFromCloud(){
       }
       // Merge fichas actualizadas por clientas en /pub
       await _mergePubFichas();
+      _pullSolicitudes(); // solicitudes de reserva online (no bloquea)
       setSyncStatus('sync-ok');
     } else { setSyncStatus('sync-err'); }
   } catch(e){
@@ -2583,6 +2608,104 @@ async function syncNow(){
     if(ok) toast('☁ Datos sincronizados con Firebase ✓');
     else   toast('⚠️ No se pudo conectar con Firebase','warn');
   }
+}
+
+// ═══ AUTO-RESERVA ONLINE (espejo público /reservas + solicitudes) ═══
+function _reservaCfg(){
+  const c=D.config||{};
+  return {
+    ini:c.rIni||'08:00', fin:c.rFin||'17:00', paso:30,
+    cerrados:(c.rDom===true)?[]:[0], // por defecto: domingo cerrado
+    ventana:+c.rVentana||21
+  };
+}
+async function _pushReservasMirror(){
+  try{
+    // Catálogo público (solo nombre, precio, duración, categoría)
+    const catalogo=getAllSvcs().map(s=>({n:s.nombre,p:s.precio||0,d:s.duracion||60,cat:s.cat||'Otros'}));
+    // Agenda ocupada (SIN nombres): próximos 60 días, citas activas
+    const hoy=todayStr();
+    const agenda={};
+    (D.citas||[]).forEach(c=>{
+      if(!c||!c.fecha||c.fecha<hoy) return;
+      if(c.estado!=='Confirmada'&&c.estado!=='Completada') return;
+      (agenda[c.fecha]=agenda[c.fecha]||[]).push({h:c.hora||'08:00',d:_durCita(c)});
+    });
+    await authedFetch(FIREBASE_BASE+'/reservas/catalogo.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(catalogo)});
+    await authedFetch(FIREBASE_BASE+'/reservas/config.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(_reservaCfg())});
+    await authedFetch(FIREBASE_BASE+'/reservas/agenda.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(agenda)});
+  }catch(e){ console.warn('mirror reservas',e); }
+}
+window._reservasSol={};
+async function _pullSolicitudes(manual){
+  try{
+    const r=await authedFetch(FIREBASE_BASE+'/reservas/solicitudes.json');
+    if(!r.ok) return;
+    const prev=Object.keys(window._reservasSol).length;
+    window._reservasSol=(await r.json())||{};
+    const n=Object.keys(window._reservasSol).length;
+    renderSolicitudes();
+    _updateNotifBadge();
+    if(manual) toast(n?('🌸 '+n+' solicitud'+(n>1?'es':'')+' pendiente'+(n>1?'s':'')):'Sin solicitudes nuevas');
+    else if(n>prev) toast('🌸 ¡Nueva solicitud de reserva online!');
+  }catch(e){ if(manual) toast('⚠️ No se pudo consultar','warn'); }
+}
+function renderSolicitudes(){
+  const card=document.getElementById('reservas-sol-card');
+  const box=document.getElementById('reservas-sol');
+  if(!card||!box) return;
+  const entries=Object.entries(window._reservasSol||{});
+  card.style.display=entries.length?'':'none';
+  box.innerHTML=entries.map(([id,s])=>{
+    if(!s) return '';
+    const svcs=(s.servicios||[]).map(x=>_esc(x.n)).join(' + ');
+    const telDig=String(s.tel||'').replace(/\D/g,'');
+    return `<div style="border:1px solid rgba(221,152,177,.4);background:rgba(221,152,177,.06);border-radius:12px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start">
+        <div style="flex:1;min-width:200px">
+          <strong style="font-size:14px">${_esc(s.nombre)}</strong> <span style="color:var(--gray);font-size:12px">· ${_esc(s.tel)}</span>
+          <div style="font-size:12px;color:var(--gray-dk);margin-top:3px">${svcs}</div>
+          <div style="font-size:12px;color:var(--gold-deep);margin-top:3px">📅 ${fmtD(s.fecha)} · ${_esc(s.hora)} · ~${_durFmt(s.dur||60)} · <strong style="color:var(--pink)">${fmtM(s.total||0)}</strong></div>
+          ${s.nota?`<div style="font-size:11.5px;color:var(--gray);margin-top:3px">📝 ${_esc(s.nota)}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="hbtn hbtn-gold" style="font-size:11px;padding:6px 12px" onclick="aceptarSolicitud('${_esc(id)}')">✓ Aceptar</button>
+          <a class="hbtn hbtn-outline" style="font-size:11px;padding:6px 12px;text-decoration:none" target="_blank" href="https://wa.me/${telDig}">WhatsApp</a>
+          <button class="hbtn hbtn-outline" style="font-size:11px;padding:6px 12px;color:#b03050" onclick="rechazarSolicitud('${_esc(id)}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function aceptarSolicitud(id){
+  const s=(window._reservasSol||{})[id]; if(!s) return;
+  const choque=_citaChoca(s.fecha,s.hora,s.dur||60);
+  if(choque && !confirm('⚠️ Se cruza con la cita de '+choque.clienta+' a las '+choque.hora+'. ¿Aceptar de todos modos?')) return;
+  const c={
+    id:nextId(D.citas), fecha:s.fecha, hora:s.hora,
+    clienta:s.nombre, tel:s.tel,
+    servicios:(s.servicios||[]).map(x=>({nombre:x.n,precio:Number(x.p)||0})),
+    precioTotal:Number(s.total)||0, descuento:0,
+    pago:'Por cobrar', estado:'Confirmada',
+    notas:(s.nota?('Reserva online: '+s.nota):'Reserva online'),
+    origen:'auto-reserva', _ts:Date.now()
+  };
+  D.citas.push(c);
+  if(!D.clientes.some(x=>x&&x.nombre.toLowerCase()===s.nombre.toLowerCase())){
+    D.clientes.push({id:nextId(D.clientes),nombre:s.nombre,tel:s.tel||'',ig:'',correo:'',fecha:todayStr(),bday:'',notas:'Creada desde reserva online',_ts:Date.now()});
+  }
+  try{ await authedFetch(FIREBASE_BASE+'/reservas/solicitudes/'+id+'.json',{method:'DELETE'}); }catch(e){}
+  delete window._reservasSol[id];
+  saveAndSync(); renderAll(); renderSolicitudes(); actualizarDatalist();
+  toast('✅ Reserva aceptada — cita confirmada para '+s.nombre);
+}
+async function rechazarSolicitud(id){
+  const s=(window._reservasSol||{})[id]; if(!s) return;
+  if(!confirm('¿Rechazar la solicitud de '+s.nombre+'?\n\nTip: avísale por WhatsApp para ofrecerle otro horario.')) return;
+  try{ await authedFetch(FIREBASE_BASE+'/reservas/solicitudes/'+id+'.json',{method:'DELETE'}); }catch(e){}
+  delete window._reservasSol[id];
+  renderSolicitudes(); _updateNotifBadge();
+  toast('Solicitud rechazada');
 }
 
 // ═══ RESPALDOS AUTOMÁTICOS (nodo /backups en Firebase) ═══
@@ -3043,6 +3166,18 @@ function loadCfgNegocio(){
   Object.entries(map).forEach(([id,key])=>{
     const el=document.getElementById(id); if(el&&D.config[key]) el.value=D.config[key];
   });
+  const ri=document.getElementById('cfg-rini'); if(ri&&D.config.rIni) ri.value=D.config.rIni;
+  const rf=document.getElementById('cfg-rfin'); if(rf&&D.config.rFin) rf.value=D.config.rFin;
+  const rv=document.getElementById('cfg-rven'); if(rv&&D.config.rVentana) rv.value=D.config.rVentana;
+  const rd=document.getElementById('cfg-rdom'); if(rd) rd.checked=D.config.rDom===true;
+}
+function saveCfgReserva(){
+  if(!D.config) D.config={};
+  D.config.rIni=document.getElementById('cfg-rini').value||'08:00';
+  D.config.rFin=document.getElementById('cfg-rfin').value||'17:00';
+  D.config.rVentana=+document.getElementById('cfg-rven').value||21;
+  D.config.rDom=document.getElementById('cfg-rdom').checked;
+  saveAndSync(); toast('🌸 Horario de reserva online guardado');
 }
 async function resetAllData(){
   if(!confirm('⚠️ ¿Borrar TODOS los datos de prueba?\n\nSe eliminarán todas las citas, clientes, finanzas e inventario tanto en local como en la nube.\n\nEsta acción no se puede deshacer.')) return;
@@ -6342,7 +6477,7 @@ function renderStatsExtra(){
   const porOrigen={};
   (D.citas||[]).forEach(c=>{
     if(!c) return;
-    const o=c.origen==='manual'?'Registrada en el sistema':(c.origen||'Sin origen');
+    const o=c.origen==='manual'?'Registrada en el sistema':c.origen==='auto-reserva'?'🌸 Reserva online':(c.origen||'Sin origen');
     porOrigen[o]=(porOrigen[o]||0)+1;
   });
   _statBars('stats-origen',porOrigen,'count');
@@ -6535,6 +6670,11 @@ function mostrarAvisosDelDia(){
     if(rec.length) items.push(`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:rgba(178,146,87,.1);border-radius:10px;margin-bottom:8px">
       <span>📅 <strong>${rec.length}</strong> cita${rec.length!==1?'s':''} mañana — recordatorio${rec.length!==1?'s':''} sin enviar</span>
       <button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="closeModal('modal-avisos');showTab('notificaciones')">Enviar</button></div>`);
+    // 🌸 Solicitudes de reserva online
+    const nSol=Object.keys(window._reservasSol||{}).length;
+    if(nSol) items.push(`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:rgba(221,152,177,.12);border-radius:10px;margin-bottom:8px">
+      <span>🌸 <strong>${nSol}</strong> solicitud${nSol!==1?'es':''} de reserva online sin responder</span>
+      <button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="closeModal('modal-avisos');showTab('notificaciones')">Ver</button></div>`);
     // 💰 Cobros pendientes
     const pend=(D.citas||[]).filter(c=>c&&c.estado==='Completada'&&c.pago==='Por cobrar');
     if(pend.length){
@@ -6597,6 +6737,7 @@ document.addEventListener('input', function(e){
     if(!currentUser || isSyncing) return;
     const updated = await _mergePubFichas();
     if(updated){ renderClientes(); toast('✨ Ficha de clienta actualizada'); }
+    _pullSolicitudes();
   }, 60000);
   // Pull from cloud and update badge
   pullFromCloud().then(()=>{
@@ -6832,6 +6973,11 @@ function buildNotifications(){
     }
   });
 
+  // Solicitudes de reserva online
+  Object.values(window._reservasSol||{}).filter(Boolean).forEach(s=>{
+    notifs.push({tipo:'reserva',titulo:`${s.nombre} — ${fmtM(s.total||0)}`,sub:'Quiere '+fmtD(s.fecha)+' a las '+s.hora,orden:'0-reserva'});
+  });
+
   // Cobros pendientes (citas completadas sin pago recibido)
   (D.citas||[]).filter(c=>c&&c.estado==='Completada'&&c.pago==='Por cobrar')
     .sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''))
@@ -6892,7 +7038,15 @@ function renderNotifPanel(){
   const bdays=notifs.filter(n=>n.tipo==='bday');
   const inv=notifs.filter(n=>n.tipo==='inv');
   const cobros=notifs.filter(n=>n.tipo==='cobro');
+  const reservas=notifs.filter(n=>n.tipo==='reserva');
   let html='';
+  if(reservas.length){
+    html+=`<div class="notif-group-hdr">🌸 Reservas online</div>`;
+    reservas.forEach(n=>{html+=`<div class="notif-item notif-cita" onclick="showTab('notificaciones');toggleNotifPanel()" style="cursor:pointer">
+      <div class="notif-icon">🌸</div>
+      <div class="notif-text"><div class="notif-title">${n.titulo}</div><div class="notif-sub">${n.sub}</div></div>
+    </div>`;});
+  }
   if(cobros.length){
     html+=`<div class="notif-group-hdr">💰 Cobros pendientes</div>`;
     cobros.forEach(n=>{html+=`<div class="notif-item notif-cita" onclick="showTab('citas');toggleNotifPanel()" style="cursor:pointer">
