@@ -2609,7 +2609,7 @@ function _buildReciboDoc(citaId){
     if(y>185){doc.addPage();y=20;}
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...mdgray);
     doc.text('  Descuento',14,y);
-    doc.setFont('helvetica','bold'); doc.setTextColor([180,60,60]);
+    doc.setFont('helvetica','bold'); doc.setTextColor(180,60,60);
     doc.text('- L. '+Number(c.descuento).toLocaleString('es-HN'),W-14,y,{align:'right'});
     doc.setDrawColor(...bord); doc.setLineWidth(0.2); doc.line(14,y+1.5,W-14,y+1.5);
     y+=7;
@@ -2646,9 +2646,14 @@ function _buildReciboDoc(citaId){
   return {doc, c, filename};
 }
 function descargarReciboPDF(citaId){
-  const r=_buildReciboDoc(citaId); if(!r) return;
-  r.doc.save(r.filename);
-  toast('Recibo descargado');
+  try{
+    const r=_buildReciboDoc(citaId); if(!r) return;
+    r.doc.save(r.filename);
+    toast('Recibo descargado');
+  }catch(e){
+    console.error('Error generando recibo PDF:',e);
+    toast('⚠️ Error al generar el recibo','warn');
+  }
 }
 
 let D={citas:[],clientes:[],movimientos:[],inventario:[],catalogoCustom:[],usuarios:[],svcExtra:{},config:{}};
