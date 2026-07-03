@@ -320,6 +320,9 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 .action-check{background:rgba(221,152,177,.15);color:var(--pink);}
 .action-wa{background:rgba(221,152,177,.15);color:var(--pink);}
 .action-pdf{background:rgba(178,146,87,.15);color:var(--gold-deep);}
+.action-cobrar{background:rgba(221,152,177,.22);color:#9a3a60;}
+.row-flash{animation:rowFlash 2.4s ease;}
+@keyframes rowFlash{0%,40%{background:rgba(221,152,177,.35);}100%{background:transparent;}}
 .action-msg{background:rgba(221,152,177,.1);color:var(--pink);}
 .action-edit{background:rgba(178,146,87,.1);color:var(--gold-deep);}
 .action-del{background:rgba(192,57,43,.08);color:#c0392b;}
@@ -1050,6 +1053,36 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
       <button class="btn-red" onclick="deleteMovModal()"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-right:4px;vertical-align:middle"><path d="M4 6h12M8 6V4h4v2M15 6l-1 10H6L5 6"/></svg>Eliminar</button>
       <button class="btn-sec" onclick="closeModal('modal-mov')">Cancelar</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-cobro">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">💰 Registrar cobro
+      <button class="modal-close" onclick="closeModal('modal-cobro')">✕</button>
+    </div>
+    <input type="hidden" id="cb-cita-id">
+    <div id="cb-resumen" style="background:rgba(221,152,177,.1);border:1px solid rgba(221,152,177,.3);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6;margin-bottom:14px"></div>
+    <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fgrp"><label>Método de pago</label>
+        <select id="cb-pago"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option></select>
+      </div>
+      <div class="fgrp"><label>Fecha de cobro</label><input type="text" class="fpdate" id="cb-fecha"></div>
+    </div>
+    <div class="factions">
+      <button class="btn-pri" onclick="confirmarCobro()">Registrar cobro</button>
+      <button class="btn-sec" onclick="closeModal('modal-cobro')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-mov-det">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">Detalle del movimiento
+      <button class="modal-close" onclick="closeModal('modal-mov-det')">✕</button>
+    </div>
+    <div id="mov-det-body" style="font-size:13px;line-height:2"></div>
+    <div class="factions" id="mov-det-actions"></div>
   </div>
 </div>
 
@@ -2858,17 +2891,19 @@ function estadoBadge(e){
   const m={'Completada':'bg','Confirmada':'bb','Cancelada':'br','No Show':'bgr'};
   return`<span class="badge ${m[e]||'bgr'}">${e}</span>`;
 }
-function autoRegistrarIngreso(cita){
-  if(D.movimientos.find(m=>m.citaId===cita.id)) return;
+function autoRegistrarIngreso(cita,fechaCobro){
+  if(cita.pago==='Por cobrar') return false; // aún no se ha cobrado — se registra con el botón de cobro
+  if(D.movimientos.find(m=>+m.citaId===+cita.id)) return false;
   const id=nextId(D.movimientos);
   const svcsStr=(cita.servicios||[]).map(s=>s.nombre).join(' + ');
   D.movimientos.push({
-    id,fecha:cita.fecha,tipo:'Ingreso',cat:'Servicio',
+    id,fecha:fechaCobro||cita.fecha,tipo:'Ingreso',cat:'Servicio',
     desc:svcsStr+' – '+cita.clienta,
     monto:cita.precioTotal||0,
-    pago:cita.pago==='Por cobrar'?'Efectivo':cita.pago,
+    pago:cita.pago,
     ref:'CI-'+String(id).padStart(3,'0'),citaId:cita.id
   });
+  return true;
 }
 let toastT;
 function toast(msg,type='ok'){
@@ -2992,17 +3027,20 @@ function renderCitas(){
     const accionBtn = c.estado==='Confirmada'
       ? `<button class="action-icon-btn action-check" onclick="completarCita(${c.id})" title="Marcar como completada"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>`
       : `<button class="action-icon-btn action-pdf" onclick="descargarReciboPDF(${c.id})" title="Descargar PDF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button>`;
-    return`<tr>
+    const cobrarBtn = (c.estado==='Completada' && c.pago==='Por cobrar')
+      ? `<button class="action-icon-btn action-cobrar" onclick="openCobro(${c.id})" title="Registrar cobro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15.5 9.5c0-1.4-1.6-2.5-3.5-2.5s-3.5 1.1-3.5 2.5 1.2 2 3.5 2.5c2.3.5 3.5 1.1 3.5 2.5s-1.6 2.5-3.5 2.5-3.5-1.1-3.5-2.5"/></svg></button>`
+      : '';
+    return`<tr id="cita-row-${c.id}">
       <td style="color:var(--pink);font-weight:700;font-size:12px">${i+1}</td>
       <td>${fmtD(c.fecha)}</td><td>${c.hora||'—'}</td>
       <td><strong>${c.clienta}</strong><br><small style="color:var(--gray);font-size:11px">${c.tel}</small></td>
       <td>${svcsHtml}</td>
       <td style="font-weight:700;white-space:nowrap;color:var(--pink)">${fmtM(c.precioTotal||0)}</td>
-      <td>${c.pago}</td>
+      <td>${c.pago==='Por cobrar'?'<span class="badge bgo">Por cobrar</span>':c.pago}</td>
       <td>${estadoBadge(c.estado)}</td>
       <td style="color:var(--gray);font-size:12px">${c.notas||'—'}</td>
       <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:8px 4px">
-        ${accionBtn}
+        ${accionBtn}${cobrarBtn}
         <button class="action-icon-btn action-msg" onclick="openWAcita(${c.id})" title="Mensaje"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button><button class="action-icon-btn" onclick="openCorreoCita(${c.id})" style="height:34px;width:34px;color:#CF8AA3" title="Enviar correo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button>
         <button class="action-icon-btn action-edit" onclick="openEditCita(${c.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="action-icon-btn action-del" onclick="delCita(${c.id})" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
@@ -3015,10 +3053,12 @@ function renderCitas(){
     const svcLine=svcs.slice(0,2).map(s=>s.nombre).join(' · ')+(svcs.length>2?` +${svcs.length-2}`:'');
     const [cy,cm,cd]=(c.fecha||'').split('-');
     const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const accion=c.estado==='Confirmada'
+    const accion=(c.estado==='Confirmada'
       ?`<button class="action-icon-btn action-check" onclick="completarCita(${c.id})" title="Completar" style="height:34px;width:34px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></button>`
-      :`<button class="action-icon-btn action-pdf" onclick="descargarReciboPDF(${c.id})" title="PDF" style="height:34px;width:34px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`;
-    return`<div class="mob-card">
+      :`<button class="action-icon-btn action-pdf" onclick="descargarReciboPDF(${c.id})" title="PDF" style="height:34px;width:34px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`)
+      +((c.estado==='Completada' && c.pago==='Por cobrar')
+      ?`<button class="action-icon-btn action-cobrar" onclick="openCobro(${c.id})" title="Registrar cobro" style="height:34px;width:34px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15.5 9.5c0-1.4-1.6-2.5-3.5-2.5s-3.5 1.1-3.5 2.5 1.2 2 3.5 2.5c2.3.5 3.5 1.1 3.5 2.5s-1.6 2.5-3.5 2.5-3.5-1.1-3.5-2.5"/></svg></button>`:'');
+    return`<div class="mob-card" id="cita-card-${c.id}">
       <div class="mob-card-top">
         <div class="mob-date-badge">
           <div style="font-size:22px;font-weight:800;color:var(--cream);line-height:1">${cd||'—'}</div>
@@ -3063,8 +3103,10 @@ function addCita(){
     notas:document.getElementById('c-notas').value.trim(),origen:'manual'
   };
   D.citas.push(c);
-  if(c.estado==='Completada'){autoRegistrarIngreso(c);toast('✅ Cita guardada e ingreso registrado en Finanzas');}
-  else toast('✅ Cita guardada');
+  if(c.estado==='Completada'){
+    if(autoRegistrarIngreso(c)) toast('✅ Cita guardada e ingreso registrado en Finanzas');
+    else toast('✅ Cita guardada — pendiente de cobro (botón 💰)','warn');
+  } else toast('✅ Cita guardada');
   // Reset completo del formulario
   ['c-cl','c-notas','c-tel','c-h'].forEach(fid=>{const e=document.getElementById(fid);if(e)e.value='';});
   const disc2=document.getElementById('c-descuento'); if(disc2) disc2.value='';
@@ -3076,8 +3118,39 @@ function addCita(){
 }
 function completarCita(id){
   const c=D.citas.find(x=>x.id===id); if(!c) return;
-  c.estado='Completada'; autoRegistrarIngreso(c);
-  saveAndSync(); renderAll(); toast('✅ Cita completada y registrada en Finanzas');
+  c.estado='Completada';
+  if(c.pago==='Por cobrar'){
+    saveAndSync(); renderAll();
+    toast('✅ Cita completada — pendiente de cobro. Usa el botón 💰 al recibir el pago','warn');
+  } else {
+    autoRegistrarIngreso(c);
+    saveAndSync(); renderAll();
+    toast('✅ Cita completada y registrada en Finanzas');
+  }
+}
+// ── Registrar cobro de una cita "Por cobrar" ──
+function openCobro(id){
+  const c=D.citas.find(x=>+x.id===+id); if(!c) return;
+  document.getElementById('cb-cita-id').value=c.id;
+  document.getElementById('cb-resumen').innerHTML=
+    `<strong>${c.clienta}</strong><br>`+
+    (c.servicios||[]).map(s=>s.nombre).join(' + ')+
+    `<br><span style="font-size:16px;font-weight:800;color:var(--pink)">${fmtM(c.precioTotal||0)}</span>`;
+  document.getElementById('cb-pago').value='Efectivo';
+  document.getElementById('cb-fecha').value=todayStr();
+  openModal('modal-cobro');
+}
+function confirmarCobro(){
+  const id=+document.getElementById('cb-cita-id').value;
+  const c=D.citas.find(x=>+x.id===+id); if(!c) return;
+  c.pago=document.getElementById('cb-pago').value;
+  const fecha=document.getElementById('cb-fecha').value||todayStr();
+  const mov=D.movimientos.find(m=>+m.citaId===+c.id);
+  if(mov){ mov.pago=c.pago; mov.monto=c.precioTotal||0; mov.fecha=fecha; }
+  else autoRegistrarIngreso(c,fecha);
+  saveAndSync(); renderAll();
+  closeModal('modal-cobro');
+  toast('💰 Cobro registrado en Finanzas');
 }
 function delCita(id){
   if(!confirm('¿Eliminar esta cita?')) return;
@@ -3671,22 +3744,22 @@ function renderFinanzas(){
       return true;
     })
     .sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
-  document.getElementById('fin-tb').innerHTML=(list.length?'':`<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:28px;font-size:13px">Sin movimientos en el período seleccionado. Usa los botones <strong>Semana</strong> / <strong>Todo</strong> o registra uno con <strong>+ Nuevo movimiento</strong>.</td></tr>`)+list.map(m=>`
-    <tr>
+  document.getElementById('fin-tb').innerHTML=(list.length?'':`<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:28px;font-size:13px">Sin movimientos aún. Se registran solos al completar/cobrar citas, o crea uno con <strong>+ Nuevo movimiento</strong>.</td></tr>`)+list.map(m=>`
+    <tr id="mov-row-${m.id}" onclick="verMovDetalle(${m.id})" style="cursor:pointer">
       <td>${fmtD(m.fecha)}</td>
       <td><span class="badge ${m.tipo==='Ingreso'?'bb-pink':'bgo'}">${m.tipo==='Ingreso'?'Ingreso':'Gasto'}</span></td>
       <td>${m.cat}</td><td>${m.desc}</td>
       <td><strong style="color:${m.tipo==='Ingreso'?'var(--pink)':'var(--gold-deep)'};white-space:nowrap">${fmtM(m.monto)}</strong></td>
       <td>${m.pago}</td><td>${m.ref||'—'}</td>
-      <td>${m.citaId?`<span class="badge bb" title="Cita #${m.citaId}">Cita</span>`:'<span class="badge bgr">Manual</span>'}</td>
-      <td style="white-space:nowrap;display:flex;gap:4px;padding:10px 4px"><button class="action-icon-btn action-edit" onclick="openEditMov(${m.id})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-icon-btn action-del" onclick="delMov(${m.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></td></tr>`).join('');
+      <td>${m.citaId?`<span class="badge bb" title="Ver cita #${m.citaId}" onclick="event.stopPropagation();irACita(${m.citaId})" style="cursor:pointer;text-decoration:underline">Cita ↗</span>`:'<span class="badge bgr">Manual</span>'}</td>
+      <td style="white-space:nowrap;display:flex;gap:4px;padding:10px 4px" onclick="event.stopPropagation()"><button class="action-icon-btn action-edit" onclick="openEditMov(${m.id})" title="Editar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-icon-btn action-del" onclick="delMov(${m.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></td></tr>`).join('');
   // ── Mobile cards ──
   const _finMob=document.getElementById('fin-mob');
   if(_finMob) _finMob.innerHTML=list.map(m=>{
     const esIngreso=m.tipo==='Ingreso';
     const [cy,cm,cd]=(m.fecha||'').split('-');
     const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    return`<div class="mob-card">
+    return`<div class="mob-card" onclick="verMovDetalle(${m.id})">
       <div class="mob-card-top">
         <div class="mob-date-badge">
           <div style="font-size:22px;font-weight:800;color:var(--cream);line-height:1">${cd||'—'}</div>
@@ -3704,7 +3777,7 @@ function renderFinanzas(){
           <div style="font-size:20px;font-weight:800;color:${esIngreso?'var(--pink)':'var(--gold-deep)'}">${fmtM(m.monto)}</div>
           <div style="font-size:10px;color:var(--gray)">${m.citaId?'Auto · Cita #'+m.citaId:'Manual'}</div>
         </div>
-        <div class="mob-actions">
+        <div class="mob-actions" onclick="event.stopPropagation()">
           <button class="action-icon-btn action-edit" onclick="openEditMov(${m.id})" style="height:34px;width:34px" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
           <button class="action-icon-btn action-del" onclick="delMov(${m.id})" style="height:34px;width:34px" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
         </div>
@@ -3731,18 +3804,49 @@ function delMov(id){
   if(!confirm('¿Eliminar?'))return;
   D.movimientos=D.movimientos.filter(m=>m.id!==id); saveAndSync(); renderFinanzas(); renderDashboard();
 }
+// ── Detalle de un movimiento + enlace a su cita ──
+function verMovDetalle(id){
+  const m=D.movimientos.find(x=>+x.id===+id); if(!m) return;
+  const cita=m.citaId?D.citas.find(c=>+c.id===+m.citaId):null;
+  const r=(l,v)=>`<div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed var(--border);padding:3px 0"><span style="color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.5px">${l}</span><span style="font-weight:600;text-align:right">${v}</span></div>`;
+  document.getElementById('mov-det-body').innerHTML=
+    r('Fecha',fmtD(m.fecha))+
+    r('Tipo',m.tipo)+
+    r('Categoría',m.cat)+
+    r('Descripción',m.desc)+
+    r('Monto',`<span style="color:${m.tipo==='Ingreso'?'var(--pink)':'var(--gold-deep)'};font-size:15px;font-weight:800">${fmtM(m.monto)}</span>`)+
+    r('Método de pago',m.pago||'—')+
+    r('Referencia',m.ref||'—')+
+    r('Origen',m.citaId?'Automático — cita #'+m.citaId:'Manual')+
+    (cita?r('Clienta',cita.clienta)+r('Servicios',(cita.servicios||[]).map(s=>s.nombre).join(' + ')):'');
+  document.getElementById('mov-det-actions').innerHTML=
+    (m.citaId?`<button class="btn-pri" onclick="closeModal('modal-mov-det');irACita(${m.citaId})">Ver cita →</button>`:'')+
+    `<button class="btn-sec" onclick="closeModal('modal-mov-det');openEditMov(${m.id})">Editar</button>
+     <button class="btn-sec" onclick="closeModal('modal-mov-det')">Cerrar</button>`;
+  openModal('modal-mov-det');
+}
+function irACita(citaId){
+  const c=D.citas.find(x=>+x.id===+citaId);
+  if(!c){ toast('La cita ya no existe','warn'); return; }
+  const s=document.getElementById('s-citas'); if(s) s.value='';
+  const f=document.getElementById('f-est-c'); if(f) f.value='';
+  showTab('citas'); renderCitas();
+  setTimeout(()=>{
+    const el=document.getElementById('cita-row-'+c.id)||document.getElementById('cita-card-'+c.id);
+    if(el){ el.scrollIntoView({behavior:'smooth',block:'center'});
+      el.classList.remove('row-flash'); void el.offsetWidth; el.classList.add('row-flash');
+      const card=document.getElementById('cita-card-'+c.id);
+      if(card&&card!==el){ card.classList.remove('row-flash'); void card.offsetWidth; card.classList.add('row-flash'); }
+    }
+  },150);
+}
 function initMesFilter(){
-  // Replaced by date range filter — set default to current month
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth()+1).padStart(2,'0');
-  const firstDay = `${y}-${m}-01`;
-  const lastDay = new Date(y, now.getMonth()+1, 0).toISOString().split('T')[0];
+  // Por defecto se muestra TODO; el usuario filtra con Este mes / Semana si lo desea
   const desde = document.getElementById('f-fin-desde');
   const hasta = document.getElementById('f-fin-hasta');
-  if(desde) desde.value = firstDay;
-  if(hasta) hasta.value = lastDay;
-  highlightFinRango('mes');
+  if(desde) desde.value = '';
+  if(hasta) hasta.value = '';
+  highlightFinRango('todo');
 }
 function setFinRango(tipo){
   const now = new Date();
@@ -4568,8 +4672,8 @@ function saveEditCita(){
   c.descuento=descuentoEdit;
   c.precioTotal=Math.max(0,subtotalEdit-descuentoEdit);
   if(c.estado==='Completada'){
-    const movExist=D.movimientos.find(m=>m.citaId===c.id);
-    if(movExist){ movExist.monto=c.precioTotal; movExist.pago=c.pago==='Por cobrar'?'Efectivo':c.pago; }
+    const movExist=D.movimientos.find(m=>+m.citaId===+c.id);
+    if(movExist){ movExist.monto=c.precioTotal; if(c.pago!=='Por cobrar') movExist.pago=c.pago; }
     else { autoRegistrarIngreso(c); }
   }
   saveAndSync(); renderAll();
