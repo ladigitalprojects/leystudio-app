@@ -1724,7 +1724,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
     <div class="kpi-card kpi-red" style="cursor:pointer" onclick="document.getElementById('bday-section').scrollIntoView({behavior:'smooth'})">
       <div class="kpi-label">Cumpleaños próximos</div>
       <div class="kpi-value" id="n-bday">—</div>
-      <div class="kpi-sub">próximos 14 días</div>
+      <div class="kpi-sub">próximos 30 días</div>
       <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
     </div>
   </div>
@@ -1763,7 +1763,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
   <!-- Cumpleaños próximos -->
   <div class="card" style="margin-top:16px" id="bday-section">
     <div class="card-header">
-      <span class="card-title">🎂 Cumpleaños Próximos (14 días)</span>
+      <span class="card-title">🎂 Cumpleaños Próximos (30 días)</span>
     </div>
     <div id="notif-bday-list" style="margin-top:12px"></div>
   </div>
@@ -5271,7 +5271,7 @@ function renderNotificaciones(){
         </div>`;
       }).join('');
 
-  // ── Cumpleaños próximos (14 días) ──
+  // ── Cumpleaños próximos (30 días) ──
   const todDate = new Date(todStr);
   const bdayList = D.clientes.filter(c=>{
     if(!c.bday) return false;
@@ -5282,7 +5282,7 @@ function renderNotificaciones(){
     for(const yr of [thisYear, thisYear+1]){
       const bd2 = new Date(yr, parseInt(bm)-1, parseInt(bd));
       const diff = Math.floor((bd2-todDate)/86400000);
-      if(diff>=0 && diff<=14) return true;
+      if(diff>=0 && diff<=30) return true;
     }
     return false;
   }).map(c=>{
@@ -5298,7 +5298,7 @@ function renderNotificaciones(){
 
   const bl = document.getElementById('notif-bday-list');
   bl.innerHTML = bdayList.length === 0
-    ? '<p style="color:#444;font-size:13px;padding:8px 0">No hay cumpleaños en los próximos 14 días 🎉</p>'
+    ? '<p style="color:#444;font-size:13px;padding:8px 0">No hay cumpleaños en los próximos 30 días 🎉</p>'
     : bdayList.map(c=>{
         const label = c._daysUntil===0 ? '<span class="bday-badge">¡HOY! 🎂</span>'
           : c._daysUntil===1 ? '<span class="bday-badge">Mañana</span>'
