@@ -4,16 +4,23 @@
     ".write": false,
 
     "data": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      ".read": "auth != null && (auth.token.email === 'leonardoalvarado.jm@gmail.com' || auth.token.email === 'leylan.perdomo@gmail.com')",
+      ".write": "auth != null && (auth.token.email === 'leonardoalvarado.jm@gmail.com' || auth.token.email === 'leylan.perdomo@gmail.com')"
+    },
+
+    "backups": {
+      ".read": "auth != null && (auth.token.email === 'leonardoalvarado.jm@gmail.com' || auth.token.email === 'leylan.perdomo@gmail.com')",
+      ".write": "auth != null && (auth.token.email === 'leonardoalvarado.jm@gmail.com' || auth.token.email === 'leylan.perdomo@gmail.com')"
     },
 
     "pub": {
-      ".read": "auth != null",
-      ".write": "auth != null",
+      ".read": "auth != null && (auth.token.email === 'leonardoalvarado.jm@gmail.com' || auth.token.email === 'leylan.perdomo@gmail.com')",
+      ".write": "auth != null && (auth.token.email === 'leonardoalvarado.jm@gmail.com' || auth.token.email === 'leylan.perdomo@gmail.com')",
       "$token": {
         ".read": true,
-        ".write": true
+        "ficha": { ".write": true },
+        "correo": { ".write": true, ".validate": "newData.isString() && newData.val().length < 120" },
+        "ig": { ".write": true, ".validate": "newData.isString() && newData.val().length < 80" }
       }
     }
   }

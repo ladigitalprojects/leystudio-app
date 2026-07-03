@@ -322,6 +322,7 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
 .action-pdf{background:rgba(178,146,87,.15);color:var(--gold-deep);}
 .action-cobrar{background:rgba(221,152,177,.22);color:#9a3a60;}
 .row-flash{animation:rowFlash 2.4s ease;}
+@media(max-width:900px){.stats-extra-grid{grid-template-columns:1fr!important;}}
 @keyframes rowFlash{0%,40%{background:rgba(221,152,177,.35);}100%{background:transparent;}}
 .action-msg{background:rgba(221,152,177,.1);color:var(--pink);}
 .action-edit{background:rgba(178,146,87,.1);color:var(--gold-deep);}
@@ -1056,6 +1057,18 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-avisos">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-title">☀️ Avisos de hoy
+      <button class="modal-close" onclick="closeModal('modal-avisos')">✕</button>
+    </div>
+    <div id="avisos-body" style="font-size:13px;line-height:1.7"></div>
+    <div class="factions">
+      <button class="btn-sec" onclick="closeModal('modal-avisos')">Entendido</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-cobro">
   <div class="modal" style="max-width:380px">
     <div class="modal-title">💰 Registrar cobro
@@ -1426,7 +1439,10 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
   <div class="table-card">
     <div class="th">
       <div class="tt">Ingresos y Gastos</div>
-      <button class="add-btn" onclick="toggleForm('fm')">+ Nuevo movimiento</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="hbtn hbtn-outline" onclick="cierreCajaPDF()" style="font-size:12px">🗓 Cierre del día</button>
+        <button class="add-btn" onclick="toggleForm('fm')">+ Nuevo movimiento</button>
+      </div></div>
 
     <div class="form-box" id="fm"><div class="form-box-inner"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)"><span style="font-size:15px;font-weight:800;color:var(--cream)">Nuevo Movimiento</span><button onclick="toggleForm('fm')" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&#x2715;</button></div>
       <div class="fg">
@@ -1798,6 +1814,17 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
     <!-- List -->
     <div id="stats-tab-grid"></div>
   </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px" class="stats-extra-grid">
+    <div class="table-card">
+      <span style="font-size:11px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:1px">Ingresos por categoría — mes actual</span>
+      <div id="stats-cat" style="margin-top:12px"></div>
+    </div>
+    <div class="table-card">
+      <span style="font-size:11px;font-weight:700;color:var(--gold-deep);text-transform:uppercase;letter-spacing:1px">Origen de las citas</span>
+      <div id="stats-origen" style="margin-top:12px"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ══ REPORTES ══ -->
@@ -1882,6 +1909,13 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
       <button class="hbtn hbtn-outline" onclick="probarConexion()">Probar conexión</button>
       <button class="hbtn hbtn-outline" onclick="exportJSON()">Exportar backup</button>
       <label class="hbtn hbtn-outline" style="cursor:pointer">Importar backup<input type="file" accept=".json" style="display:none" onchange="doImport(event)"></label>
+    </div>
+    <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:700;color:var(--gold-deep)">RESPALDOS AUTOMÁTICOS <span style="font-weight:400;color:var(--gray)">(semanal, se guardan los últimos 8)</span></span>
+        <button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="crearBackupAhora()">Crear respaldo ahora</button>
+      </div>
+      <div id="backups-list"></div>
     </div>
     <div id="cloud-test-result" style="display:none;font-size:12px;padding:8px 10px;border-radius:6px;margin-bottom:8px;font-family:monospace;"></div>
     <p class="cfg-note">Los datos se sincronizan automáticamente con cada registro guardado.</p>
@@ -2009,6 +2043,27 @@ const BASE_SVCS=[
   {codigo:'DEP-001',cat:'Depilación',nombre:'Depilación',duracion:15,precio:50,descripcion:'',productos:[],custom:false}
 ];
 function getAllSvcs(){ return [...BASE_SVCS,...(D.catalogoCustom||[])]; }
+// Duración estimada de una cita (min): suma de duraciones del catálogo; 60 min si no se encuentra
+function _durCita(c){
+  const all=getAllSvcs();
+  let t=0;
+  (c.servicios||[]).forEach(s=>{
+    const m=all.find(x=>x.nombre===s.nombre);
+    t+=(m&&m.duracion)?m.duracion:60;
+  });
+  return t||60;
+}
+function _horaMin(h){ const p=String(h||'').split(':'); return (+p[0]||0)*60+(+p[1]||0); }
+// ¿Se solapa una nueva cita con otra existente del mismo día?
+function _citaChoca(fecha,hora,dur,exceptoId){
+  const ini=_horaMin(hora), fin=ini+(dur||60);
+  return (D.citas||[]).find(x=>{
+    if(!x||x.fecha!==fecha||x.estado==='Cancelada') return false;
+    if(exceptoId!=null&&+x.id===+exceptoId) return false;
+    const xi=_horaMin(x.hora), xf=xi+_durCita(x);
+    return ini<xf && xi<fin;
+  });
+}
 function getCats(){ return [...new Set(getAllSvcs().map(s=>s.cat))]; }
 
 // ═══════════════════════════════════════════════════
@@ -2341,7 +2396,7 @@ function openCampana(){
   const cont=document.getElementById('camp-lista');
   cont.innerHTML=dest.length?dest.map(c=>{
     const mail=_clienteCorreo(c);
-    return `<label style="display:flex;align-items:center;gap:8px;font-size:12.5px;padding:4px 2px;cursor:pointer"><input type="checkbox" class="camp-dest" checked data-email="${mail}" data-nombre="${(c.nombre||'').replace(/"/g,'&quot;')}" onchange="actualizarCampCount()"> <strong style="color:var(--cream)">${c.nombre}</strong> <span style="color:var(--gray);font-size:11.5px">· ${mail}</span></label>`;
+    return `<label style="display:flex;align-items:center;gap:8px;font-size:12.5px;padding:4px 2px;cursor:pointer"><input type="checkbox" class="camp-dest" checked data-email="${mail}" data-nombre="${(c.nombre||'').replace(/"/g,'&quot;')}" onchange="actualizarCampCount()"> <strong style="color:var(--cream)">${_esc(c.nombre)}</strong> <span style="color:var(--gray);font-size:11.5px">· ${_esc(mail)}</span></label>`;
   }).join(''):'<div style="color:var(--gray);font-size:12px;padding:4px 2px">Ninguna clienta tiene correo registrado — puedes agregar correos manualmente abajo.</div>';
   document.getElementById('camp-extra').value='';
   document.getElementById('camp-prog').textContent='';
@@ -2433,7 +2488,8 @@ async function pushToCloud(){
       // Espejo público actualizado (solo lo que la clienta necesita ver)
       const pubAll = {};
       (D.clientes||[]).forEach(c=>{ if(c && c.fichaToken) pubAll[c.fichaToken] = _pubPayload(c); });
-      await authedFetch(FIREBASE_BASE + '/pub.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(pubAll)});
+      // PATCH (no PUT): actualiza los tokens conocidos sin borrar los que este dispositivo no conoce
+      await authedFetch(FIREBASE_BASE + '/pub.json', {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(pubAll)});
     }catch(e){ /* sin red o sin sesión: seguimos con datos locales */ }
     const body = JSON.stringify(D);
     const sizeKB = Math.round(body.length / 1024);
@@ -2527,6 +2583,76 @@ async function syncNow(){
     if(ok) toast('☁ Datos sincronizados con Firebase ✓');
     else   toast('⚠️ No se pudo conectar con Firebase','warn');
   }
+}
+
+// ═══ RESPALDOS AUTOMÁTICOS (nodo /backups en Firebase) ═══
+function _backupPayload(){
+  // Clonar sin fotos si el tamaño es excesivo (las fotos viven en el estado principal)
+  let body=JSON.stringify(D);
+  if(body.length>6*1024*1024){
+    const lite=JSON.parse(body);
+    (lite.clientes||[]).forEach(c=>{ if(c) delete c.foto; });
+    if(lite.svcExtra) Object.values(lite.svcExtra).forEach(v=>{ if(v&&v.fotos) v.fotos=[]; });
+    body=JSON.stringify(lite);
+  }
+  return body;
+}
+async function checkAutoBackup(){
+  try{
+    const r=await authedFetch(FIREBASE_BASE+'/backups.json?shallow=true');
+    if(!r.ok) return;
+    const keys=Object.keys((await r.json())||{}).sort();
+    const ult=keys[keys.length-1]||'';
+    const hace7=new Date(Date.now()-7*86400000).toISOString().split('T')[0];
+    if(ult>=hace7) return; // ya hay respaldo reciente
+    await crearBackupAhora(true);
+    // Conservar solo los últimos 8
+    const r2=await authedFetch(FIREBASE_BASE+'/backups.json?shallow=true');
+    const ks=Object.keys((await r2.json())||{}).sort();
+    for(const k of ks.slice(0,Math.max(0,ks.length-8))){
+      await authedFetch(FIREBASE_BASE+'/backups/'+k+'.json',{method:'DELETE'});
+    }
+  }catch(e){ console.warn('autobackup',e); }
+}
+async function crearBackupAhora(silencioso){
+  try{
+    const key=todayStr();
+    const r=await authedFetch(FIREBASE_BASE+'/backups/'+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:_backupPayload()});
+    if(r.ok){ if(!silencioso) toast('💾 Respaldo creado: '+key); renderBackupsList(); return true; }
+    if(!silencioso) toast('⚠️ No se pudo crear el respaldo','warn');
+  }catch(e){ if(!silencioso) toast('⚠️ Error al respaldar: '+e.message,'warn'); }
+  return false;
+}
+async function renderBackupsList(){
+  const box=document.getElementById('backups-list'); if(!box) return;
+  box.innerHTML='<span style="font-size:12px;color:var(--gray)">Cargando…</span>';
+  try{
+    const r=await authedFetch(FIREBASE_BASE+'/backups.json?shallow=true');
+    const keys=Object.keys((await r.json())||{}).sort().reverse();
+    box.innerHTML=keys.length?keys.map(k=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dashed var(--border)">
+      <span style="flex:1;font-size:13px">💾 ${fmtD(k)}</span>
+      <button class="hbtn hbtn-outline" style="font-size:11px;padding:4px 10px" onclick="restaurarBackup('${k}')">Restaurar</button>
+    </div>`).join(''):'<span style="font-size:12px;color:var(--gray)">Aún no hay respaldos. Se crea uno automáticamente cada semana.</span>';
+  }catch(e){ box.innerHTML='<span style="font-size:12px;color:var(--gray)">No se pudo cargar la lista.</span>'; }
+}
+async function restaurarBackup(key){
+  if(!confirm('¿Restaurar el respaldo del '+fmtD(key)+'?\n\nLos datos actuales serán reemplazados por los de esa fecha.')) return;
+  try{
+    const r=await authedFetch(FIREBASE_BASE+'/backups/'+key+'.json');
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const snap=await r.json();
+    if(!snap||!snap.citas){ toast('⚠️ Respaldo vacío o inválido','warn'); return; }
+    Object.keys(D).forEach(k=>{ if(snap[k]!==undefined) D[k]=snap[k]; });
+    D.citas=(D.citas||[]).filter(Boolean); D.clientes=(D.clientes||[]).filter(Boolean);
+    D.movimientos=(D.movimientos||[]).filter(Boolean); D.inventario=(D.inventario||[]).filter(Boolean);
+    normalizarBdays();
+    // Marcar todo como recién restaurado para que el merge no lo pise con la nube
+    const t=Date.now();
+    ['citas','clientes','movimientos','inventario'].forEach(k=>(D[k]||[]).forEach(x=>{ if(x) x._ts=t; }));
+    D.tomb={};
+    saveLocal(); await pushToCloud(); renderAll();
+    toast('✅ Respaldo del '+fmtD(key)+' restaurado');
+  }catch(e){ toast('⚠️ Error al restaurar: '+e.message,'warn'); }
 }
 
 async function probarConexion(){
@@ -2637,7 +2763,7 @@ function _buildReciboDoc(citaId){
   doc.setFont('helvetica','bold'); doc.setFontSize(15.5); doc.setTextColor(...brown);
   doc.text('FACTURA PROFORMA',ML,32,{charSpace:2});
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...soft);
-  doc.text('Proforma N° '+String(c.id).padStart(4,'0'),ML,40);
+  doc.text('Proforma N° '+_shortId(c.id),ML,40);
   const fLarga=(typeof _fmtFechaLarga==='function')?_fmtFechaLarga(c.fecha):fmtD(c.fecha);
   doc.text(fLarga+(c.hora?('  ·  '+c.hora):''),ML,45.5);
 
@@ -2723,6 +2849,73 @@ function _buildReciboDoc(citaId){
   const filename=`LeyStudio_Proforma_${c.clienta.replace(/\s/g,'_')}_${c.fecha}.pdf`;
   return {doc, c, filename};
 }
+function cierreCajaPDF(){
+  const _jsPDF=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;
+  if(!_jsPDF){ toast('⚠️ Recarga la página','warn'); return; }
+  const hoy=todayStr();
+  const movsHoy=(D.movimientos||[]).filter(m=>m&&m.fecha===hoy);
+  const ingHoy=movsHoy.filter(m=>m.tipo==='Ingreso');
+  const gasHoy=movsHoy.filter(m=>m.tipo==='Gasto');
+  const porMetodo={};
+  ingHoy.forEach(m=>{ const k=m.pago||'Otro'; porMetodo[k]=(porMetodo[k]||0)+(m.monto||0); });
+  const totIng=ingHoy.reduce((s,m)=>s+(m.monto||0),0);
+  const totGas=gasHoy.reduce((s,m)=>s+(m.monto||0),0);
+  const pend=(D.citas||[]).filter(c=>c&&c.estado==='Completada'&&c.pago==='Por cobrar');
+  const totPend=pend.reduce((s,c)=>s+(c.precioTotal||0),0);
+  const citasHoy=(D.citas||[]).filter(c=>c&&c.fecha===hoy&&c.estado==='Completada').length;
+
+  const doc=new _jsPDF({unit:'mm',format:'a5',orientation:'portrait'});
+  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
+  const pinkBand=[235,178,197], brown=[61,43,31], soft=[110,88,74], goldDk=[169,136,77];
+  const ML=16, MR=W-16;
+  try{ doc.addImage(_reciboBg(),'JPEG',0,0,W,H); }catch(e){ doc.setFillColor(253,249,245); doc.rect(0,0,W,H,'F'); }
+  if(window.__logoReciboPng){ const ar=window.__logoReciboAR||1; const lh=28, lw=Math.min(32,lh*ar);
+    try{ doc.addImage(window.__logoReciboPng,'PNG',MR-lw,13,lw,lh); }catch(e){} }
+  doc.setFont('helvetica','bold'); doc.setFontSize(15.5); doc.setTextColor(...brown);
+  doc.text('CIERRE DE CAJA',ML,32,{charSpace:2});
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...soft);
+  doc.text(_fmtFechaLarga(hoy),ML,40);
+
+  let y=58;
+  const fila=(l,v,destacar,color)=>{
+    doc.setFont('helvetica',destacar?'bold':'normal'); doc.setFontSize(destacar?10:9);
+    doc.setTextColor(...(destacar?brown:soft)); doc.text(l,ML,y);
+    doc.setFont('helvetica','bold'); doc.setTextColor(...(color||brown));
+    doc.text(v,MR,y,{align:'right'});
+    doc.setDrawColor(224,209,184); doc.setLineWidth(.2); doc.setLineDashPattern([0.6,1],0);
+    doc.line(ML,y+2,MR,y+2); doc.setLineDashPattern([],0);
+    y+=8;
+  };
+  const secc=t=>{ doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...goldDk);
+    doc.text(t.toUpperCase(),ML,y,{charSpace:1.2}); y+=6; };
+
+  secc('Ingresos del día');
+  const mets=Object.keys(porMetodo);
+  if(mets.length) mets.forEach(k=>fila('  '+k,'L. '+porMetodo[k].toLocaleString('es-HN')));
+  else fila('  Sin ingresos hoy','L. 0');
+  fila('Total ingresos','L. '+totIng.toLocaleString('es-HN'),true,[154,58,96]);
+  y+=3; secc('Gastos del día');
+  fila('Total gastos','L. '+totGas.toLocaleString('es-HN'),true,goldDk);
+  y+=3;
+  doc.setFillColor(...pinkBand); doc.rect(ML,y-4,MR-ML,11,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...brown);
+  doc.text('BALANCE DEL DÍA',ML+4,y+3,{charSpace:.8});
+  doc.text('L. '+(totIng-totGas).toLocaleString('es-HN'),MR-4,y+3,{align:'right'});
+  y+=16;
+  secc('Otros');
+  fila('Citas completadas hoy',String(citasHoy));
+  fila('Pendiente por cobrar (total)','L. '+totPend.toLocaleString('es-HN'),false,[154,58,96]);
+
+  const fy=H-24;
+  doc.setDrawColor(...goldDk); doc.setLineWidth(.4); doc.line(W/2-12,fy,W/2+12,fy);
+  doc.setFont('times','italic'); doc.setFontSize(9.5); doc.setTextColor(...brown);
+  doc.text('Ley Studio · Nail Artist',W/2,fy+5.5,{align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.3); doc.setTextColor(...goldDk);
+  doc.text('Generado el '+new Date().toLocaleString('es-HN'),W/2,fy+10,{align:'center'});
+
+  doc.save('LeyStudio_Cierre_'+hoy+'.pdf');
+  toast('🗓 Cierre del día descargado');
+}
 function descargarReciboPDF(citaId){
   try{
     const r=_buildReciboDoc(citaId); if(!r) return;
@@ -2787,6 +2980,8 @@ function saveLocal(){
 // Cada registro lleva _ts (última modificación). Los borrados dejan "lápida" en D.tomb
 // para que no resuciten al sincronizar con otro dispositivo.
 function _touch(r){ if(r) r._ts=Date.now(); return r; }
+// Escapar HTML en datos no confiables (ficha pública editable por clientas)
+function _esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 function _tomb(col,id){
   D.tomb=D.tomb||{};
   D.tomb[col]=D.tomb[col]||{};
@@ -2956,11 +3151,14 @@ const inThisMo=s=>{
   if(!s)return false;
   let ds=s;
   if(s.includes('/'))ds=s.split('/').reverse().join('-'); // DD/MM/YYYY → YYYY-MM-DD
-  const d=new Date(ds);
+  const d=new Date(ds+'T12:00:00'); // mediodía local: evita que el día 1 caiga en el mes anterior (UTC-6)
   return !isNaN(d)&&d.getMonth()===_dashMes&&d.getFullYear()===_dashAnio;
 };
 const invSt=i=>i.stock===0?'empty':i.stock<=i.min?'low':'ok';
-const nextId=arr=>arr.length?Math.max(...arr.map(x=>x.id))+1:1;
+// ID único incluso si dos dispositivos crean registros sin haber sincronizado:
+// timestamp en ms, monotónico por dispositivo. (Antes: max+1 → colisiones que pisaban registros.)
+const nextId=arr=>{ const t=Date.now(); nextId._l=Math.max(t,(nextId._l||0)+1); return nextId._l; };
+const _shortId=id=>{ const s=String(id); return s.length>6?s.slice(-6):s.padStart(4,'0'); };
 function clientStats(nombre){
   const comp=D.citas.filter(c=>c.clienta===nombre&&c.estado==='Completada');
   const visitas=comp.length, total=comp.reduce((s,c)=>s+(c.precioTotal||0),0);
@@ -2982,7 +3180,7 @@ function autoRegistrarIngreso(cita,fechaCobro){
     desc:svcsStr+' – '+cita.clienta,
     monto:cita.precioTotal||0,
     pago:cita.pago,
-    ref:'CI-'+String(id).padStart(3,'0'),citaId:cita.id,_ts:Date.now()
+    ref:'CI-'+_shortId(id),citaId:cita.id,_ts:Date.now()
   });
   return true;
 }
@@ -3200,7 +3398,18 @@ function addCita(){
     estado:document.getElementById('c-estado').value,
     notas:document.getElementById('c-notas').value.trim(),origen:'manual',_ts:Date.now()
   };
+  // Validaciones: cita duplicada y choque de horario
+  const dup=D.citas.find(x=>x&&x.clienta.toLowerCase()===clienta.toLowerCase()&&x.fecha===c.fecha&&x.hora===c.hora&&x.estado!=='Cancelada');
+  if(dup && !confirm('⚠️ '+clienta+' ya tiene una cita ese día a esa hora. ¿Agendar de todos modos?')) return;
+  const choque=c.hora?_citaChoca(c.fecha,c.hora,_durCita(c)):null;
+  if(choque && !confirm('⚠️ Se cruza con la cita de '+choque.clienta+' a las '+choque.hora+' (dura ~'+_durFmt(_durCita(choque))+'). ¿Agendar de todos modos?')) return;
   D.citas.push(c);
+  // Crear clienta automáticamente si no existe
+  if(!D.clientes.some(x=>x&&x.nombre.toLowerCase()===clienta.toLowerCase())){
+    D.clientes.push({id:nextId(D.clientes),nombre:clienta,tel:c.tel||'',ig:'',correo:'',fecha:todayStr(),bday:'',notas:'Creada automáticamente desde una cita',_ts:Date.now()});
+    actualizarDatalist();
+    toast('👤 Clienta nueva registrada: '+clienta);
+  }
   if(c.estado==='Completada'){
     if(autoRegistrarIngreso(c)) toast('✅ Cita guardada e ingreso registrado en Finanzas');
     else toast('✅ Cita guardada — pendiente de cobro (botón 💰)','warn');
@@ -3634,7 +3843,7 @@ function buildFichaPage(c,f,logoSrc,filename){
   const fmtD=s=>{if(!s)return '';const p=s.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:s;};
   const dot=a=>'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+(a?PINK:LGOLD)+';flex-shrink:0;margin-top:1px"></span>';
   const chk=(arr,v)=>dot((arr||[]).includes(v));
-  const fld=(lbl,val,extra)=>'<div style="margin-bottom:5px'+(extra?';'+extra:'')+'"><div style="font-size:5.5pt;font-weight:700;color:'+PINK+';letter-spacing:.5px;margin-bottom:1px">'+lbl+'</div><div style="background:'+BEIGE+';border-radius:3px;padding:2px 7px;min-height:15px;font-size:8pt;color:'+DARK+'">'+((val||'')+'')+'</div></div>';
+  const fld=(lbl,val,extra)=>'<div style="margin-bottom:5px'+(extra?';'+extra:'')+'"><div style="font-size:5.5pt;font-weight:700;color:'+PINK+';letter-spacing:.5px;margin-bottom:1px">'+lbl+'</div><div style="background:'+BEIGE+';border-radius:3px;padding:2px 7px;min-height:15px;font-size:8pt;color:'+DARK+'">'+_esc(val||'')+'</div></div>';
   const sec=t=>'<div style="display:flex;align-items:center;gap:8px;margin:7px 0 5px"><div style="flex:1;height:1px;background:'+GOLD+'"></div><div style="font-size:9.5pt;font-weight:700;color:'+PINK+';letter-spacing:2px;white-space:nowrap">'+t+'</div><div style="flex:1;height:1px;background:'+GOLD+'"></div></div>';
   const sub=t=>'<div style="font-size:6pt;font-weight:700;color:'+PINK+';letter-spacing:1px;margin:5px 0 3px">'+t+'</div>';
   const col=t=>'<div style="font-size:5.5pt;font-weight:700;color:'+GOLD+';letter-spacing:1px;margin:0 0 3px">'+t+'</div>';
@@ -3731,8 +3940,8 @@ body{width:210mm;min-height:297mm;font-family:Arial,sans-serif;background:#F5EFE
       ${fld('TELEFONO / WHATS APP',c.tel)}
       ${fld('TELEFONO EMERGENCIA',f.telEmg)}
       <div style="display:flex;gap:5px">
-        <div style="flex:1"><div style="font-size:5.5pt;color:${PINK};font-weight:700">GUSTOS: musica</div><div style="background:${BEIGE};border-radius:3px;padding:2px 6px;font-size:7.5pt;color:${DARK}">${(f.musica||'')}</div></div>
-        <div style="flex:1"><div style="font-size:5.5pt;color:${PINK};font-weight:700">snack favorito</div><div style="background:${BEIGE};border-radius:3px;padding:2px 6px;font-size:7.5pt;color:${DARK}">${(f.snack||'')}</div></div>
+        <div style="flex:1"><div style="font-size:5.5pt;color:${PINK};font-weight:700">GUSTOS: musica</div><div style="background:${BEIGE};border-radius:3px;padding:2px 6px;font-size:7.5pt;color:${DARK}">${_esc(f.musica||'')}</div></div>
+        <div style="flex:1"><div style="font-size:5.5pt;color:${PINK};font-weight:700">snack favorito</div><div style="background:${BEIGE};border-radius:3px;padding:2px 6px;font-size:7.5pt;color:${DARK}">${_esc(f.snack||'')}</div></div>
       </div>
     </div>
   </div>
@@ -3743,7 +3952,7 @@ body{width:210mm;min-height:297mm;font-family:Arial,sans-serif;background:#F5EFE
     <div style="width:38%">
       ${sub('INFORMACIÓN CLÍNICA')}
       ${clinica.map(v=>item('',f.clinica,v)).join('')}
-      <div style="display:flex;align-items:flex-start;gap:4px;margin-top:3px">${dot(false)}<span style="font-size:7pt;color:${DARK}">Observaciones: ${(f.obsClinicas||'_______________________')}</span></div>
+      <div style="display:flex;align-items:flex-start;gap:4px;margin-top:3px">${dot(false)}<span style="font-size:7pt;color:${DARK}">Observaciones: ${_esc(f.obsClinicas||'_______________________')}</span></div>
     </div>
     <div style="flex:1">
       ${sub('EVALUACIÓN DE LA UÑA NATURAL')}
@@ -3805,7 +4014,7 @@ body{width:210mm;min-height:297mm;font-family:Arial,sans-serif;background:#F5EFE
   <div style="height:1px;background:${GOLD};margin-bottom:4px"></div>
 
   <div style="font-size:9pt;font-weight:700;color:${PINK};letter-spacing:2px;margin-bottom:3px">OBSERVACIONES</div>
-  <div style="border-bottom:1px solid ${DARK};min-height:9px;font-size:8pt;color:${DARK};padding-bottom:2px">${(f.obs||'')}</div>
+  <div style="border-bottom:1px solid ${DARK};min-height:9px;font-size:8pt;color:${DARK};padding-bottom:2px">${_esc(f.obs||'')}</div>
   <div style="border-bottom:1px solid #ccc;margin-top:7px;min-height:9px"></div>
   <div style="border-bottom:1px solid #ccc;margin-top:7px;min-height:9px"></div>
   <div style="border-bottom:1px solid #ccc;margin-top:7px;min-height:9px"></div>
@@ -3920,6 +4129,7 @@ function addMovimiento(){
     ref:document.getElementById('m-ref').value.trim(),
     citaId:null,_ts:Date.now()};
   if(!m.desc){toast('Ingresa la descripción','warn');return;}
+  if(!(m.monto>0)){toast('El monto debe ser mayor a 0','warn');return;}
   D.movimientos.push(m); saveAndSync(); renderFinanzas(); renderDashboard();
   toggleForm('fm'); document.getElementById('m-desc').value=''; document.getElementById('m-monto').value='';
   toast('✅ Movimiento registrado');
@@ -4059,7 +4269,7 @@ function addInventario(){
   if(!nombre){toast('Ingresa el nombre','warn');return;}
   D.inventario.push({id:nextId(D.inventario),nombre,
     cat:document.getElementById('i-cat').value,
-    stock:+document.getElementById('i-s').value||0,min:+document.getElementById('i-m').value||1,
+    stock:Math.max(0,Math.round(+document.getElementById('i-s').value||0)),min:Math.max(0,Math.round(+document.getElementById('i-m').value||1)),
     unidad:document.getElementById('i-u').value||'Unidad',
     precio:+document.getElementById('i-p').value||0,
     proveedor:document.getElementById('i-prov').value.trim(),
@@ -4110,8 +4320,8 @@ function saveEditInv(){
   if(!nombre){toast('Ingresa el nombre','warn');return;}
   item.nombre=nombre;
   item.cat=document.getElementById('i-cat').value;
-  item.stock=+document.getElementById('i-s').value||0;
-  item.min=+document.getElementById('i-m').value||1;
+  item.stock=Math.max(0,Math.round(+document.getElementById('i-s').value||0));
+  item.min=Math.max(0,Math.round(+document.getElementById('i-m').value||1));
   item.unidad=document.getElementById('i-u').value||'Unidad';
   item.precio=+document.getElementById('i-p').value||0;
   item.proveedor=document.getElementById('i-prov').value.trim();
@@ -4422,11 +4632,7 @@ function saveNewSvc(){
   D.catalogoCustom.push({id:Date.now(),codigo,cat,nombre,precio:+document.getElementById('sv-precio').value||0,duracion:+document.getElementById('sv-dur').value||0,descripcion:'',productos:[],custom:true});
   saveAndSync();toggleForm('fsvc');renderServicios();toast('Servicio agregado');
 }
-function delCustomSvc(id){
-  if(!confirm('¿Eliminar este servicio?'))return;
-  D.catalogoCustom=(D.catalogoCustom||[]).filter(s=>s.id!==id);
-  saveAndSync();renderServicios();toast('Servicio eliminado');
-}
+// (delCustomSvc está definido más abajo — se eliminó un duplicado muerto)
 
 // ── Gestionar categorías ──
 function openCatModal(){ _renderCatList(); openModal('modal-cat-mgr'); }
@@ -4649,8 +4855,8 @@ function renderDashboard(){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
     const mm=d.getMonth(),yy=d.getFullYear();
     months.push(d.toLocaleString('es',{month:'short'}));
-    ing6.push(D.movimientos.filter(x=>x.tipo==='Ingreso'&&new Date(x.fecha).getMonth()===mm&&new Date(x.fecha).getFullYear()===yy).reduce((s,x)=>s+x.monto,0));
-    gas6.push(D.movimientos.filter(x=>x.tipo==='Gasto'&&new Date(x.fecha).getMonth()===mm&&new Date(x.fecha).getFullYear()===yy).reduce((s,x)=>s+x.monto,0));
+    ing6.push(D.movimientos.filter(x=>x.tipo==='Ingreso'&&(x.fecha||'').startsWith(yy+'-'+String(mm+1).padStart(2,'0'))).reduce((s,x)=>s+x.monto,0));
+    gas6.push(D.movimientos.filter(x=>x.tipo==='Gasto'&&(x.fecha||'').startsWith(yy+'-'+String(mm+1).padStart(2,'0'))).reduce((s,x)=>s+x.monto,0));
   }
   // Chart 1: Ingresos vs Gastos — PIE
   const ing6Total=ing6.reduce((a,b)=>a+b,0);
@@ -4683,7 +4889,7 @@ function renderDashboard(){
 
   // Métodos de pago
   const pagoMap={};
-  D.movimientos.filter(m=>m.tipo==='Ingreso'&&fInRng(m.fecha)).forEach(m=>{
+  D.movimientos.filter(m=>m.tipo==='Ingreso'&&inThisMo(m.fecha)).forEach(m=>{
     const k=m.pago||'Otro'; pagoMap[k]=(pagoMap[k]||0)+(m.monto||0);
   });
   const pagoL=Object.keys(pagoMap); const pagoV=Object.values(pagoMap);
@@ -4840,6 +5046,7 @@ function saveEditMov(){
   m.pago=document.getElementById('e-mov-pago').value;
   m.desc=document.getElementById('e-mov-desc').value.trim()||m.desc;
   m.monto=+document.getElementById('e-mov-monto').value||0;
+  if(!(m.monto>0)){toast('El monto debe ser mayor a 0','warn');return;}
   m.ref=document.getElementById('e-mov-ref').value.trim();
   _touch(m);
   saveAndSync(); renderFinanzas(); renderDashboard();
@@ -4902,10 +5109,11 @@ function showDayCitas(ds){
       const border=c.estado==='Completada'?'#27ae60':c.estado==='Confirmada'?'var(--gold)':'#c0392b';
       const svcs=(c.servicios||[]).map(s=>`<div style="font-size:12px;color:#aaa;margin-top:3px">${s.nombre} <span style="color:var(--gold)">L.${s.precio}</span></div>`).join('');
       const nota=c.notas?`<div style="font-size:11px;color:#555;margin-top:5px">📝 ${c.notas}</div>`:'';
+      const durTxt=`<div style="font-size:11px;color:var(--gold-deep);margin-top:3px">⏱ ~${_durFmt(_durCita(c))}</div>`;
       const complBtn=c.estado==='Confirmada'?`<button class="complete-btn" onclick="completarCita(${c.id});renderCalendar();showDayCitas('${ds}')">✔ Listo</button>`:'';
       return`<div style="background:var(--card);border-radius:8px;padding:14px;margin-bottom:8px;border-left:3px solid ${border};border:1px solid var(--border)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-          <div><div style="font-size:15px;font-weight:700">${c.hora} · ${c.clienta}</div>${svcs}${nota}</div>
+          <div><div style="font-size:15px;font-weight:700">${c.hora} · ${c.clienta}</div>${svcs}${durTxt}${nota}</div>
           <div style="text-align:right;flex-shrink:0">
             ${estadoBadge(c.estado)}
             <div style="color:var(--pink);font-weight:700;margin-top:5px">${fmtM(c.precioTotal||0)}</div>
@@ -4921,7 +5129,7 @@ function showDayCitas(ds){
   document.getElementById('cal-detail').innerHTML=`
     <div class="card" style="margin-top:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <span class="card-title">📅 ${d} de ${mn[+m-1]} de ${y} — ${dc.length} cita${dc.length!==1?'s':''}</span>
+        <span class="card-title">📅 ${d} de ${mn[+m-1]} de ${y} — ${dc.length} cita${dc.length!==1?'s':''}${dc.length?` · carga ~${_durFmt(dc.reduce((s,c)=>s+_durCita(c),0))}`:''}</span>
         <button class="add-btn" onclick="document.getElementById('c-f').value='${ds}';showTab('citas')">+ Nueva cita aquí</button>
       </div>
       ${rows}
@@ -4996,7 +5204,7 @@ async function doLogin(){
     const r = await authedFetch(FIREBASE_URL);
     if(r.ok){
       const remote = await r.json();
-      if(remote && remote.citas){ Object.assign(D, remote); saveLocal(); }
+      if(remote){ mergeRemoteData(remote); normalizarBdays(); limpiarIngresosPrematuros(); saveLocal(); }
     }
   }catch(e){ /* sin conexión: usamos lo local */ }
   btn.textContent='ENTRAR'; btn.disabled=false;
@@ -5037,13 +5245,16 @@ function logout(){
   location.reload();
 }
 
+const TABS_SOLO_ADMIN=['FINANZAS','ESTADÍSTICAS','REPORTES','CONFIG'];
 function applyRoleUI(){
   if(!currentUser) return;
   const isAdmin = currentUser.rol === 'admin';
-  // Hide Config tab for non-admins
+  // Pestañas sensibles ocultas para roles no-admin (asistente)
   const tabs = document.querySelectorAll('.tab');
   tabs.forEach(t => {
-    if(t.textContent.includes('Config') && !isAdmin) t.style.display='none';
+    const txt=(t.textContent||'').toUpperCase();
+    if(!isAdmin && TABS_SOLO_ADMIN.some(k=>txt.includes(k))) t.style.display='none';
+    else t.style.display='';
   });
   // Show logout button with user name
   const hr = document.getElementById('header-user');
@@ -5512,6 +5723,9 @@ function enviarTodosReactivacion(){
 // NAV / FORMS
 // ═══════════════════════════════════════════════════
 function showTab(name){
+  if(currentUser && currentUser.rol!=='admin' && ['finanzas','estadisticas','reportes','config'].includes(name)){
+    toast('🔒 Esta sección es solo para administradoras','warn'); return;
+  }
   setTimeout(()=>{try{reinitFlatpickr();reinitFlatpickrTime();}catch(e){}},60);
   const _lbls={dashboard:'Dashboard',citas:'Citas',clientes:'Clientas',finanzas:'Finanzas',inventario:'Inventario',servicios:'Servicios',calendario:'Calendario',notificaciones:'Notificaciones',estadisticas:'Estadísticas',reportes:'Reportes',config:'Config'};
   const _bc=document.getElementById('h-breadcrumb');
@@ -5524,7 +5738,7 @@ function showTab(name){
   document.querySelectorAll('.tab')[map[name]]?.classList.add('active');
   if(name==='dashboard') renderDashboard();
   if(name==='calendario') renderCalendar();
-  if(name==='config') renderUsuarios();
+  if(name==='config'){ renderUsuarios(); renderBackupsList(); }
   if(name==='notificaciones') renderNotificaciones();
   if(name==='estadisticas') renderStatsTab('gasto');
   if(name==='reportes') renderReportes();
@@ -6100,7 +6314,41 @@ function _buildClientData(){
   });
 }
 
+function _statBars(el,data,mode){
+  const box=document.getElementById(el); if(!box) return;
+  const entries=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  const max=entries.length?entries[0][1]:0;
+  box.innerHTML=entries.length?entries.map(([k,v],i)=>`
+    <div style="margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+        <span style="font-weight:600">${_esc(k)}</span><strong style="color:var(--pink)">${mode==='money'?fmtM(v):v}</strong>
+      </div>
+      <div style="height:7px;background:rgba(178,146,87,.12);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${max?Math.round(v/max*100):0}%;background:${i%2?'var(--gold)':'var(--pink)'};border-radius:4px"></div>
+      </div>
+    </div>`).join(''):'<p style="font-size:12px;color:var(--gray)">Sin datos aún.</p>';
+}
+function renderStatsExtra(){
+  const hoy=todayStr(); const mes=hoy.slice(0,7);
+  const all=getAllSvcs(); const porCat={};
+  (D.citas||[]).filter(c=>c&&c.estado==='Completada'&&(c.fecha||'').startsWith(mes)).forEach(c=>{
+    (c.servicios||[]).forEach(s=>{
+      const m=all.find(x=>x.nombre===s.nombre);
+      const cat=(m&&m.cat)||'Otro';
+      porCat[cat]=(porCat[cat]||0)+(Number(s.precio)||0);
+    });
+  });
+  _statBars('stats-cat',porCat,'money');
+  const porOrigen={};
+  (D.citas||[]).forEach(c=>{
+    if(!c) return;
+    const o=c.origen==='manual'?'Registrada en el sistema':(c.origen||'Sin origen');
+    porOrigen[o]=(porOrigen[o]||0)+1;
+  });
+  _statBars('stats-origen',porOrigen,'count');
+}
 function renderStatsTab(tipo){
+  renderStatsExtra();
   // Pills active state
   ['gasto','visitas','reciente','inactivas'].forEach(k=>{
     const el=document.getElementById('stt-'+k);
@@ -6268,6 +6516,55 @@ function init(){
 
 // Arranque de la app: corre al cargar con sesión O después de un login fresco
 let _booted=false;
+function mostrarAvisosDelDia(){
+  try{
+    const hoy=todayStr();
+    if(localStorage.getItem('ls_avisos_dia')===hoy) return;
+    const items=[];
+    // 🎂 Cumpleañeras de hoy
+    const mmdd=hoy.slice(5);
+    (D.clientes||[]).filter(c=>c&&c.bday&&String(c.bday).slice(5)===mmdd).forEach(c=>{
+      items.push(`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:rgba(221,152,177,.1);border-radius:10px;margin-bottom:8px">
+        <span>🎂 Hoy cumple <strong>${_esc(c.nombre)}</strong></span>
+        <button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="closeModal('modal-avisos');openWABday(${c.id})">Felicitar</button></div>`);
+    });
+    // 📅 Recordatorios de citas de mañana
+    const man=new Date(hoy+'T12:00:00'); man.setDate(man.getDate()+1);
+    const manStr=man.toISOString().split('T')[0];
+    const rec=(D.citas||[]).filter(c=>c&&c.estado==='Confirmada'&&c.fecha===manStr);
+    if(rec.length) items.push(`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:rgba(178,146,87,.1);border-radius:10px;margin-bottom:8px">
+      <span>📅 <strong>${rec.length}</strong> cita${rec.length!==1?'s':''} mañana — recordatorio${rec.length!==1?'s':''} sin enviar</span>
+      <button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="closeModal('modal-avisos');showTab('notificaciones')">Enviar</button></div>`);
+    // 💰 Cobros pendientes
+    const pend=(D.citas||[]).filter(c=>c&&c.estado==='Completada'&&c.pago==='Por cobrar');
+    if(pend.length){
+      const tot=pend.reduce((s,c)=>s+(c.precioTotal||0),0);
+      items.push(`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:rgba(221,152,177,.1);border-radius:10px;margin-bottom:8px">
+        <span>💰 <strong>${fmtM(tot)}</strong> pendiente de cobro (${pend.length} cita${pend.length!==1?'s':''})</span>
+        <button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="closeModal('modal-avisos');showTab('finanzas')">Ver</button></div>`);
+    }
+    // 💖 Reactivación mensual de inactivas
+    const mesKey=hoy.slice(0,7);
+    if(localStorage.getItem('ls_reactiv_mes')!==mesKey){
+      const lim=new Date(hoy+'T12:00:00'); lim.setDate(lim.getDate()-30);
+      const limStr=lim.toISOString().split('T')[0];
+      const inact=(D.clientes||[]).filter(cl=>{
+        if(!cl) return false;
+        const ult=(D.citas||[]).filter(c=>c&&c.clienta===cl.nombre&&c.estado==='Completada').map(c=>c.fecha).sort().pop();
+        return ult && ult<limStr;
+      });
+      if(inact.length){
+        items.push(`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:rgba(178,146,87,.1);border-radius:10px;margin-bottom:8px">
+          <span>💖 <strong>${inact.length}</strong> clienta${inact.length!==1?'s':''} sin visita hace +30 días — campaña "Te extrañamos"</span>
+          <button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="closeModal('modal-avisos');localStorage.setItem('ls_reactiv_mes','${mesKey}');showTab('notificaciones')">Ver</button></div>`);
+      }
+    }
+    if(!items.length) return;
+    localStorage.setItem('ls_avisos_dia',hoy);
+    document.getElementById('avisos-body').innerHTML=items.join('');
+    openModal('modal-avisos');
+  }catch(e){ console.error('avisos',e); }
+}
 function appBoot(){
   if(_booted) return; _booted=true;
   initSvcDropdown();
@@ -6305,6 +6602,8 @@ document.addEventListener('input', function(e){
   pullFromCloud().then(()=>{
     const b=document.getElementById('cloud-status-badge');
     if(b) b.textContent='● Conectado';
+    setTimeout(mostrarAvisosDelDia, 900);
+    checkAutoBackup();
     // Si sigue vacío después de sync, mostrar aviso
     if(!D.citas.length && !D.clientes.length){
       showEmptyState();

@@ -6,3 +6,7 @@ RedirectMatch 404 /\.github
 
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Bloquear archivos de configuración y datos de ejemplo
+RedirectMatch 404 ^/firebase_rules\.json$
+RedirectMatch 404 ^/leystudio_demo_data\.json$
