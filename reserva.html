@@ -32,10 +32,22 @@ body{
 .hdr .tag{font-family:'Playfair Display',serif;font-style:italic;color:var(--gold-dk);font-size:13px}
 .hdr h1{font-family:'Playfair Display',serif;font-size:26px;color:var(--pink);margin-top:4px}
 .hdr .sub{font-size:12px;color:var(--soft);margin-top:5px}
-.panes{display:grid;grid-template-columns:1.15fr 1fr;min-height:380px}
-@media(max-width:720px){.panes{grid-template-columns:1fr}}
+.panes{display:grid;grid-template-columns:250px 1.2fr 1fr;min-height:420px}
+@media(max-width:860px){.panes{grid-template-columns:1fr}}
+.brand-pane{padding:30px 22px;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;text-align:center}
+.brand-pane img{width:170px;max-width:80%;margin-bottom:10px}
+.brand-pane h1{font-family:'Playfair Display',serif;font-size:24px;color:var(--pink);line-height:1.2;margin-bottom:6px}
+.brand-pane .tag{font-family:'Playfair Display',serif;font-style:italic;color:var(--gold-dk);font-size:12.5px;line-height:1.5;margin-bottom:14px}
+.brand-pane .sub{font-size:11.5px;color:var(--soft);line-height:1.6}
+.brand-info{margin-top:auto;padding-top:18px;font-size:11px;color:var(--soft);line-height:2;border-top:1px dashed var(--border);width:100%}
+@media(max-width:860px){
+  .brand-pane{border-right:none;border-bottom:1px solid var(--border);padding:24px 20px 16px}
+  .brand-pane img{width:120px}
+  .brand-pane h1{font-size:22px}
+  .brand-info{margin-top:12px;padding-top:12px}
+}
 .cal-pane{padding:20px 22px;border-right:1px solid var(--border)}
-@media(max-width:720px){.cal-pane{border-right:none;border-bottom:1px solid var(--border)}}
+@media(max-width:860px){.cal-pane{border-right:none;border-bottom:1px solid var(--border)}}
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .cal-nav .mes{font-weight:800;font-size:15px;text-transform:capitalize}
 .cal-nav button{border:1.5px solid var(--border);background:#fff;border-radius:10px;width:34px;height:34px;font-size:16px;cursor:pointer;color:var(--gold-dk)}
@@ -87,17 +99,21 @@ body{
 </head>
 <body>
 <div class="card">
-  <div class="hdr">
-    <img src="/assets/logo.png" alt="Ley Studio">
-    <div class="tag">Tu belleza y el cuidado de tus uñas son nuestra prioridad</div>
-    <h1>Reserva tu cita</h1>
-    <div class="sub">Elige el día y la hora que prefieras — te confirmamos por WhatsApp 💅</div>
-  </div>
-
   <div id="loading"><div class="spinner"></div></div>
 
-  <!-- PASO 1: calendario + horas -->
+  <!-- PASO 1: marca + calendario + horas -->
   <div class="panes hidden" id="paso1">
+    <div class="brand-pane">
+      <img src="/assets/logo.png" alt="Ley Studio">
+      <h1>Reserva tu cita</h1>
+      <div class="tag">Tu belleza y el cuidado de tus uñas son nuestra prioridad</div>
+      <div class="sub">Elige el día y la hora que prefieras — te confirmamos por WhatsApp 💅</div>
+      <div class="brand-info">
+        📍 Residencial Zarahemla, Etapa II<br>
+        💬 +504 9499-4709<br>
+        ✨ @leystudiohn
+      </div>
+    </div>
     <div class="cal-pane">
       <div class="cal-nav">
         <button id="cal-prev" onclick="moverMes(-1)">‹</button>
@@ -116,6 +132,7 @@ body{
 
   <!-- PASO 2: datos -->
   <div class="form-pane hidden" id="paso2">
+    <img src="/assets/logo.png" alt="Ley Studio" style="width:96px;display:block;margin:0 auto 10px">
     <button class="btn-back" onclick="volver()">‹ Cambiar día u hora</button>
     <div class="resumen" id="resumen"></div>
     <div class="fgrp"><label>Tu nombre completo</label><input type="text" id="f-nombre" maxlength="60" placeholder="Nombre y apellido"></div>
@@ -148,6 +165,7 @@ body{
 
   <!-- ÉXITO -->
   <div class="ok-wrap hidden" id="exito">
+    <img src="/assets/logo.png" alt="Ley Studio" style="width:110px;display:block;margin:0 auto 8px">
     <div style="font-size:50px">🎀</div>
     <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--pink);margin:8px 0">¡Solicitud enviada!</div>
     <div style="font-size:13.5px;color:var(--soft);line-height:1.7" id="exito-msg"></div>
