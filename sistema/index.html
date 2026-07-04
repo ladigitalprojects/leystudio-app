@@ -2677,8 +2677,9 @@ function renderSolicitudes(){
         <div style="flex:1;min-width:200px">
           <strong style="font-size:14px">${_esc(s.nombre)}</strong> <span style="color:var(--gray);font-size:12px">· ${_esc(s.tel)}</span>
           <div style="font-size:12px;color:var(--gray-dk);margin-top:3px">${svcs}</div>
-          <div style="font-size:12px;color:var(--gold-deep);margin-top:3px">📅 ${fmtD(s.fecha)} · ${_esc(s.hora)} · ~${_durFmt(s.dur||60)}${s.total?` · <strong style="color:var(--pink)">${fmtM(s.total)}</strong>`:''}</div>
+          <div style="font-size:12px;color:var(--gold-deep);margin-top:3px">📅 ${fmtD(s.fecha)} · ${_esc(s.hora)}${s.total?` · <strong style="color:var(--pink)">${fmtM(s.total)}</strong>`:''}</div>
           ${s.nota?`<div style="font-size:11.5px;color:var(--gray);margin-top:3px">📝 ${_esc(s.nota)}</div>`:''}
+          ${s.img&&String(s.img).indexOf('data:image')===0?`<img src="${s.img}" onclick="verImgRef(this.src)" style="margin-top:6px;max-width:90px;max-height:90px;border-radius:8px;border:1.5px solid rgba(221,152,177,.5);cursor:zoom-in" title="Ver imagen de referencia">`:''}
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="hbtn hbtn-gold" style="font-size:11px;padding:6px 12px" onclick="aceptarSolicitud('${_esc(id)}')">✓ Aceptar</button>
@@ -2688,6 +2689,13 @@ function renderSolicitudes(){
       </div>
     </div>`;
   }).join('');
+}
+function verImgRef(src){
+  if(!src) return;
+  const lb=document.getElementById('img-lightbox');
+  const im=document.getElementById('img-lightbox-img');
+  if(!lb||!im) return;
+  im.src=src; lb.style.display='flex';
 }
 async function aceptarSolicitud(id){
   const s=(window._reservasSol||{})[id]; if(!s) return;
@@ -2702,6 +2710,7 @@ async function aceptarSolicitud(id){
     notas:(s.nota?('Reserva online: '+s.nota):'Reserva online'),
     origen:'auto-reserva', _ts:Date.now()
   };
+  if(s.img&&String(s.img).indexOf('data:image')===0) c.imgRef=s.img;
   D.citas.push(c);
   if(!D.clientes.some(x=>x&&x.nombre.toLowerCase()===s.nombre.toLowerCase())){
     D.clientes.push({id:nextId(D.clientes),nombre:s.nombre,tel:s.tel||'',ig:'',correo:'',fecha:todayStr(),bday:'',notas:'Creada desde reserva online',_ts:Date.now()});
@@ -2871,119 +2880,203 @@ function _reciboBg(){
 }
 
 function _buildReciboDoc(citaId){
-  citaId=+citaId; // asegurar número para comparación estricta
+  citaId=+citaId;
   const c = D.citas.find(x=>+x.id===citaId); if(!c) return null;
   const _jsPDF=(window.jspdf&&window.jspdf.jsPDF)||(typeof jspdf!=='undefined'&&jspdf.jsPDF)||window.jsPDF;
   if(!_jsPDF){ toast('⚠️ Error PDF: recarga la página','warn'); return null; }
-  const doc = new _jsPDF({unit:'mm',format:'a5',orientation:'portrait'});
-  const W = doc.internal.pageSize.getWidth();  // 148mm
-  const H = doc.internal.pageSize.getHeight(); // 210mm
+  const W=148, H=240;
+  const doc = new _jsPDF({unit:'mm',format:[W,H],orientation:'portrait'});
 
-  const pink=[221,152,177], pinkBand=[235,178,197], brown=[61,43,31], soft=[110,88,74], gold=[169,136,77];
-  const ML=16, MR=W-16;
+  // Paleta del Diseño Base
+  const rose=[194,91,112], roseSoft=[246,215,222], roseBand=[243,201,211];
+  const brown=[74,52,40], gold=[178,146,87], goldDk=[169,136,77], soft=[110,88,74];
+  const bordRosa=[236,190,200];
+  const ML=14, MR=W-14;
 
-  const bg=_reciboBg();
-  const paintBg=()=>{ try{ doc.addImage(bg,'JPEG',0,0,W,H); }catch(e){ doc.setFillColor(253,249,245); doc.rect(0,0,W,H,'F'); } };
-  paintBg();
+  try{ doc.addImage(_reciboBg(),'JPEG',0,0,W,H); }catch(e){ doc.setFillColor(253,246,246); doc.rect(0,0,W,H,'F'); }
 
-  // ── Logo superior derecho ──
-  const logoData=window.__logoReciboPng||((document.querySelector('.logo-img')||{}).src||'').startsWith('data:')&&document.querySelector('.logo-img').src||null;
-  if(logoData){
-    const ar=window.__logoReciboAR||1;
-    const lh=30, lw=Math.min(34,lh*ar);
-    try{ doc.addImage(logoData,'PNG',MR-lw,13,lw,lh); }catch(e){}
-  }
+  // ── Iconos vectoriales mínimos en círculo rosa ──
+  const circ=(x,y,r)=>{ doc.setFillColor(...roseSoft); doc.circle(x,y,r,'F'); doc.setDrawColor(...rose); doc.setLineWidth(.35); };
+  const icoPersona=(x,y)=>{ circ(x,y,4); doc.circle(x,y-1.1,1.1,'D'); doc.lines([[1.4,-1.8],[-2.8,0]],x-1.4,y+2.2); doc.setLineCap?.('round'); doc.line(x-1.8,y+2.1,x-1.4,y+.9); doc.line(x+1.8,y+2.1,x+1.4,y+.9); };
+  const icoTel=(x,y)=>{ circ(x,y,4); doc.roundedRect(x-.9,y-2,1.8,4,0.8,0.8,'D'); };
+  const icoCal=(x,y)=>{ circ(x,y,4); doc.roundedRect(x-1.8,y-1.5,3.6,3.2,.4,.4,'D'); doc.line(x-1.8,y-.6,x+1.8,y-.6); doc.line(x-.9,y-2.1,x-.9,y-1.3); doc.line(x+.9,y-2.1,x+.9,y-1.3); };
+  const icoDoc=(x,y)=>{ circ(x,y,4); doc.roundedRect(x-1.5,y-1.9,3,3.8,.3,.3,'D'); doc.line(x-.8,y-.7,x+.8,y-.7); doc.line(x-.8,y+.3,x+.8,y+.3); };
+  const icoDiam=(x,y)=>{ circ(x,y,4); doc.lines([[1.6,1.2],[-1.6,2],[-1.6,-2],[1.6,-1.2]],x,y-1.8,[1,1],'D',true); };
+  const icoCard=(x,y)=>{ circ(x,y,4); doc.roundedRect(x-2,y-1.4,4,2.8,.4,.4,'D'); doc.line(x-2,y-.4,x+2,y-.4); };
+  const icoCheck=(x,y)=>{ circ(x,y,4); doc.line(x-1.4,y,x-.3,y+1.1); doc.line(x-.3,y+1.1,x+1.5,y-1.1); };
+  const icoPct=(x,y)=>{ circ(x,y,4); doc.line(x-1.3,y+1.3,x+1.3,y-1.3); doc.circle(x-1.1,y-1.1,.45,'D'); doc.circle(x+1.1,y+1.1,.45,'D'); };
+  const checkGold=(x,y)=>{ doc.setFillColor(...gold); doc.circle(x,y,1.6,'F'); doc.setDrawColor(255,255,255); doc.setLineWidth(.4); doc.line(x-.7,y,x-.15,y+.55); doc.line(x-.15,y+.55,x+.75,y-.55); };
+  const heart=(x,y,s)=>{ doc.setDrawColor(...gold); doc.setLineWidth(.35);
+    doc.circle(x-s*.5,y-s*.3,s*.52,'D'); doc.circle(x+s*.5,y-s*.3,s*.52,'D');
+    doc.line(x-s*.98,y-.02,x,y+s); doc.line(x+s*.98,y-.02,x,y+s); };
 
-  // ── Título ──
-  doc.setFont('helvetica','bold'); doc.setFontSize(15.5); doc.setTextColor(...brown);
-  doc.text('FACTURA PROFORMA',ML,32,{charSpace:2});
-  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...soft);
-  doc.text('Proforma N° '+_shortId(c.id),ML,40);
-  const fLarga=(typeof _fmtFechaLarga==='function')?_fmtFechaLarga(c.fecha):fmtD(c.fecha);
-  doc.text(fLarga+(c.hora?('  ·  '+c.hora):''),ML,45.5);
+  // ── Encabezado ──
+  const logoData=window.__logoReciboPng||null;
+  if(logoData){ const ar=window.__logoReciboAR||1; const lh=26, lw=Math.min(30,lh*ar);
+    try{ doc.addImage(logoData,'PNG',MR-lw,9,lw,lh); }catch(e){} }
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...brown);
+  doc.text('COMPROBANTE DE SERVICIO',ML,26,{charSpace:1.4});
+  doc.setDrawColor(...gold); doc.setLineWidth(.6); doc.line(ML,29.5,ML+16,29.5);
 
-  // ── Clienta ──
-  doc.setFont('helvetica','bold'); doc.setFontSize(12.5); doc.setTextColor(...brown);
-  doc.text('CLIENTA:',ML,60,{charSpace:1.8});
-  let y=67.5;
-  const info=(label,val)=>{
-    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...brown);
-    doc.text(label,ML,y);
-    doc.setFont('helvetica','normal'); doc.setTextColor(...soft);
-    doc.text(String(val||'—'),ML+21,y);
-    y+=5.8;
+  const hora12=(h)=>{ if(!h) return ''; const [hh,mm]=String(h).split(':'); let n=+hh;
+    const ap=n>=12?'p.m.':'a.m.'; n=n%12||12; return String(n).padStart(2,'0')+':'+(mm||'00')+' '+ap; };
+  let fL=(typeof _fmtFechaLarga==='function')?_fmtFechaLarga(c.fecha):fmtD(c.fecha);
+  fL=fL.charAt(0).toUpperCase()+fL.slice(1);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...brown);
+  doc.text('Comprobante N°',ML,37);
+  doc.setFont('helvetica','bold'); doc.setTextColor(...rose);
+  doc.text(_shortId(c.id),ML+23,37);
+  doc.setDrawColor(...bordRosa); doc.setLineWidth(.3); doc.line(ML+33,33.5,ML+33,38.5);
+  doc.setFont('times','normal'); doc.setFontSize(9.5); doc.setTextColor(...brown);
+  doc.text(fL,ML+37,37);
+  if(c.hora){ const fw=doc.getTextWidth(fL); doc.setDrawColor(...bordRosa); doc.line(ML+40+fw,33.5,ML+40+fw,38.5); doc.text(hora12(c.hora),ML+44+fw,37); }
+
+  // ── Fila de info: clienta / teléfono / especialista ──
+  const infoY=49;
+  const col=(x,ico,label,val)=>{
+    ico(x+4,infoY);
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.3); doc.setTextColor(...rose);
+    doc.text(label,x+10,infoY-1.6,{charSpace:.5});
+    doc.setFont('times','normal'); doc.setFontSize(9); doc.setTextColor(...brown);
+    const vv=String(val||'—'); doc.text(vv.length>22?vv.slice(0,22)+'…':vv,x+10,infoY+2.6);
   };
-  info('Nombre',c.clienta);
-  info('Teléfono',c.tel||'—');
+  col(ML,icoPersona,'CLIENTA',c.clienta);
+  col(ML+42,icoTel,'TELÉFONO',c.tel);
+  col(ML+84,icoPersona,'ESPECIALISTA',(typeof currentUser!=='undefined'&&currentUser&&currentUser.nombre)||'Ley Studio');
+  doc.setDrawColor(...bordRosa); doc.setLineWidth(.3);
+  doc.line(ML+39,infoY-4,ML+39,infoY+4); doc.line(ML+81,infoY-4,ML+81,infoY+4);
 
   // ── Tabla de servicios ──
-  let ty=y+8;
-  const bandH=9.5, rowH=9;
-  const drawBand=(yy)=>{
-    doc.setFillColor(...pinkBand); doc.rect(ML,yy,MR-ML,bandH,'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(7.2); doc.setTextColor(...brown);
-    doc.text('DESCRIPCIÓN DE LOS SERVICIOS',ML+4,yy+6,{charSpace:.7});
-    doc.text('CANT.',93,yy+6,{align:'center',charSpace:.7});
-    doc.text('PRECIO',MR-4,yy+6,{align:'right',charSpace:.7});
-    return yy+bandH;
-  };
-  // filas: pre-calcular líneas envueltas
-  const items=(c.servicios||[]).map(s=>{
-    const nombre=String((s&&s.nombre)||'Servicio');
-    const words=nombre.split(' '); let l1='',l2='';
-    words.forEach(w=>{ if((l1+' '+w).length<=36) l1+=(l1?' ':'')+w; else l2+=(l2?' ':'')+w; });
-    return {l1,l2,precio:Number(s.precio||0),h:l2?rowH+4:rowH};
-  });
-  let ry=drawBand(ty);
-  let boxTop=ry;
-  const closeBox=(bot)=>{ doc.setDrawColor(...brown); doc.setLineWidth(.3); doc.rect(ML,boxTop,MR-ML,bot-boxTop,'D'); };
-  items.forEach(it=>{
-    if(ry+it.h>158){ closeBox(ry+2); doc.addPage(); paintBg(); ry=drawBand(20); boxTop=ry; }
-    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...brown);
-    doc.text(it.l1,ML+4,ry+6.2);
-    if(it.l2) doc.text(it.l2,ML+4,ry+10.4);
-    doc.text('1',93,ry+6.2,{align:'center'});
-    doc.text('L. '+it.precio.toLocaleString('es-HN'),MR-4,ry+6.2,{align:'right'});
-    ry+=it.h;
-  });
-  closeBox(ry+2); ry+=2;
-
-  // ── Subtotal / Descuento (sin impuestos) ──
-  const subtotal=items.reduce((a,b)=>a+b.precio,0);
-  const bx=MR-64; let by=ry+7;
-  if(c.descuento && c.descuento>0){
-    doc.setDrawColor(...brown); doc.setLineWidth(.3); doc.rect(bx,by,64,16,'D');
-    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...brown);
-    doc.text('Subtotal:',bx+30,by+6.2,{align:'right'});
-    doc.text('Descuento:',bx+30,by+12.4,{align:'right'});
-    doc.setFont('helvetica','normal'); doc.setTextColor(...soft);
-    doc.text('L. '+subtotal.toLocaleString('es-HN'),bx+60,by+6.2,{align:'right'});
-    doc.text('- L. '+Number(c.descuento).toLocaleString('es-HN'),bx+60,by+12.4,{align:'right'});
-    by+=16+6;
+  let ty=59;
+  let items=(c.servicios||[]).map(s=>({n:String((s&&s.nombre)||'Servicio'),p:Number(s&&s.precio||0)}));
+  if(items.length>5){
+    const extra=items.slice(4);
+    items=items.slice(0,4).concat([{n:'+ '+extra.length+' servicios más',p:extra.reduce((a,b)=>a+b.p,0)}]);
   }
+  const rowH=items.length>4?7.6:9;
+  doc.setFillColor(...roseBand); doc.rect(ML,ty,MR-ML,7.6,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...rose);
+  doc.text('SERVICIOS',ML+4,ty+5,{charSpace:1});
+  doc.text('CANT.',ML+86,ty+5,{align:'center',charSpace:.6});
+  doc.text('PRECIO',MR-4,ty+5,{align:'right',charSpace:.6});
+  let ry=ty+7.6;
+  items.forEach((it,i)=>{
+    doc.setFont('times','normal'); doc.setFontSize(9); doc.setTextColor(...brown);
+    const nn=it.n.length>52?it.n.slice(0,52)+'…':it.n;
+    doc.text(nn,ML+4,ry+rowH*0.62);
+    doc.text('1',ML+86,ry+rowH*0.62,{align:'center'});
+    doc.text('L. '+it.p.toLocaleString('es-HN'),MR-4,ry+rowH*0.62,{align:'right'});
+    if(i<items.length-1){ doc.setDrawColor(...bordRosa); doc.setLineWidth(.2);
+      doc.setLineDashPattern([.5,.9],0); doc.line(ML+4,ry+rowH,MR-4,ry+rowH); doc.setLineDashPattern([],0); }
+    ry+=rowH;
+  });
+  ry+=1.5;
+  doc.setFillColor(...roseSoft); doc.rect(ML,ry,MR-ML,6.6,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...rose);
+  doc.text('ADICIONALES / DETALLES',ML+4,ry+4.4,{charSpace:1});
+  if(c.notas){ doc.setFont('times','italic'); doc.setFontSize(7.5); doc.setTextColor(...soft);
+    const nt=String(c.notas); doc.text(nt.length>44?nt.slice(0,44)+'…':nt,MR-4,ry+4.4,{align:'right'}); }
+  const tablaFin=ry+6.6;
+  doc.setDrawColor(...bordRosa); doc.setLineWidth(.4); doc.rect(ML,ty,MR-ML,tablaFin-ty,'D');
 
-  // ── Banda TOTAL ──
-  doc.setFillColor(...pinkBand); doc.rect(bx,by,64,10.5,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...brown);
-  doc.text('TOTAL:  L. '+Number(c.precioTotal||0).toLocaleString('es-HN'),bx+32,by+6.8,{align:'center',charSpace:.8});
+  // ── Chips izquierda + caja de totales derecha ──
+  let cy=tablaFin+11;
+  const chip=(ico,label,val,valColor,extra)=>{
+    ico(ML+4,cy);
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...rose);
+    doc.text(label,ML+10,cy+1,{charSpace:.6});
+    doc.setFont('times','normal'); doc.setFontSize(9.5); doc.setTextColor(...(valColor||brown));
+    doc.text(String(val),ML+44,cy+1);
+    if(extra) extra();
+    cy+=9.8;
+  };
+  const pagado=c.pago!=='Por cobrar';
+  chip(icoCard,'MÉTODO DE PAGO:',pagado?c.pago:'—');
+  chip(icoCheck,'ESTADO:',pagado?'Pagado':'Por cobrar',pagado?brown:rose,()=>{ if(pagado) checkGold(ML+44+doc.getTextWidth('Pagado')+4,cy); });
+  const subtotal=items.reduce((a,b)=>a+b.p,0);
+  if(c.descuento&&c.descuento>0){
+    chip(icoPct,'DESCUENTO:','- L. '+Number(c.descuento).toLocaleString('es-HN'),rose);
+  }
+  // Caja de totales
+  const bx=ML+78, bw=MR-bx, by=tablaFin+6;
+  doc.setFillColor(255,255,255); doc.setDrawColor(...bordRosa); doc.setLineWidth(.4);
+  doc.rect(bx,by,bw,30,'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...brown);
+  doc.text('SUBTOTAL:',bx+4,by+6.5,{charSpace:.5});
+  doc.text('DESCUENTO:',bx+4,by+13.5,{charSpace:.5});
+  doc.setFont('times','normal'); doc.setFontSize(9.5);
+  doc.text('L. '+subtotal.toLocaleString('es-HN'),bx+bw-4,by+6.5,{align:'right'});
+  doc.setTextColor(...rose);
+  doc.text(c.descuento>0?('- L. '+Number(c.descuento).toLocaleString('es-HN')):'—',bx+bw-4,by+13.5,{align:'right'});
+  doc.setDrawColor(...gold); doc.setLineWidth(.4); doc.line(bx+3,by+17,bx+bw-3,by+17);
+  doc.setFillColor(...roseBand); doc.rect(bx,by+19,bw,11,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...brown);
+  doc.text('TOTAL:',bx+4,by+26,{charSpace:.8});
+  doc.setFontSize(13);
+  doc.text('L. '+Number(c.precioTotal||0).toLocaleString('es-HN'),bx+bw-4,by+26.5,{align:'right'});
 
-  // ── Pago / estado (columna izquierda, a la altura del subtotal) ──
-  const py=ry+7+6.2;
-  doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...brown);
-  doc.text('Método de pago:',ML,py);
-  doc.text('Estado:',ML,py+6.2);
-  doc.setFont('helvetica','normal'); doc.setTextColor(...soft);
-  doc.text(String(c.pago||'—'),ML+30,py);
-  doc.text(String(c.estado||'—'),ML+30,py+6.2);
+  // ── Tres cajas informativas ──
+  const iy=Math.max(cy+3,by+36), ih=47;
+  doc.setFillColor(255,255,255); doc.setDrawColor(...bordRosa); doc.setLineWidth(.35);
+  doc.rect(ML,iy,MR-ML,ih,'FD');
+  const c1=ML+(MR-ML)/3, c2=ML+2*(MR-ML)/3;
+  doc.line(c1,iy+5,c1,iy+ih-5); doc.line(c2,iy+5,c2,iy+ih-5);
+  const hdr3=(x,ico,l1,l2)=>{ ico(x+6.5,iy+9);
+    doc.setFont('helvetica','bold'); doc.setFontSize(5.4); doc.setTextColor(...rose);
+    doc.text(l1,x+12,iy+7.5,{charSpace:.2}); if(l2) doc.text(l2,x+12,iy+10.5,{charSpace:.2}); };
+  // 1: próximo mantenimiento (+3 semanas)
+  hdr3(ML,icoCal,'PRÓXIMO MANTENIMIENTO','RECOMENDADO');
+  const prox=new Date(c.fecha+'T12:00:00'); prox.setDate(prox.getDate()+21);
+  doc.setFont('times','normal'); doc.setFontSize(9); doc.setTextColor(...brown);
+  doc.text(prox.toLocaleDateString('es-HN',{day:'numeric',month:'long',year:'numeric'}),ML+((MR-ML)/3)/2,iy+24,{align:'center'});
+  doc.setFont('times','italic'); doc.setFontSize(7); doc.setTextColor(...goldDk);
+  doc.text('Te recomendamos agendar',ML+((MR-ML)/3)/2,iy+32,{align:'center'});
+  doc.text('con anticipación.',ML+((MR-ML)/3)/2,iy+36,{align:'center'});
+  // 2: observaciones
+  hdr3(c1,icoDoc,'OBSERVACIONES','');
+  const obs=['Refill recomendado: 3 semanas.','No usar las uñas como herramienta.','Aceite de cutícula a diario.','Cualquier duda, contáctanos.'];
+  let oy=iy+17;
+  obs.forEach(o=>{
+    doc.setFont('times','normal'); doc.setFontSize(6.3); doc.setTextColor(...brown);
+    const lns=doc.splitTextToSize(o,(c2-c1)-12);
+    doc.setFillColor(...gold); doc.circle(c1+5.5,oy-1,.6,'F');
+    doc.text(lns,c1+8,oy);
+    oy+=lns.length*3+2.4; });
+  // 3: beneficios
+  hdr3(c2,icoDiam,'BENEFICIOS INCLUIDOS','EN TU VISITA');
+  const bens=['Spa de manos','Esterilización de herramientas','Productos profesionales','Garantía Ley Studio'];
+  let byy=iy+18;
+  bens.forEach(b=>{ checkGold(c2+6,byy-1);
+    doc.setFont('times','normal'); doc.setFontSize(6.3); doc.setTextColor(...brown);
+    doc.text(b,c2+9.5,byy); byy+=6.2; });
 
-  doc.setFont('times','italic'); doc.setFontSize(10.5); doc.setTextColor(...brown);
-  doc.text('Gracias por tu visita',W/2,H-16.5,{align:'center'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(6.8); doc.setTextColor(...gold);
-  doc.text('@leystudiohn  ·  +504 9499-4709  ·  Tegucigalpa, Honduras',W/2,H-11.5,{align:'center'});
+  // ── Cierre ──
+  let fy=iy+ih+10;
+  doc.setFont('times','italic'); doc.setFontSize(13.5); doc.setTextColor(...brown);
+  doc.text('Gracias por confiar en Ley Studio',W/2,fy,{align:'center'});
+  heart(W/2+doc.getTextWidth('Gracias por confiar en Ley Studio')/2+5,fy-1.5,1.7);
+  fy+=6;
+  doc.setFont('times','normal'); doc.setFontSize(8.2); doc.setTextColor(...soft);
+  doc.text('Tu belleza y el cuidado de tus uñas son nuestra prioridad.',W/2,fy,{align:'center'});
+  fy+=5.5;
+  doc.setDrawColor(...gold); doc.setLineWidth(.3);
+  doc.line(ML+6,fy,W/2-5,fy); doc.line(W/2+5,fy,MR-6,fy); heart(W/2,fy-1.2,1.4);
+  fy+=6;
+  doc.setFont('times','normal'); doc.setFontSize(6.8); doc.setTextColor(...brown);
+  doc.text('Residencial Zarahemla, Etapa II',ML+((MR-ML)/3)/2,fy,{align:'center'});
+  doc.text('Tegucigalpa, M.D.C. Honduras C.A.',ML+((MR-ML)/3)/2,fy+3.8,{align:'center'});
+  doc.text('Síguenos en nuestras redes',W/2,fy,{align:'center'});
+  doc.setTextColor(...rose); doc.text('@leystudiohn',W/2,fy+3.8,{align:'center'});
+  doc.setTextColor(...brown);
+  doc.text('www.leystudiohn.com',c2+((MR-c2))/2,fy,{align:'center'});
+  doc.text('+504 9499-4709',c2+((MR-c2))/2,fy+3.8,{align:'center'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.2); doc.setTextColor(...goldDk);
+  doc.text('LEY STUDIO   ·   NAIL ARTIST',W/2,H-4.5,{align:'center',charSpace:1.6});
 
-  const filename=`LeyStudio_Proforma_${c.clienta.replace(/\s/g,'_')}_${c.fecha}.pdf`;
+  const filename=`LeyStudio_Comprobante_${c.clienta.replace(/\s/g,'_')}_${c.fecha}.pdf`;
   return {doc, c, filename};
 }
+
 function cierreCajaPDF(){
   const _jsPDF=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;
   if(!_jsPDF){ toast('⚠️ Recarga la página','warn'); return; }
@@ -3044,7 +3137,7 @@ function cierreCajaPDF(){
   const fy=H-24;
   doc.setDrawColor(...goldDk); doc.setLineWidth(.4); doc.line(W/2-12,fy,W/2+12,fy);
   doc.setFont('times','italic'); doc.setFontSize(9.5); doc.setTextColor(...brown);
-  doc.text('Ley Studio · Nail Artist',W/2,fy+5.5,{align:'center'});
+  doc.text('Ley Studio · Residencial Zarahemla, Etapa II',W/2,fy+5.5,{align:'center'});
   doc.setFont('helvetica','normal'); doc.setFontSize(6.3); doc.setTextColor(...goldDk);
   doc.text('Generado el '+new Date().toLocaleString('es-HN'),W/2,fy+10,{align:'center'});
 
@@ -3499,7 +3592,7 @@ function renderCitas(){
       <td style="font-weight:700;white-space:nowrap;color:var(--pink)">${fmtM(c.precioTotal||0)}</td>
       <td>${c.pago==='Por cobrar'?'<span class="badge bgo">Por cobrar</span>':c.pago}</td>
       <td>${estadoBadge(c.estado)}</td>
-      <td style="color:var(--gray);font-size:12px">${c.notas||'—'}</td>
+      <td style="color:var(--gray);font-size:12px">${c.notas||'—'}${c.imgRef?` <span onclick="event.stopPropagation();verImgRef(D.citas.find(x=>+x.id===${c.id}).imgRef)" style="cursor:zoom-in" title="Ver diseño de referencia">🖼️</span>`:''}</td>
       <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:8px 4px" onclick="event.stopPropagation()">
         ${accionBtn}${cobrarBtn}
         <button class="action-icon-btn action-msg" onclick="openWAcita(${c.id})" title="Mensaje"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button><button class="action-icon-btn" onclick="openCorreoCita(${c.id})" style="height:34px;width:34px;color:#CF8AA3" title="Enviar correo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button>

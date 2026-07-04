@@ -10,3 +10,10 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 # Bloquear archivos de configuración y datos de ejemplo
 RedirectMatch 404 ^/firebase_rules\.json$
 RedirectMatch 404 ^/leystudio_demo_data\.json$
+
+# HTML siempre fresco: evita que el equipo trabaje con versiones viejas tras un deploy
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>

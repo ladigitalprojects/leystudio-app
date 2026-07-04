@@ -89,7 +89,7 @@ body{
 <div class="card">
   <div class="hdr">
     <img src="/assets/logo.png" alt="Ley Studio">
-    <div class="tag">El arte está en los detalles</div>
+    <div class="tag">Tu belleza y el cuidado de tus uñas son nuestra prioridad</div>
     <h1>Reserva tu cita</h1>
     <div class="sub">Elige el día y la hora que prefieras — te confirmamos por WhatsApp 💅</div>
   </div>
@@ -132,6 +132,16 @@ body{
       <div class="svc-opt-body" id="svc-list"></div>
     </div>
     <div class="fgrp"><label>Nota (opcional)</label><textarea id="f-nota" rows="2" maxlength="200" placeholder="Diseño en mente, referencia, ocasión especial…"></textarea></div>
+    <div class="fgrp"><label>Foto de referencia (opcional)</label>
+      <label id="img-drop" style="display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--border);border-radius:10px;padding:14px;font-size:12.5px;color:var(--gold-dk);cursor:pointer;background:#fff">
+        📷 <span id="img-drop-txt">Sube una foto del diseño que tienes en mente</span>
+        <input type="file" id="f-img" accept="image/*" style="display:none" onchange="cargarImg(this)">
+      </label>
+      <div id="img-prev-wrap" class="hidden" style="position:relative;margin-top:8px;display:inline-block">
+        <img id="img-prev" style="max-width:140px;max-height:140px;border-radius:10px;border:1.5px solid var(--border);display:block">
+        <button onclick="quitarImg()" style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;border:none;background:var(--pink);color:#fff;font-weight:800;cursor:pointer;font-size:12px">✕</button>
+      </div>
+    </div>
     <button class="btn btn-p" id="btn-enviar" onclick="enviar()">Solicitar reserva 💅</button>
     <div class="err" id="err"></div>
   </div>
@@ -144,7 +154,7 @@ body{
     <div style="margin-top:14px;font-size:12px;color:var(--gold-dk)">Te escribiremos por WhatsApp para confirmar tu cita ✨</div>
   </div>
 
-  <div class="footer">Ley Studio · Nail Artist · Tegucigalpa<br>@leystudiohn · +504 9499-4709</div>
+  <div class="footer">Ley Studio · Nail Artist<br>Residencial Zarahemla, Etapa II · Tegucigalpa<br>@leystudiohn · +504 9499-4709</div>
 </div>
 
 <script>
@@ -174,6 +184,14 @@ async function init(){
     AGENDA=ag||{};
     CATALOGO=(cat||[]).filter(Boolean);
     renderCal(); renderSvcList();
+    // Autoseleccionar el primer día con disponibilidad
+    const hoy0=new Date(); hoy0.setHours(0,0,0,0);
+    for(let i=0;i<(CFG.ventana||30);i++){
+      const d=new Date(hoy0); d.setDate(d.getDate()+i);
+      if(diaAbierto(d) && slotsDe(iso(d)).length){ 
+        if(d.getMonth()!==vista.getMonth()){ vista=new Date(d.getFullYear(),d.getMonth(),1); renderCal(); }
+        selDia(iso(d)); break; }
+    }
     $('loading').classList.add('hidden');
     $('paso1').classList.remove('hidden');
   }catch(e){
@@ -262,6 +280,29 @@ function renderSvcList(){
   `).join('');
 }
 
+let IMG='';
+function cargarImg(inp){
+  const f=inp.files&&inp.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=ev=>{
+    const im=new Image();
+    im.onload=()=>{
+      const max=700; let w=im.width,h=im.height;
+      if(w>max||h>max){ const k=Math.min(max/w,max/h); w=Math.round(w*k); h=Math.round(h*k); }
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(im,0,0,w,h);
+      IMG=cv.toDataURL('image/jpeg',.72);
+      if(IMG.length>380000){ IMG=cv.toDataURL('image/jpeg',.5); }
+      $('img-prev').src=IMG;
+      $('img-prev-wrap').classList.remove('hidden');
+      $('img-drop-txt').textContent='Cambiar foto';
+    };
+    im.src=ev.target.result;
+  };
+  rd.readAsDataURL(f);
+}
+function quitarImg(){ IMG=''; $('f-img').value=''; $('img-prev-wrap').classList.add('hidden'); $('img-drop-txt').textContent='Sube una foto del diseño que tienes en mente'; }
+
 $('f-tel')?.addEventListener('input',e=>{
   let v=e.target.value.replace(/\D/g,'').slice(0,8);
   if(v.length>4) v=v.slice(0,4)+'-'+v.slice(4);
@@ -286,6 +327,7 @@ async function enviar(){
     nota:$('f-nota').value.trim().slice(0,200),
     creado:new Date().toISOString()
   };
+  if(IMG) payload.img=IMG;
   try{
     const r=await fetch(FB+'/reservas/solicitudes.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     if(!r.ok) throw new Error('HTTP '+r.status);
