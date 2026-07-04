@@ -27,11 +27,18 @@ body{
   border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 32px rgba(178,146,87,.12);
   overflow:hidden;
 }
-.hdr{text-align:center;padding:26px 20px 18px;border-bottom:1px solid var(--border)}
-.hdr img{width:170px;max-width:60%;display:block;margin:0 auto 6px}
-.hdr .tag{font-family:'Playfair Display',serif;font-style:italic;color:var(--gold-dk);font-size:13px}
-.hdr h1{font-family:'Playfair Display',serif;font-size:26px;color:var(--pink);margin-top:4px}
-.hdr .sub{font-size:12px;color:var(--soft);margin-top:5px}
+.hdr{display:flex;align-items:center;gap:28px;padding:20px 30px;border-bottom:1px solid var(--border)}
+.hdr img{width:150px;flex-shrink:0;display:block}
+.hdr .txt{flex:1;text-align:left}
+.hdr h1{font-family:'Playfair Display',serif;font-size:28px;color:var(--pink);line-height:1.15}
+.hdr .tag{font-family:'Playfair Display',serif;font-style:italic;color:var(--gold-dk);font-size:13px;margin-top:4px}
+.hdr .sub{font-size:12px;color:var(--soft);margin-top:7px}
+@media(max-width:640px){
+  .hdr{flex-direction:column;gap:10px;padding:22px 18px 16px}
+  .hdr img{width:130px}
+  .hdr .txt{text-align:center}
+  .hdr h1{font-size:24px}
+}
 .panes{display:grid;grid-template-columns:1.15fr 1fr;min-height:380px}
 @media(max-width:720px){.panes{grid-template-columns:1fr}}
 .cal-pane{padding:20px 22px;border-right:1px solid var(--border)}
@@ -89,9 +96,11 @@ body{
 <div class="card">
   <div class="hdr">
     <img src="/assets/logo.png" alt="Ley Studio">
-    <div class="tag">Tu belleza y el cuidado de tus uñas son nuestra prioridad</div>
-    <h1>Reserva tu cita</h1>
-    <div class="sub">Elige el día y la hora que prefieras — te confirmamos por WhatsApp 💅</div>
+    <div class="txt">
+      <h1>Reserva tu cita</h1>
+      <div class="tag">Tu belleza y el cuidado de tus uñas son nuestra prioridad</div>
+      <div class="sub">Elige el día y la hora que prefieras — te confirmamos por WhatsApp 💅</div>
+    </div>
   </div>
 
   <div id="loading"><div class="spinner"></div></div>
