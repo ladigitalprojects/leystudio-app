@@ -1925,11 +1925,9 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
         <input type="text" value="https://leystudiohn.com/reserva.html" readonly id="cfg-rlink" style="flex:1;min-width:220px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--gray-dk);background:#fff">
         <button class="hbtn hbtn-gold" style="font-size:11px;padding:6px 12px" onclick="navigator.clipboard.writeText(document.getElementById('cfg-rlink').value).then(()=>toast('🔗 Enlace copiado'))">Copiar enlace</button>
       </div>
+      <div id="cfg-rhor" style="display:grid;gap:5px;margin-bottom:10px"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
-        <div><label style="font-size:10px;font-weight:700;color:var(--gold-deep)">ABRE</label><br><input type="time" id="cfg-rini" value="08:00" style="border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:12px;font-family:inherit"></div>
-        <div><label style="font-size:10px;font-weight:700;color:var(--gold-deep)">CIERRA</label><br><input type="time" id="cfg-rfin" value="17:00" style="border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:12px;font-family:inherit"></div>
-        <div><label style="font-size:10px;font-weight:700;color:var(--gold-deep)">DÍAS A FUTURO</label><br><input type="number" id="cfg-rven" value="21" min="7" max="60" style="width:70px;border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:12px;font-family:inherit"></div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding-bottom:8px"><input type="checkbox" id="cfg-rdom"> Abre domingos</label>
+        <div><label style="font-size:10px;font-weight:700;color:var(--gold-deep)">DÍAS A FUTURO RESERVABLES</label><br><input type="number" id="cfg-rven" value="30" min="7" max="90" style="width:80px;border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:12px;font-family:inherit"></div>
         <button class="hbtn hbtn-gold" style="font-size:11px;padding:7px 14px" onclick="saveCfgReserva()">Guardar horario</button>
       </div>
     </div>
@@ -2611,13 +2609,27 @@ async function syncNow(){
 }
 
 // ═══ AUTO-RESERVA ONLINE (espejo público /reservas + solicitudes) ═══
+function _reservaHorDef(){
+  // Por defecto: L-V de 5pm en adelante; sábado y domingo todo el día
+  return {
+    0:{on:true,ini:'08:00',fin:'18:00'}, // Dom
+    1:{on:true,ini:'17:00',fin:'20:00'},
+    2:{on:true,ini:'17:00',fin:'20:00'},
+    3:{on:true,ini:'17:00',fin:'20:00'},
+    4:{on:true,ini:'17:00',fin:'20:00'},
+    5:{on:true,ini:'17:00',fin:'20:00'},
+    6:{on:true,ini:'08:00',fin:'18:00'}  // Sáb
+  };
+}
 function _reservaCfg(){
   const c=D.config||{};
-  return {
-    ini:c.rIni||'08:00', fin:c.rFin||'17:00', paso:30,
-    cerrados:(c.rDom===true)?[]:[0], // por defecto: domingo cerrado
-    ventana:+c.rVentana||21
-  };
+  const rh=c.rHor||_reservaHorDef();
+  const horario={};
+  for(let d=0;d<7;d++){
+    const h=rh[d]||rh[String(d)];
+    if(h&&h.on!==false&&h.ini&&h.fin) horario[d]={ini:h.ini,fin:h.fin};
+  }
+  return { paso:30, ventana:+c.rVentana||30, durDef:60, horario };
 }
 async function _pushReservasMirror(){
   try{
@@ -2665,7 +2677,7 @@ function renderSolicitudes(){
         <div style="flex:1;min-width:200px">
           <strong style="font-size:14px">${_esc(s.nombre)}</strong> <span style="color:var(--gray);font-size:12px">· ${_esc(s.tel)}</span>
           <div style="font-size:12px;color:var(--gray-dk);margin-top:3px">${svcs}</div>
-          <div style="font-size:12px;color:var(--gold-deep);margin-top:3px">📅 ${fmtD(s.fecha)} · ${_esc(s.hora)} · ~${_durFmt(s.dur||60)} · <strong style="color:var(--pink)">${fmtM(s.total||0)}</strong></div>
+          <div style="font-size:12px;color:var(--gold-deep);margin-top:3px">📅 ${fmtD(s.fecha)} · ${_esc(s.hora)} · ~${_durFmt(s.dur||60)}${s.total?` · <strong style="color:var(--pink)">${fmtM(s.total)}</strong>`:''}</div>
           ${s.nota?`<div style="font-size:11.5px;color:var(--gray);margin-top:3px">📝 ${_esc(s.nota)}</div>`:''}
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -3166,18 +3178,36 @@ function loadCfgNegocio(){
   Object.entries(map).forEach(([id,key])=>{
     const el=document.getElementById(id); if(el&&D.config[key]) el.value=D.config[key];
   });
-  const ri=document.getElementById('cfg-rini'); if(ri&&D.config.rIni) ri.value=D.config.rIni;
-  const rf=document.getElementById('cfg-rfin'); if(rf&&D.config.rFin) rf.value=D.config.rFin;
   const rv=document.getElementById('cfg-rven'); if(rv&&D.config.rVentana) rv.value=D.config.rVentana;
-  const rd=document.getElementById('cfg-rdom'); if(rd) rd.checked=D.config.rDom===true;
+  renderCfgHorario();
+}
+function renderCfgHorario(){
+  const box=document.getElementById('cfg-rhor'); if(!box) return;
+  const nombres=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const rh=(D.config&&D.config.rHor)||_reservaHorDef();
+  // Orden Lun..Dom para que se lea natural
+  box.innerHTML=[1,2,3,4,5,6,0].map(d=>{
+    const h=rh[d]||rh[String(d)]||{on:false,ini:'17:00',fin:'20:00'};
+    return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;width:110px"><input type="checkbox" id="rh-on-${d}" ${h.on!==false?'checked':''}> ${nombres[d]}</label>
+      <input type="time" id="rh-ini-${d}" value="${h.ini||'17:00'}" style="border:1px solid var(--border);border-radius:8px;padding:5px 7px;font-size:12px;font-family:inherit">
+      <span style="font-size:11px;color:var(--gray)">a</span>
+      <input type="time" id="rh-fin-${d}" value="${h.fin||'20:00'}" style="border:1px solid var(--border);border-radius:8px;padding:5px 7px;font-size:12px;font-family:inherit">
+    </div>`;
+  }).join('');
 }
 function saveCfgReserva(){
   if(!D.config) D.config={};
-  D.config.rIni=document.getElementById('cfg-rini').value||'08:00';
-  D.config.rFin=document.getElementById('cfg-rfin').value||'17:00';
-  D.config.rVentana=+document.getElementById('cfg-rven').value||21;
-  D.config.rDom=document.getElementById('cfg-rdom').checked;
+  const rh={};
+  for(let d=0;d<7;d++){
+    const on=document.getElementById('rh-on-'+d);
+    if(!on) continue;
+    rh[d]={on:on.checked,ini:document.getElementById('rh-ini-'+d).value||'08:00',fin:document.getElementById('rh-fin-'+d).value||'18:00'};
+  }
+  D.config.rHor=rh;
+  D.config.rVentana=+document.getElementById('cfg-rven').value||30;
   saveAndSync(); toast('🌸 Horario de reserva online guardado');
+  _pushReservasMirror();
 }
 async function resetAllData(){
   if(!confirm('⚠️ ¿Borrar TODOS los datos de prueba?\n\nSe eliminarán todas las citas, clientes, finanzas e inventario tanto en local como en la nube.\n\nEsta acción no se puede deshacer.')) return;
