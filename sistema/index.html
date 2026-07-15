@@ -356,7 +356,11 @@ html.pwa header{
 @media(max-width:768px){
   nav{display:none!important;}
   .ham-btn{display:none!important;}
-  body{padding-bottom:calc(92px + env(safe-area-inset-bottom));}
+  html,body{height:100%;overflow:hidden;}
+  body{display:flex;flex-direction:column;}
+  header{flex-shrink:0;}
+  main{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding-bottom:calc(108px + env(safe-area-inset-bottom))!important;}
   #bnav{
     display:flex;position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:8500;
     background:rgba(253,248,242,.48);
@@ -6345,7 +6349,11 @@ function showTab(name){
   const map={dashboard:0,citas:1,clientes:2,finanzas:3,inventario:4,servicios:5,calendario:6,notificaciones:7,estadisticas:8,reportes:9,config:10};
   document.querySelectorAll('.tab')[map[name]]?.classList.add('active');
   _syncBottomNav(name);
-  try{ window.scrollTo({top:0,left:0,behavior:'instant'}); }catch(e){ window.scrollTo(0,0); }
+  try{
+    const m=document.querySelector('main');
+    if(m) m.scrollTop=0;
+    window.scrollTo(0,0);
+  }catch(e){}
   if(name==='dashboard') renderDashboard();
   if(name==='calendario') renderCalendar();
   if(name==='config'){ renderUsuarios(); renderBackupsList(); }
