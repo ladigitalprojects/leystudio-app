@@ -98,6 +98,7 @@ body{
 @media all and (display-mode: standalone){
   body{padding-top:max(env(safe-area-inset-top),54px);}
 }
+html.pwa body{padding-top:max(env(safe-area-inset-top),54px)!important;}
 .footer{text-align:center;font-size:11px;color:var(--gold-dk);padding:14px;border-top:1px solid var(--border);line-height:1.7}
 </style>
 </head>
@@ -361,6 +362,7 @@ async function enviar(){
 }
 init();
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
+try{ if(navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)) document.documentElement.classList.add('pwa'); }catch(e){}
 </script>
 </body>
 </html>
