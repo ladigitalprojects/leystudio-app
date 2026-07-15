@@ -1463,15 +1463,20 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
       <div class="tt">Ingresos y Gastos</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="hbtn hbtn-outline" onclick="cierreCajaPDF()" style="font-size:12px">🗓 Cierre del día</button>
-        <button class="add-btn" onclick="toggleForm('fm')">+ Nuevo movimiento</button>
+        <button class="add-btn" onclick="openNuevoMovimiento()">+ Nuevo movimiento</button>
       </div></div>
 
     <div class="form-box" id="fm"><div class="form-box-inner"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)"><span style="font-size:15px;font-weight:800;color:var(--cream)">Nuevo Movimiento</span><button onclick="toggleForm('fm')" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&#x2715;</button></div>
       <div class="fg">
         <div class="fgrp"><label>Fecha</label><input type="text" class="fpdate" id="m-f"></div>
-        <div class="fgrp"><label>Tipo</label><select id="m-tipo"><option>Ingreso</option><option>Gasto</option></select></div>
+        <div class="fgrp"><label>Tipo</label><select id="m-tipo" onchange="_finToggleSvcWrap()"><option>Ingreso</option><option>Gasto</option></select></div>
         <div class="fgrp"><label>Categoría</label>
           <select id="m-cat"><option>Servicio</option><option>Propina</option><option>Otro</option><option>Insumos</option><option>Herramientas</option><option>Publicidad</option><option>Arriendo</option><option>Varios</option></select></div>
+        <div class="fgrp span2" style="grid-column:span 2" id="m-svc-wrap">
+          <label>Servicios del catálogo <span style="font-weight:400;text-transform:none">(opcional — llenan descripción y monto)</span></label>
+          <select id="m-svc-sel" onchange="finAddSvc(this.value);this.value=''"></select>
+          <div id="m-svc-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
+        </div>
         <div class="fgrp span2" style="grid-column:span 2"><label>Descripción</label><input type="text" id="m-desc" placeholder="Detalle..."></div>
         <div class="fgrp"><label>Monto (L.)</label><input type="number" id="m-monto" placeholder="0"></div>
         <div class="fgrp"><label>Pago</label><select id="m-pago"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option></select></div>
@@ -4406,6 +4411,48 @@ function renderFinanzas(){
     </div>`;
   }).join('');
 }
+let _finSvcs=[];
+function openNuevoMovimiento(){
+  _finSvcs=[]; _finRenderChips();
+  const sel=document.getElementById('m-svc-sel');
+  if(sel){
+    const cats={};
+    getAllSvcs().forEach(s=>{ (cats[s.cat||'Otros']=cats[s.cat||'Otros']||[]).push(s); });
+    sel.innerHTML='<option value="">➕ Agregar servicio del catálogo…</option>'+
+      Object.entries(cats).map(([c,ss])=>`<optgroup label="${_esc(c)}">`+
+        ss.map(s=>`<option value="${_esc(_svcKey(s))}">${_esc(s.nombre)} — L. ${(s.precio||0).toLocaleString('es-HN')}</option>`).join('')+
+      '</optgroup>').join('');
+  }
+  _finToggleSvcWrap();
+  toggleForm('fm');
+}
+function _finToggleSvcWrap(){
+  const w=document.getElementById('m-svc-wrap'); if(!w) return;
+  const t=document.getElementById('m-tipo');
+  w.style.display=(t&&t.value==='Gasto')?'none':'';
+}
+function finAddSvc(key){
+  if(!key) return;
+  const s=getAllSvcs().find(x=>_svcKey(x)===key); if(!s) return;
+  _finSvcs.push({nombre:s.nombre,precio:+s.precio||0});
+  _finApply();
+}
+function finDelSvc(i){ _finSvcs.splice(i,1); _finApply(); }
+function _finApply(){
+  _finRenderChips();
+  if(_finSvcs.length){
+    document.getElementById('m-desc').value=_finSvcs.map(s=>s.nombre).join(' + ');
+    document.getElementById('m-monto').value=_finSvcs.reduce((a,b)=>a+(+b.precio||0),0);
+    const cat=document.getElementById('m-cat'); if(cat) cat.value='Servicio';
+  } else {
+    document.getElementById('m-desc').value='';
+    document.getElementById('m-monto').value='';
+  }
+}
+function _finRenderChips(){
+  const box=document.getElementById('m-svc-chips'); if(!box) return;
+  box.innerHTML=_finSvcs.map((s,i)=>`<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(221,152,177,.15);border:1px solid rgba(221,152,177,.4);border-radius:14px;padding:4px 10px;font-size:12px">${_esc(s.nombre)} <strong style="color:var(--pink)">L. ${(+s.precio||0).toLocaleString('es-HN')}</strong> <span onclick="finDelSvc(${i})" style="cursor:pointer;font-weight:800;color:#9a3a60" title="Quitar">✕</span></span>`).join('');
+}
 function addMovimiento(){
   const m={id:nextId(D.movimientos),
     fecha:document.getElementById('m-f').value||todayStr(),
@@ -4418,7 +4465,9 @@ function addMovimiento(){
     citaId:null,_ts:Date.now()};
   if(!m.desc){toast('Ingresa la descripción','warn');return;}
   if(!(m.monto>0)){toast('El monto debe ser mayor a 0','warn');return;}
+  if(_finSvcs.length) m.servicios=_finSvcs.map(s=>({nombre:s.nombre,precio:+s.precio||0}));
   D.movimientos.push(m); saveAndSync(); renderFinanzas(); renderDashboard();
+  _finSvcs=[]; _finRenderChips();
   toggleForm('fm'); document.getElementById('m-desc').value=''; document.getElementById('m-monto').value='';
   toast('✅ Movimiento registrado');
 }
@@ -4441,7 +4490,8 @@ function verMovDetalle(id){
     r('Método de pago',m.pago||'—')+
     r('Referencia',m.ref||'—')+
     r('Origen',m.citaId?'Automático — cita #'+m.citaId:'Manual')+
-    (cita?r('Clienta',cita.clienta)+r('Servicios',(cita.servicios||[]).map(s=>s.nombre).join(' + ')):'');
+    (cita?r('Clienta',cita.clienta)+r('Servicios',(cita.servicios||[]).map(s=>s.nombre).join(' + '))
+         :(m.servicios&&m.servicios.length?r('Servicios',m.servicios.map(s=>_esc(s.nombre)).join(' + ')):''));
   document.getElementById('mov-det-actions').innerHTML=
     (m.citaId?`<button class="btn-pri" onclick="closeModal('modal-mov-det');irACita(${m.citaId})">Ver cita →</button>`:'')+
     `<button class="btn-sec" onclick="closeModal('modal-mov-det');openEditMov(${m.id})">Editar</button>
