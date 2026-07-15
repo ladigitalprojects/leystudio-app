@@ -1069,6 +1069,28 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-svc-edit">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">✏️ Editar Servicio
+      <button class="modal-close" onclick="closeModal('modal-svc-edit')">✕</button>
+    </div>
+    <input type="hidden" id="se-key">
+    <div style="font-size:11px;color:var(--gold-deep);font-weight:700;margin-bottom:10px" id="se-codigo"></div>
+    <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fgrp" style="grid-column:span 2"><label>Nombre del servicio</label><input type="text" id="se-nombre" maxlength="120"></div>
+      <div class="fgrp"><label>Categoría</label><select id="se-cat"></select></div>
+      <div class="fgrp"><label>Precio (L.)</label><input type="number" id="se-precio" min="0" step="1"></div>
+      <div class="fgrp"><label>Duración (minutos)</label><input type="number" id="se-dur" min="5" step="5"></div>
+    </div>
+    <div style="font-size:11px;color:var(--gray);margin:4px 0 12px">El cambio aplica a citas nuevas; las citas ya registradas conservan su precio.</div>
+    <div class="factions">
+      <button class="btn-pri" onclick="saveSvcEdit()">Guardar cambios</button>
+      <button class="btn-sec" onclick="toggleOcultarSvc()" id="se-ocultar-btn">Ocultar del catálogo</button>
+      <button class="btn-sec" onclick="closeModal('modal-svc-edit')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-cobro">
   <div class="modal" style="max-width:380px">
     <div class="modal-title">💰 Registrar cobro
@@ -2063,7 +2085,15 @@ const BASE_SVCS=[
   {codigo:'SPP-004',cat:'Spa Pedicure',nombre:'Luxury Pedi Spa (Russian Pedi + Pedi Rusa + Semi Permanente)',duracion:120,precio:700,descripcion:'',productos:[],custom:false},
   {codigo:'DEP-001',cat:'Depilación',nombre:'Depilación',duracion:15,precio:50,descripcion:'',productos:[],custom:false}
 ];
-function getAllSvcs(){ return [...BASE_SVCS,...(D.catalogoCustom||[])]; }
+function getAllSvcs(){
+  const ov=(D&&D.svcOverrides)||{};
+  const base=BASE_SVCS.map(s=>{ const o=ov[s.codigo]; return o?{...s,...o}:s; });
+  return [...base,...(D.catalogoCustom||[])].filter(s=>s&&!s.oculto);
+}
+function _svcOcultosCount(){
+  const ov=(D&&D.svcOverrides)||{};
+  return Object.values(ov).filter(o=>o&&o.oculto).length + (D.catalogoCustom||[]).filter(s=>s&&s.oculto).length;
+}
 // Duración estimada de una cita (min): suma de duraciones del catálogo; 60 min si no se encuentra
 function _durCita(c){
   const all=getAllSvcs();
@@ -3155,7 +3185,7 @@ function descargarReciboPDF(citaId){
   }
 }
 
-let D={citas:[],clientes:[],movimientos:[],inventario:[],catalogoCustom:[],usuarios:[],svcExtra:{},config:{}};
+let D={citas:[],clientes:[],movimientos:[],inventario:[],catalogoCustom:[],usuarios:[],svcExtra:{},config:{},svcOverrides:{}};
 let SHEETS_URL='';
 
 // Normalizar cumpleaños: acepta "DD/MM/AAAA" (entrada manual) y lo convierte a "AAAA-MM-DD"
@@ -3253,7 +3283,7 @@ function mergeRemoteData(remote){
   D.movimientos=_mergeColl(D.movimientos,remote.movimientos,tomb.movimientos);
   D.inventario =_mergeColl(D.inventario, remote.inventario, tomb.inventario);
   // Colecciones menores: remoto gana si existe (bajo riesgo de conflicto)
-  ['catalogoCustom','usuarios','svcExtra','config'].forEach(k=>{ if(remote[k]!=null) D[k]=remote[k]; });
+  ['catalogoCustom','usuarios','svcExtra','config','svcOverrides'].forEach(k=>{ if(remote[k]!=null) D[k]=remote[k]; });
   _pruneTombs();
 }
 
@@ -4698,9 +4728,9 @@ function renderServiciosList(){
       <td style="font-weight:500;color:var(--cream)">${s.nombre}</td>
       <td style="color:var(--gray);font-size:12px;white-space:nowrap">${_durFmt(s.duracion)}</td>
       <td style="color:var(--pink);font-weight:700;white-space:nowrap">${fmtM(s.precio)}</td>
-      <td style="white-space:nowrap" onclick="event.stopPropagation()">${s.custom?`<button class="action-icon-btn action-del" onclick="delCustomSvc(${s.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/></svg></button>`:'&nbsp;'}</td>
+      <td style="white-space:nowrap;display:flex;gap:4px" onclick="event.stopPropagation()"><button class="action-icon-btn action-edit" onclick="openSvcEdit('${key}')" title="Editar servicio"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>${s.custom?`<button class="action-icon-btn action-del" onclick="delCustomSvc(${s.id})" title="Eliminar"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/></svg></button>`:''}</td>
     </tr>`;
-  }).join('');
+  }).join('')+(_svcOcultosCount()?`<tr><td colspan="5" style="text-align:center;padding:10px;font-size:11px;color:var(--gray)">${_svcOcultosCount()} servicio(s) oculto(s) · <a href="#" onclick="event.preventDefault();restaurarSvcOcultos()" style="color:var(--gold-deep);font-weight:700">restaurar todos</a></td></tr>`:'');
   // ── Mobile cards ──
   let lastCatMob='';
   const _svcMob=document.getElementById('svc-mob');
@@ -4721,9 +4751,68 @@ function renderServiciosList(){
           <div style="font-size:10px;color:var(--gray)">precio</div>
         </div>
       </div>
-      ${s.custom?`<hr class="mob-card-divider"><div style="display:flex;justify-content:flex-end"><button class="action-icon-btn action-del" onclick="event.stopPropagation();delCustomSvc(${s.id})" style="height:34px;width:34px" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div>`:''}
+      <hr class="mob-card-divider"><div style="display:flex;justify-content:flex-end;gap:6px"><button class="action-icon-btn action-edit" onclick="event.stopPropagation();openSvcEdit('${key}')" style="height:34px;width:34px" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>${s.custom?`<button class="action-icon-btn action-del" onclick="event.stopPropagation();delCustomSvc(${s.id})" style="height:34px;width:34px" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>`:''}</div>
     </div>`;
   }).join('');
+}
+
+// ── Edición de servicio (base o personalizado) ──
+function _findSvcAll(key){
+  const ov=(D.svcOverrides||{});
+  const base=BASE_SVCS.map(s=>{ const o=ov[s.codigo]; return o?{...s,...o}:s; });
+  return [...base,...(D.catalogoCustom||[])].find(s=>s&&_svcKey(s)===key);
+}
+function openSvcEdit(key){
+  const s=_findSvcAll(key); if(!s){ toast('Servicio no encontrado','warn'); return; }
+  document.getElementById('se-key').value=key;
+  document.getElementById('se-codigo').textContent=(s.codigo?('Código: '+s.codigo):'Servicio personalizado')+(s.oculto?' · OCULTO':'');
+  document.getElementById('se-nombre').value=s.nombre||'';
+  const cats=[...new Set([...BASE_SVCS,...(D.catalogoCustom||[])].map(x=>x&&x.cat).filter(Boolean))];
+  document.getElementById('se-cat').innerHTML=cats.map(c=>`<option ${c===s.cat?'selected':''}>${_esc(c)}</option>`).join('');
+  document.getElementById('se-precio').value=s.precio!=null?s.precio:0;
+  document.getElementById('se-dur').value=s.duracion||60;
+  document.getElementById('se-ocultar-btn').textContent=s.oculto?'Mostrar en el catálogo':'Ocultar del catálogo';
+  openModal('modal-svc-edit');
+}
+function saveSvcEdit(){
+  const key=document.getElementById('se-key').value;
+  const s=_findSvcAll(key); if(!s) return;
+  const nombre=document.getElementById('se-nombre').value.trim();
+  if(!nombre){ toast('El nombre no puede estar vacío','warn'); return; }
+  const precio=Math.max(0,Math.round(+document.getElementById('se-precio').value||0));
+  const duracion=Math.max(5,Math.round(+document.getElementById('se-dur').value||60));
+  const cat=document.getElementById('se-cat').value;
+  const custom=(D.catalogoCustom||[]).find(x=>x&&_svcKey(x)===key);
+  if(custom){
+    custom.nombre=nombre; custom.precio=precio; custom.duracion=duracion; custom.cat=cat;
+  } else {
+    D.svcOverrides=D.svcOverrides||{};
+    const prev=D.svcOverrides[s.codigo]||{};
+    D.svcOverrides[s.codigo]={...prev,nombre,precio,duracion,cat};
+  }
+  saveAndSync(); renderServicios();
+  closeModal('modal-svc-edit');
+  toast('✅ Servicio actualizado: '+nombre);
+}
+function toggleOcultarSvc(){
+  const key=document.getElementById('se-key').value;
+  const s=_findSvcAll(key); if(!s) return;
+  const custom=(D.catalogoCustom||[]).find(x=>x&&_svcKey(x)===key);
+  const nuevo=!s.oculto;
+  if(custom){ custom.oculto=nuevo; }
+  else {
+    D.svcOverrides=D.svcOverrides||{};
+    D.svcOverrides[s.codigo]={...(D.svcOverrides[s.codigo]||{}),oculto:nuevo};
+  }
+  saveAndSync(); renderServicios();
+  closeModal('modal-svc-edit');
+  toast(nuevo?('🙈 "'+s.nombre+'" oculto del catálogo y la reserva online'):('👁 "'+s.nombre+'" visible de nuevo'));
+}
+function restaurarSvcOcultos(){
+  if(!confirm('¿Mostrar de nuevo todos los servicios ocultos?')) return;
+  Object.values(D.svcOverrides||{}).forEach(o=>{ if(o) delete o.oculto; });
+  (D.catalogoCustom||[]).forEach(s=>{ if(s) delete s.oculto; });
+  saveAndSync(); renderServicios(); toast('👁 Servicios ocultos restaurados');
 }
 
 // ── Ficha de servicio ──
