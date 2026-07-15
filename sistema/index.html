@@ -3552,12 +3552,29 @@ function canjearPremio(id){
   saveAndSync(); renderClientes(); renderLealtadEnModal(c.id);
   toast('🎉 Premio canjeado — nueva tarjeta: '+lealtadDe(c.nombre).sellos+' sellos');
 }
+async function enviarTarjetaWA(id){
+  const c=D.clientes.find(x=>+x.id===+id); if(!c) return;
+  if(!c.tel){ toast('Esta clienta no tiene teléfono registrado','warn'); return; }
+  if(!c.fichaToken){ c.fichaToken=genFichaToken(); saveAndSync(); }
+  try{
+    await authedFetch(`${FIREBASE_BASE}/pub/${c.fichaToken}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(_pubPayload(c))});
+  }catch(e){ toast('⚠️ No se pudo publicar la tarjeta. Revisa tu conexión.','warn'); return; }
+  const url=`https://leystudiohn.com/ficha.html?t=${c.fichaToken}`;
+  const lea=lealtadDe(c.nombre);
+  const nombre=(c.nombre||'').split(' ')[0];
+  const msg=lea.completa
+    ?`Hola ${nombre} 💅✨\n\n🎉 ¡Completaste tu *Tarjeta de Lealtad Ley Studio*! Tienes disponible: *${lea.premio}*\n\nMírala aquí: ${url}\n\n¡Te esperamos para consentirte! 🌸`
+    :`Hola ${nombre} 💅✨\n\nAquí puedes ver tu *Tarjeta de Lealtad Ley Studio* 🌸 — ya llevas *${lea.sellos} de ${lea.meta} sellos*.\n\n${url}\n\nCada visita suma un sello. Al completarla: *${lea.premio}* 🎁`;
+  const telDig=String(c.tel).replace(/\D/g,'');
+  window.open('https://wa.me/'+telDig+'?text='+encodeURIComponent(msg),'_blank');
+}
 function renderLealtadEnModal(id){
   const box=document.getElementById('cl-lealtad'); if(!box) return;
   const c=D.clientes.find(x=>+x.id===+id); if(!c){ box.innerHTML=''; return; }
   const lea=lealtadDe(c.nombre);
   box.innerHTML=lealtadCardHTML(lea,false)+`
     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="enviarTarjetaWA(${c.id})">🌸 Enviar tarjeta por WhatsApp</button>
       <button class="hbtn hbtn-outline" style="font-size:11px;padding:5px 12px" onclick="ajustarSellos(${c.id})">Acreditar carnet físico</button>
       ${lea.completa?`<button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="canjearPremio(${c.id})">🎉 Canjear premio</button>`:''}
     </div>`;
