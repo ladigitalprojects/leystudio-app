@@ -8,7 +8,7 @@
 <link rel="manifest" href="/manifest-reserva.json">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ley Studio">
 <meta name="theme-color" content="#FDF8F2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -95,6 +95,9 @@ body{
 .ok-wrap{text-align:center;padding:40px 24px}
 .spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--pink);border-radius:50%;margin:50px auto;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+@media all and (display-mode: standalone){
+  body{padding-top:max(env(safe-area-inset-top),54px);}
+}
 .footer{text-align:center;font-size:11px;color:var(--gold-dk);padding:14px;border-top:1px solid var(--border);line-height:1.7}
 </style>
 </head>

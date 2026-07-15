@@ -4,7 +4,7 @@
 <link rel="manifest" href="/sistema/manifest.json">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ley Studio">
 <meta name="theme-color" content="#FDF8F2">
 <meta charset="UTF-8">
@@ -335,6 +335,12 @@ tbody tr td:first-child{color:var(--pink);font-size:12px;font-variant-numeric:ta
     height:calc(54px + env(safe-area-inset-top));
   }
   footer{display:none;}
+}
+@media all and (display-mode: standalone) and (max-width:768px){
+  header{
+    padding-top:max(env(safe-area-inset-top),54px);
+    height:calc(54px + max(env(safe-area-inset-top),54px));
+  }
   .chart-wrap{height:190px!important;}
   .chart-wrap canvas{max-height:190px!important;}
 }
