@@ -3532,16 +3532,15 @@ function lealtadCardHTML(lea,compacta){
     </div>
   </div>`;
 }
-function ajustarSellos(id){
+function sumarSello(id,delta){
   const c=D.clientes.find(x=>+x.id===+id); if(!c) return;
-  const lea=lealtadDe(c.nombre);
-  const v=prompt('Sellos adicionales para '+c.nombre+' (ej. los de su carnet físico).\nVisitas en el sistema: '+lea.visitas+'\nSellos extra actuales: '+lea.extra,String(lea.extra));
-  if(v===null) return;
-  const n=parseInt(v,10);
-  if(isNaN(n)||n<0||n>99){ toast('Ingresa un número entre 0 y 99','warn'); return; }
-  c.leaExtra=n; _touch(c);
+  const antes=lealtadDe(c.nombre);
+  if(delta<0 && antes.sellos<=0){ toast('No tiene sellos que quitar','warn'); return; }
+  c.leaExtra=Math.max(-99,Math.min(99,(+c.leaExtra||0)+delta)); _touch(c);
   saveAndSync(); renderClientes(); renderLealtadEnModal(c.id);
-  toast('🌸 Sellos actualizados: ahora tiene '+lealtadDe(c.nombre).sellos);
+  const lea=lealtadDe(c.nombre);
+  if(delta>0 && lea.completa && !antes.completa) toast('🎉 ¡'+c.nombre+' completó su tarjeta! Premio: '+lea.premio);
+  else toast((delta>0?'🌸 Sello agregado — ':'Sello retirado — ')+c.nombre.split(' ')[0]+' lleva '+Math.min(lea.sellos,lea.meta)+' de '+lea.meta);
 }
 function canjearPremio(id){
   const c=D.clientes.find(x=>+x.id===+id); if(!c) return;
@@ -3574,8 +3573,9 @@ function renderLealtadEnModal(id){
   const lea=lealtadDe(c.nombre);
   box.innerHTML=lealtadCardHTML(lea,false)+`
     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-      <button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="enviarTarjetaWA(${c.id})">🌸 Enviar tarjeta por WhatsApp</button>
-      <button class="hbtn hbtn-outline" style="font-size:11px;padding:5px 12px" onclick="ajustarSellos(${c.id})">Acreditar carnet físico</button>
+      <button class="hbtn hbtn-outline" style="font-size:12px;padding:5px 14px;font-weight:800" onclick="sumarSello(${c.id},1)" title="Sellar (ej. sticker del carnet físico)">🌸 +1 sello</button>
+      <button class="hbtn hbtn-outline" style="font-size:12px;padding:5px 12px" onclick="sumarSello(${c.id},-1)" title="Quitar un sello">−1</button>
+      <button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="enviarTarjetaWA(${c.id})">Enviar por WhatsApp</button>
       ${lea.completa?`<button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="canjearPremio(${c.id})">🎉 Canjear premio</button>`:''}
     </div>`;
 }
