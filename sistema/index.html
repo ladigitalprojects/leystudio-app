@@ -807,6 +807,7 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
       </div>
       <input type="file" id="e-cl-photo-input" accept="image/*" style="display:none" onchange="handleClientePhoto(this)">
     </div>
+    <div id="cl-lealtad" style="margin-bottom:14px"></div>
     <input type="hidden" id="e-cl-id">
     <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px;">
       <div class="fgrp"><label>Nombre</label><input type="text" id="e-cl-n"></div>
@@ -1947,6 +1948,15 @@ body.dark-mode #modal-ficha .adm-nail-card,body.dark-mode #modal-ficha .adm-pill
       <label class="hbtn hbtn-outline" style="cursor:pointer">Importar backup<input type="file" accept=".json" style="display:none" onchange="doImport(event)"></label>
     </div>
     <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--gold-deep);margin-bottom:8px">🌸 PROGRAMA DE LEALTAD</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:6px">
+        <div><label style="font-size:10px;font-weight:700;color:var(--gold-deep)">SELLOS PARA EL PREMIO</label><br><input type="number" id="cfg-lea-meta" value="10" min="2" max="30" style="width:70px;border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:12px;font-family:inherit"></div>
+        <div style="flex:1;min-width:220px"><label style="font-size:10px;font-weight:700;color:var(--gold-deep)">PREMIO</label><br><input type="text" id="cfg-lea-premio" value="50% de descuento en tu próximo servicio" maxlength="90" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;font-family:inherit"></div>
+        <button class="hbtn hbtn-gold" style="font-size:11px;padding:7px 14px" onclick="saveCfgLealtad()">Guardar</button>
+      </div>
+      <div style="font-size:11px;color:var(--gray);margin-bottom:4px">Cada cita completada = 1 sello. El carnet físico se acredita desde la ficha de cada clienta (Clientes → editar).</div>
+    </div>
+    <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
       <div style="font-size:12px;font-weight:700;color:var(--gold-deep);margin-bottom:8px">🌸 RESERVA ONLINE</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
         <input type="text" value="https://leystudiohn.com/reserva.html" readonly id="cfg-rlink" style="flex:1;min-width:220px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--gray-dk);background:#fff">
@@ -2185,7 +2195,9 @@ async function authedFetch(url, opts){
 
 // ── Tokens de ficha pública ──
 function genFichaToken(){ const a=new Uint8Array(18); crypto.getRandomValues(a); return Array.from(a,b=>b.toString(16).padStart(2,'0')).join(''); }
-function _pubPayload(c){ const f=c.ficha||{}; return {clienteId:c.id, nombre:c.nombre||'', tel:c.tel||'', bday:c.bday||'', correo:f.correo||c.correo||'', ig:f.ig||c.ig||'', ficha:f}; }
+function _pubPayload(c){ const f=c.ficha||{}; const lea=(typeof lealtadDe==='function')?lealtadDe(c.nombre):null;
+  return {clienteId:c.id, nombre:c.nombre||'', tel:c.tel||'', bday:c.bday||'', correo:f.correo||c.correo||'', ig:f.ig||c.ig||'', ficha:f,
+    lealtad:lea?{sellos:lea.sellos,meta:lea.meta,premio:lea.premio,completa:lea.completa}:null}; }
 
 // ═══════════════════════════════════════════════════
 // CORREOS (endpoint PHP en Hostinger, remitente hola@leystudiohn.com)
@@ -2919,7 +2931,7 @@ function _buildReciboDoc(citaId){
   const c = D.citas.find(x=>+x.id===citaId); if(!c) return null;
   const _jsPDF=(window.jspdf&&window.jspdf.jsPDF)||(typeof jspdf!=='undefined'&&jspdf.jsPDF)||window.jsPDF;
   if(!_jsPDF){ toast('⚠️ Error PDF: recarga la página','warn'); return null; }
-  const W=148, H=240;
+  const W=148, H=249;
   const doc = new _jsPDF({unit:'mm',format:[W,H],orientation:'portrait'});
 
   // Paleta del Diseño Base
@@ -3085,8 +3097,33 @@ function _buildReciboDoc(citaId){
     doc.setFont('times','normal'); doc.setFontSize(6.3); doc.setTextColor(...brown);
     doc.text(b,c2+9.5,byy); byy+=6.2; });
 
+  // ── Tarjeta de lealtad ──
+  let fy=iy+ih+8;
+  const lea=(typeof lealtadDe==='function')?lealtadDe(c.clienta):null;
+  if(lea){
+    doc.setFillColor(255,255,255); doc.setDrawColor(...bordRosa); doc.setLineWidth(.35);
+    doc.roundedRect(ML,fy-4.5,MR-ML,12,2,2,'FD');
+    doc.setFont('helvetica','bold'); doc.setFontSize(5.6); doc.setTextColor(...rose);
+    doc.text('TARJETA DE',ML+4,fy-0.5,{charSpace:.3});
+    doc.text('LEALTAD',ML+4,fy+2.8,{charSpace:.3});
+    const dotR=2, gap=5.4, x0=ML+24;
+    for(let i=0;i<lea.meta;i++){
+      const cx=x0+i*gap;
+      if(i<Math.min(lea.sellos,lea.meta)){ doc.setFillColor(221,152,177); doc.circle(cx,fy+1,dotR,'F');
+        doc.setDrawColor(255,255,255); doc.setLineWidth(.35);
+        doc.line(cx-0.8,fy+1,cx-0.2,fy+1.7); doc.line(cx-0.2,fy+1.7,cx+0.9,fy+0.3); }
+      else { doc.setDrawColor(...bordRosa); doc.setLineWidth(.4); doc.circle(cx,fy+1,dotR,'D'); }
+    }
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+    if(lea.completa){ doc.setTextColor(...rose); doc.text('¡PREMIO! 🎉'.replace(' 🎉',''),MR-4,fy-0.2,{align:'right'});
+      doc.setFont('times','italic'); doc.setFontSize(6); doc.setTextColor(...soft);
+      doc.text(String(lea.premio).slice(0,32),MR-4,fy+3.2,{align:'right'}); }
+    else { doc.setTextColor(...brown); doc.text(lea.sellos+' de '+lea.meta,MR-4,fy+0.2,{align:'right'});
+      doc.setFont('times','italic'); doc.setFontSize(6); doc.setTextColor(...soft);
+      doc.text('faltan '+(lea.meta-lea.sellos),MR-4,fy+3.4,{align:'right'}); }
+    fy+=13;
+  } else { fy+=2; }
   // ── Cierre ──
-  let fy=iy+ih+10;
   doc.setFont('times','italic'); doc.setFontSize(13.5); doc.setTextColor(...brown);
   doc.text('Gracias por confiar en Ley Studio',W/2,fy,{align:'center'});
   heart(W/2+doc.getTextWidth('Gracias por confiar en Ley Studio')/2+5,fy-1.5,1.7);
@@ -3307,6 +3344,8 @@ function loadCfgNegocio(){
     const el=document.getElementById(id); if(el&&D.config[key]) el.value=D.config[key];
   });
   const rv=document.getElementById('cfg-rven'); if(rv&&D.config.rVentana) rv.value=D.config.rVentana;
+  const lm=document.getElementById('cfg-lea-meta'); if(lm&&D.config.leaMeta) lm.value=D.config.leaMeta;
+  const lp=document.getElementById('cfg-lea-premio'); if(lp&&D.config.leaPremio) lp.value=D.config.leaPremio;
   renderCfgHorario();
 }
 function renderCfgHorario(){
@@ -3323,6 +3362,12 @@ function renderCfgHorario(){
       <input type="time" id="rh-fin-${d}" value="${h.fin||'20:00'}" style="border:1px solid var(--border);border-radius:8px;padding:5px 7px;font-size:12px;font-family:inherit">
     </div>`;
   }).join('');
+}
+function saveCfgLealtad(){
+  if(!D.config) D.config={};
+  D.config.leaMeta=Math.max(2,+document.getElementById('cfg-lea-meta').value||10);
+  D.config.leaPremio=document.getElementById('cfg-lea-premio').value.trim()||'50% de descuento en tu próximo servicio';
+  saveAndSync(); renderClientes(); toast('🌸 Programa de lealtad guardado');
 }
 function saveCfgReserva(){
   if(!D.config) D.config={};
@@ -3452,6 +3497,71 @@ const invSt=i=>i.stock===0?'empty':i.stock<=i.min?'low':'ok';
 // timestamp en ms, monotónico por dispositivo. (Antes: max+1 → colisiones que pisaban registros.)
 const nextId=arr=>{ const t=Date.now(); nextId._l=Math.max(t,(nextId._l||0)+1); return nextId._l; };
 const _shortId=id=>{ const s=String(id); return s.length>6?s.slice(-6):s.padStart(4,'0'); };
+// ═══ PROGRAMA DE LEALTAD (carnet digital de sellos) ═══
+function lealtadCfg(){
+  return { meta: Math.max(2,+((D.config||{}).leaMeta)||10),
+           premio: ((D.config||{}).leaPremio)||'50% de descuento en tu próximo servicio' };
+}
+function lealtadDe(nombre){
+  const cfg=lealtadCfg();
+  const cl=(D.clientes||[]).find(x=>x&&x.nombre===nombre);
+  const visitas=(D.citas||[]).filter(c=>c&&c.clienta===nombre&&c.estado==='Completada').length;
+  const extra=cl?(+cl.leaExtra||0):0;
+  const canjes=cl?(+cl.leaCanjes||0):0;
+  const sellos=Math.max(0, visitas+extra-canjes*cfg.meta);
+  return { ...cfg, cliente:cl, visitas, extra, canjes, sellos, completa:sellos>=cfg.meta };
+}
+function lealtadCardHTML(lea,compacta){
+  const size=compacta?26:34;
+  let dots='';
+  for(let i=0;i<lea.meta;i++){
+    const lleno=i<Math.min(lea.sellos,lea.meta);
+    dots+=`<div style="width:${size}px;height:${size}px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${compacta?12:16}px;
+      ${lleno?'background:linear-gradient(135deg,var(--pink),#c4809d);box-shadow:0 2px 6px rgba(221,152,177,.4);':'background:#fff;border:1.5px dashed rgba(178,146,87,.45);'}">
+      ${lleno?'🌸':'<span style="color:rgba(178,146,87,.4);font-size:'+(compacta?9:11)+'px;font-weight:700">'+(i+1)+'</span>'}</div>`;
+  }
+  const resto=lea.meta-lea.sellos;
+  return `<div style="background:linear-gradient(135deg,rgba(221,152,177,.08),rgba(178,146,87,.06));border:1.5px solid rgba(221,152,177,.4);border-radius:14px;padding:${compacta?'10px 12px':'14px 16px'}">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:9px">
+      <span style="font-size:11px;font-weight:800;color:var(--gold-deep);letter-spacing:1.2px">🌸 TARJETA DE LEALTAD</span>
+      <span class="badge ${lea.completa?'bb-pink':'bgo'}">${lea.sellos>lea.meta?lea.meta+'+':lea.sellos} de ${lea.meta}</span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">${dots}</div>
+    <div style="font-size:11.5px;margin-top:9px;${lea.completa?'color:#9a3a60;font-weight:800':'color:var(--gray)'}">
+      ${lea.completa?('🎉 ¡Tarjeta completa! Premio disponible: '+_esc(lea.premio)):('A '+resto+' visita'+(resto!==1?'s':'')+' de: '+_esc(lea.premio))}
+    </div>
+  </div>`;
+}
+function ajustarSellos(id){
+  const c=D.clientes.find(x=>+x.id===+id); if(!c) return;
+  const lea=lealtadDe(c.nombre);
+  const v=prompt('Sellos adicionales para '+c.nombre+' (ej. los de su carnet físico).\nVisitas en el sistema: '+lea.visitas+'\nSellos extra actuales: '+lea.extra,String(lea.extra));
+  if(v===null) return;
+  const n=parseInt(v,10);
+  if(isNaN(n)||n<0||n>99){ toast('Ingresa un número entre 0 y 99','warn'); return; }
+  c.leaExtra=n; _touch(c);
+  saveAndSync(); renderClientes(); renderLealtadEnModal(c.id);
+  toast('🌸 Sellos actualizados: ahora tiene '+lealtadDe(c.nombre).sellos);
+}
+function canjearPremio(id){
+  const c=D.clientes.find(x=>+x.id===+id); if(!c) return;
+  const lea=lealtadDe(c.nombre);
+  if(!lea.completa){ toast('Aún no completa su tarjeta ('+lea.sellos+' de '+lea.meta+')','warn'); return; }
+  if(!confirm('Canjear el premio de '+c.nombre+':\n"'+lea.premio+'"\n\nLa tarjeta se reinicia y los sellos sobrantes se conservan.\nRecuerda aplicar el descuento en su cita.')) return;
+  c.leaCanjes=(+c.leaCanjes||0)+1; _touch(c);
+  saveAndSync(); renderClientes(); renderLealtadEnModal(c.id);
+  toast('🎉 Premio canjeado — nueva tarjeta: '+lealtadDe(c.nombre).sellos+' sellos');
+}
+function renderLealtadEnModal(id){
+  const box=document.getElementById('cl-lealtad'); if(!box) return;
+  const c=D.clientes.find(x=>+x.id===+id); if(!c){ box.innerHTML=''; return; }
+  const lea=lealtadDe(c.nombre);
+  box.innerHTML=lealtadCardHTML(lea,false)+`
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button class="hbtn hbtn-outline" style="font-size:11px;padding:5px 12px" onclick="ajustarSellos(${c.id})">Acreditar carnet físico</button>
+      ${lea.completa?`<button class="hbtn hbtn-gold" style="font-size:11px;padding:5px 12px" onclick="canjearPremio(${c.id})">🎉 Canjear premio</button>`:''}
+    </div>`;
+}
 function clientStats(nombre){
   const comp=D.citas.filter(c=>c.clienta===nombre&&c.estado==='Completada');
   const visitas=comp.length, total=comp.reduce((s,c)=>s+(c.precioTotal||0),0);
@@ -3727,6 +3837,8 @@ function completarCita(id){
     saveAndSync(); renderAll();
     toast('✅ Cita completada y registrada en Finanzas');
   }
+  const lea=lealtadDe(c.clienta);
+  setTimeout(()=>{ toast(lea.completa?('🎉 ¡'+c.clienta+' completó su tarjeta de lealtad! Premio: '+lea.premio):('🌸 '+c.clienta+' suma su sello #'+lea.sellos+' de '+lea.meta)); },2500);
 }
 // ── Registrar cobro de una cita "Por cobrar" ──
 function openCobro(id){
@@ -3797,7 +3909,7 @@ function renderClientes(){
     return`<tr id="cliente-row-${c.id}" onclick="openEditCliente(${c.id})" style="cursor:pointer">
       <td>${_renderAvatar(c,34)}</td><td>${i+1}</td><td><strong>${c.nombre}</strong>${bdayBadge}</td>
       <td>${c.tel}</td><td>${fmtD(c.fecha)}</td>
-      <td><span class="badge bgo">${st.visitas}</span></td>
+      <td><span class="badge bgo">${st.visitas}</span>${(()=>{const lea=lealtadDe(c.nombre);return ` <span class="badge ${lea.completa?'bb-pink':'br'}" title="Tarjeta de lealtad">🌸 ${Math.min(lea.sellos,lea.meta)}/${lea.meta}${lea.completa?' 🎉':''}</span>`;})()}</td>
       <td><strong style="color:var(--pink)">${fmtM(st.total)}</strong></td>
       <td style="max-width:200px;font-size:11px">${st.ultimoSvc.length>45?st.ultimoSvc.substring(0,45)+'…':st.ultimoSvc}</td>
       <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;padding:10px 4px" onclick="event.stopPropagation()"><button class="action-icon-btn action-wa" onclick="openWAcliente(${c.id})" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.121 1.527 5.849L0 24l6.335-1.506A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.001-1.367l-.359-.213-3.72.885.916-3.605-.234-.371A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg></button><button class="action-icon-btn" onclick="openCorreoCliente(${c.id})" title="Enviar correo" style="color:#CF8AA3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></button><button class="action-icon-btn action-pdf" onclick="openFicha(${c.id})" title="Ficha técnica"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button><button class="action-icon-btn" onclick="copiarEnlaceCliente(${c.id})" title="Copiar enlace de ficha" style="color:var(--gold)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></button><button class="action-icon-btn action-edit" onclick="openEditCliente(${c.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td></tr>`;
@@ -3859,6 +3971,7 @@ function addCliente(){
 }
 function openEditCliente(id){
   const c=D.clientes.find(x=>x.id===id); if(!c) return;
+  renderLealtadEnModal(id);
   document.getElementById('e-cl-id').value=id;
   document.getElementById('e-cl-n').value=c.nombre;
   document.getElementById('e-cl-nombre-preview').textContent=c.nombre;
