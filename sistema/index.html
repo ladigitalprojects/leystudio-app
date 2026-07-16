@@ -146,6 +146,7 @@ body.dark-mode .del-svc-btn{background:#fde8e8;color:#a93226;border-color:#e0808
 body.dark-mode .btn-red{background:#fde8e8;color:#a93226;border-color:#e08080;}
 /* Table header text */
 
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--black);color:var(--cream);font-family:'Segoe UI',Arial,sans-serif;}
 body.dark-mode{background:#141414;color:#fdfbf7;}
@@ -356,7 +357,17 @@ html.pwa header{
 @media(max-width:768px){
   nav{display:none!important;}
   .ham-btn{display:none!important;}
-  body{padding-bottom:calc(92px + env(safe-area-inset-bottom));}
+  html,body{height:100%;overflow:hidden;width:100%;}
+  body{display:flex;flex-direction:column;padding-bottom:0;}
+  header{flex-shrink:0;width:100%;}
+  main{
+    flex:1 1 auto;
+    min-height:0;min-width:0;width:100%;max-width:100%;
+    overflow-y:auto;overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:contain;
+    padding-bottom:calc(110px + env(safe-area-inset-bottom))!important;
+  }
   #bnav{
     display:flex;position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:8500;
     background:rgba(253,248,242,.48);
@@ -6345,7 +6356,10 @@ function showTab(name){
   const map={dashboard:0,citas:1,clientes:2,finanzas:3,inventario:4,servicios:5,calendario:6,notificaciones:7,estadisticas:8,reportes:9,config:10};
   document.querySelectorAll('.tab')[map[name]]?.classList.add('active');
   _syncBottomNav(name);
-  try{ window.scrollTo({top:0,left:0,behavior:'instant'}); }catch(e){ window.scrollTo(0,0); }
+  try{
+    const m=document.querySelector('main'); if(m) m.scrollTop=0;
+    window.scrollTo(0,0);
+  }catch(e){}
   if(name==='dashboard') renderDashboard();
   if(name==='calendario') renderCalendar();
   if(name==='config'){ renderUsuarios(); renderBackupsList(); }
