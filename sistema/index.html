@@ -378,6 +378,11 @@ html.pwa header{
     padding:8px 4px calc(6px + env(safe-area-inset-bottom));
     justify-content:space-around;align-items:flex-start;
   }
+  #bnav::after{
+    content:'';position:absolute;top:100%;left:0;right:0;height:120px;
+    background:rgba(253,248,242,.62);
+    -webkit-backdrop-filter:blur(28px) saturate(1.7);backdrop-filter:blur(28px) saturate(1.7);
+  }
   body.ovl-open #bnav{display:none!important;}
   body.ovl-open #bsheet-wrap{display:none!important;}
   #toast{bottom:calc(96px + env(safe-area-inset-bottom))!important;right:14px;left:14px;max-width:none;text-align:center;}
