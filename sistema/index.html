@@ -366,17 +366,21 @@ html.pwa header{
     overflow-y:auto;overflow-x:hidden;
     -webkit-overflow-scrolling:touch;
     overscroll-behavior-y:contain;
-    padding-bottom:calc(110px + env(safe-area-inset-bottom))!important;
+    padding-bottom:calc(96px + env(safe-area-inset-bottom))!important;
   }
   #bnav{
-    display:flex;position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:8500;
-    background:rgba(253,248,242,.48);
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:8500;
+    background:rgba(253,248,242,.62);
     -webkit-backdrop-filter:blur(28px) saturate(1.7);backdrop-filter:blur(28px) saturate(1.7);
-    border:1px solid rgba(255,255,255,.65);
-    box-shadow:0 10px 34px rgba(61,43,31,.22), inset 0 1px 0 rgba(255,255,255,.7);
-    border-radius:30px;padding:7px 4px;justify-content:space-around;align-items:center;
-    transform:translateZ(0);will-change:transform;
+    border-top:1px solid rgba(255,255,255,.7);
+    box-shadow:0 -6px 24px rgba(61,43,31,.14);
+    border-radius:22px 22px 0 0;
+    padding:8px 4px calc(6px + env(safe-area-inset-bottom));
+    justify-content:space-around;align-items:flex-start;
   }
+  body.ovl-open #bnav{display:none!important;}
+  body.ovl-open #bsheet-wrap{display:none!important;}
+  #toast{bottom:calc(96px + env(safe-area-inset-bottom))!important;right:14px;left:14px;max-width:none;text-align:center;}
   .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;
     font-family:inherit;color:#8a7a6a;font-size:9.5px;font-weight:700;letter-spacing:.2px;cursor:pointer;padding:2px 0;}
   .bn-ico{width:44px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:15px;transition:.18s;}
@@ -387,7 +391,7 @@ html.pwa header{
   #bsheet-wrap{display:block;position:fixed;inset:0;z-index:8400;background:rgba(61,43,31,.25);
     opacity:0;pointer-events:none;transition:opacity .22s;}
   #bsheet-wrap.open{opacity:1;pointer-events:auto;}
-  #bsheet{position:absolute;left:10px;right:10px;bottom:calc(84px + env(safe-area-inset-bottom));
+  #bsheet{position:absolute;left:10px;right:10px;bottom:calc(86px + env(safe-area-inset-bottom));
     background:rgba(253,248,242,.62);
     -webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);
     border:1px solid rgba(255,255,255,.7);border-radius:26px;
@@ -4141,7 +4145,7 @@ function deleteCliente(){
   saveAndSync(); renderClientes(); actualizarDatalist();
   closeModal('modal-cl'); toast('✅ Clienta eliminada');
 }
-function closeModal(id){document.getElementById(id).classList.remove('open');} function openModal(id){const el=document.getElementById(id); if(!el) return; el.classList.add('open'); setTimeout(()=>{reinitFlatpickr(el); if(window.reinitFlatpickrTime) reinitFlatpickrTime(el);},80);}
+function closeModal(id){document.getElementById(id).classList.remove('open');_updOverlayState();} function openModal(id){const el=document.getElementById(id); if(!el) return; el.classList.add('open');_updOverlayState(); setTimeout(()=>{reinitFlatpickr(el); if(window.reinitFlatpickrTime) reinitFlatpickrTime(el);},80);}
 
 function openFicha(id){
   const c=D.clientes.find(x=>x.id===id); if(!c) return;
@@ -6369,18 +6373,25 @@ function showTab(name){
   if(name==='servicios') renderServicios();
   try{ localStorage.setItem('ls_last_tab', name); }catch(e){}
 }
+function _updOverlayState(){
+  try{
+    const abierto=!!document.querySelector('.form-box.open, .modal-overlay.open');
+    document.body.classList.toggle('ovl-open', abierto);
+  }catch(e){}
+}
 function toggleForm(id){
   const el=document.getElementById(id);
   const opening=!el.classList.contains('open');
   // Close any other open forms
   document.querySelectorAll('.form-box.open').forEach(f=>{ if(f.id!==id) f.classList.remove('open'); });
   el.classList.toggle('open');
+  setTimeout(_updOverlayState,0);
   // Manage backdrop
   let bd=document.getElementById('form-backdrop');
   if(opening){
     if(!bd){
       bd=document.createElement('div'); bd.id='form-backdrop';
-      bd.onclick=()=>{ document.querySelectorAll('.form-box.open').forEach(f=>f.classList.remove('open')); bd.remove(); };
+      bd.onclick=()=>{ document.querySelectorAll('.form-box.open').forEach(f=>f.classList.remove('open')); bd.remove(); _updOverlayState(); };
       document.body.appendChild(bd);
     }
     // Reset campos al abrir
