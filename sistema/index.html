@@ -366,23 +366,22 @@ html.pwa header{
     overflow-y:auto;overflow-x:hidden;
     -webkit-overflow-scrolling:touch;
     overscroll-behavior-y:contain;
-    padding-bottom:calc(96px + env(safe-area-inset-bottom))!important;
+    padding-bottom:calc(84px + env(safe-area-inset-bottom))!important;
   }
-  #bnav{
-    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:8500;
-    background:rgba(253,248,242,.62);
-    -webkit-backdrop-filter:blur(28px) saturate(1.7);backdrop-filter:blur(28px) saturate(1.7);
-    border-top:1px solid rgba(255,255,255,.7);
-    box-shadow:0 -6px 24px rgba(61,43,31,.14);
-    border-radius:22px 22px 0 0;
-    padding:8px 4px calc(6px + env(safe-area-inset-bottom));
-    justify-content:space-around;align-items:flex-start;
+  #bnav{display:none!important;}
+  #fab{
+    display:flex!important;
+    position:fixed;right:16px;bottom:calc(22px + env(safe-area-inset-bottom));z-index:8500;
+    width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--gold),var(--gold-deep));
+    color:#fff;font-family:Georgia,'Times New Roman',serif;font-size:21px;font-weight:700;
+    box-shadow:0 6px 20px rgba(61,43,31,.35), inset 0 1px 0 rgba(255,255,255,.35);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .2s;
   }
-  #bnav::after{
-    content:'';position:absolute;top:100%;left:0;right:0;height:400px;
-    background:rgba(253,248,242,.62);
-    -webkit-backdrop-filter:blur(28px) saturate(1.7);backdrop-filter:blur(28px) saturate(1.7);
-  }
+  #fab:active{transform:scale(.92);}
+  #fab.abierto{background:linear-gradient(135deg,#c4809d,var(--pink));}
+  body.ovl-open #fab{display:none!important;}
   body.ovl-open #bnav{display:none!important;}
   body.ovl-open #bsheet-wrap{display:none!important;}
   #toast{bottom:calc(96px + env(safe-area-inset-bottom))!important;right:14px;left:14px;max-width:none;text-align:center;}
@@ -396,7 +395,7 @@ html.pwa header{
   #bsheet-wrap{display:block;position:fixed;inset:0;z-index:8400;background:rgba(61,43,31,.25);
     opacity:0;pointer-events:none;transition:opacity .22s;}
   #bsheet-wrap.open{opacity:1;pointer-events:auto;}
-  #bsheet{position:absolute;left:10px;right:10px;bottom:calc(86px + env(safe-area-inset-bottom));
+  #bsheet{position:absolute;left:10px;right:10px;bottom:calc(94px + env(safe-area-inset-bottom));
     background:rgba(253,248,242,.62);
     -webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);
     border:1px solid rgba(255,255,255,.7);border-radius:26px;
@@ -410,6 +409,8 @@ html.pwa header{
     border:1px solid rgba(178,146,87,.25);display:flex;align-items:center;justify-content:center;
     box-shadow:0 2px 8px rgba(61,43,31,.08);}
   .bs-item svg{width:22px;height:22px;stroke:var(--gold-deep);}
+  .bs-item.on .bs-ico{background:rgba(178,146,87,.25);border-color:var(--gold);}
+  .bs-item.on{color:var(--gold-deep);}
 }
 @media(max-width:900px){.stats-extra-grid{grid-template-columns:1fr!important;}}
 @keyframes rowFlash{0%,40%{background:rgba(221,152,177,.35);}100%{background:transparent;}}
@@ -3702,25 +3703,7 @@ try{
 }catch(e){}
 // Anclar la barra al borde físico de la pantalla: mide el recorte real del viewport
 // que iOS aplica en apps instaladas y compensa exactamente esa distancia.
-function _dockBnav(){
-  try{
-    if(!document.documentElement.classList.contains('pwa')) return;
-    if(window.innerWidth>768) return;
-    const b=document.getElementById('bnav'); if(!b) return;
-    const gap=Math.max(0,(window.screen&&screen.height?screen.height:0)-window.innerHeight);
-    if(gap>4 && gap<220){
-      b.style.bottom=(-gap)+'px';
-      b.style.paddingBottom='26px';
-      const m=document.querySelector('main');
-      if(m) m.style.setProperty('padding-bottom',(100)+'px','important');
-      requestAnimationFrame(()=>{
-        const visible=Math.max(60, b.offsetHeight-gap);
-        const bs=document.getElementById('bsheet');
-        if(bs) bs.style.bottom=(visible+8)+'px';
-      });
-    }
-  }catch(e){}
-}
+function _dockBnav(){ /* sin uso: el FAB no requiere compensación */ }
 window.addEventListener('resize',_dockBnav);
 window.addEventListener('orientationchange',()=>setTimeout(_dockBnav,300));
 document.addEventListener('DOMContentLoaded',()=>setTimeout(_dockBnav,100));
@@ -5906,7 +5889,7 @@ function applyRoleUI(){
   const bnFin=document.getElementById('bn-finanzas'); if(bnFin) bnFin.style.display=isAdmin?'':'none';
   document.querySelectorAll('#bsheet .bs-item').forEach(b=>{
     const txt=(b.textContent||'').toUpperCase();
-    if(!isAdmin && ['ESTADÍSTICAS','REPORTES','CONFIG'].some(k=>txt.includes(k))) b.style.display='none';
+    if(!isAdmin && ['FINANZAS','ESTADÍSTICAS','REPORTES','CONFIG'].some(k=>txt.includes(k))) b.style.display='none';
     else b.style.display='';
   });
   // Show logout button with user name
@@ -7129,17 +7112,19 @@ function toggleNav(){
 function toggleBSheet(){
   const w=document.getElementById('bsheet-wrap'); if(!w) return;
   w.classList.toggle('open');
-  document.getElementById('bn-mas')?.classList.toggle('on',w.classList.contains('open'));
+  const abierto=w.classList.contains('open');
+  const f=document.getElementById('fab');
+  if(f){ f.classList.toggle('abierto',abierto); f.textContent=abierto?'✕':'LS'; }
+  if(abierto) _syncBottomNav(window._tabActual||'dashboard');
 }
 function navGo(name){
   const w=document.getElementById('bsheet-wrap'); if(w) w.classList.remove('open');
   showTab(name);
 }
 function _syncBottomNav(name){
-  const principales=['dashboard','citas','clientes','finanzas'];
-  document.querySelectorAll('#bnav .bn-item').forEach(b=>b.classList.remove('on'));
-  if(principales.includes(name)) document.getElementById('bn-'+name)?.classList.add('on');
-  else document.getElementById('bn-mas')?.classList.add('on');
+  window._tabActual=name;
+  document.querySelectorAll('#bsheet .bs-item').forEach(b=>b.classList.remove('on'));
+  document.getElementById('bs-'+name)?.classList.add('on');
 }
 function closeNavOnTabClick(){
   if(window.innerWidth <= 768) document.querySelector('nav').classList.remove('nav-open');
@@ -7624,17 +7609,15 @@ function renderNotifPanel(){
 }
 </script>
 
-<!-- ══ TAB BAR MÓVIL (liquid glass) ══ -->
-<div id="bnav">
-  <button class="bn-item on" id="bn-dashboard" onclick="navGo('dashboard')"><span class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>Inicio</button>
-  <button class="bn-item" id="bn-citas" onclick="navGo('citas')"><span class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Citas</button>
-  <button class="bn-item" id="bn-clientes" onclick="navGo('clientes')"><span class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span>Clientas</button>
-  <button class="bn-item" id="bn-finanzas" onclick="navGo('finanzas')"><span class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>Finanzas</button>
-  <button class="bn-item" id="bn-mas" onclick="toggleBSheet()"><span class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></span>Más</button>
-</div>
+<!-- ══ BOTÓN FLOTANTE + MENÚ (móvil) ══ -->
+<button id="fab" onclick="toggleBSheet()" aria-label="Menú" style="display:none">LS</button>
 <div id="bsheet-wrap" onclick="if(event.target===this)toggleBSheet()">
   <div id="bsheet">
     <div class="bs-grid">
+      <button class="bs-item" id="bs-dashboard" onclick="navGo('dashboard')"><span class="bs-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>Inicio</button>
+      <button class="bs-item" id="bs-citas" onclick="navGo('citas')"><span class="bs-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Citas</button>
+      <button class="bs-item" id="bs-clientes" onclick="navGo('clientes')"><span class="bs-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span>Clientas</button>
+      <button class="bs-item" id="bs-finanzas" onclick="navGo('finanzas')"><span class="bs-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>Finanzas</button>
       <button class="bs-item" onclick="navGo('inventario')"><span class="bs-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><line x1="10" y1="12" x2="14" y2="12"/></svg></span>Inventario</button>
       <button class="bs-item" onclick="navGo('servicios')"><span class="bs-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>Servicios</button>
       <button class="bs-item" onclick="navGo('calendario')"><span class="bs-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="1.5"/></svg></span>Calendario</button>
