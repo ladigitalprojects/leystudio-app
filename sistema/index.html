@@ -3700,6 +3700,31 @@ try{
     document.documentElement.classList.add('pwa');
   }
 }catch(e){}
+// Anclar la barra al borde físico de la pantalla: mide el recorte real del viewport
+// que iOS aplica en apps instaladas y compensa exactamente esa distancia.
+function _dockBnav(){
+  try{
+    if(!document.documentElement.classList.contains('pwa')) return;
+    if(window.innerWidth>768) return;
+    const b=document.getElementById('bnav'); if(!b) return;
+    const gap=Math.max(0,(window.screen&&screen.height?screen.height:0)-window.innerHeight);
+    if(gap>4 && gap<220){
+      b.style.bottom=(-gap)+'px';
+      b.style.paddingBottom='26px';
+      const m=document.querySelector('main');
+      if(m) m.style.setProperty('padding-bottom',(100)+'px','important');
+      requestAnimationFrame(()=>{
+        const visible=Math.max(60, b.offsetHeight-gap);
+        const bs=document.getElementById('bsheet');
+        if(bs) bs.style.bottom=(visible+8)+'px';
+      });
+    }
+  }catch(e){}
+}
+window.addEventListener('resize',_dockBnav);
+window.addEventListener('orientationchange',()=>setTimeout(_dockBnav,300));
+document.addEventListener('DOMContentLoaded',()=>setTimeout(_dockBnav,100));
+setTimeout(_dockBnav,800);
 window.addEventListener('error',function(e){
   try{
     if(window.__errT && Date.now()-window.__errT<6000) return;
