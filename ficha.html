@@ -157,6 +157,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--cream);min-
         <div id="lea-sub" style="font-size:11px;color:var(--gold-dk);margin-bottom:10px;line-height:1.45"></div>
         <div id="lea-dots" style="display:grid;gap:8px;justify-content:center"></div>
         <div id="lea-msg" style="font-size:12px;margin-top:10px;text-align:center;color:var(--gold-dk)"></div>
+        <div style="text-align:center;margin-top:12px"><button type="button" onclick="descargarTarjeta()" style="background:linear-gradient(135deg,#B29257,#A9884D);color:#fff;border:none;border-radius:20px;padding:9px 22px;font-size:12.5px;font-weight:800;font-family:inherit;cursor:pointer;letter-spacing:.4px;box-shadow:0 3px 10px rgba(178,146,87,.3)">⬇ Descargar mi tarjeta</button></div>
       </div>
     </div>
   </div>
@@ -427,6 +428,7 @@ async function init(){
           ?'<strong style="color:#A9884D">✨ ¡Ya tienes '+esc(L.premioHito)+'!</strong> · a '+faltan+' sello'+(faltan!==1?'s':'')+' del '+s2
           :'Cada visita suma un sello · a '+faltan+' sello'+(faltan!==1?'s':'')+' del '+s2+(L.hitoUsado?' · '+s1+' ya canjeado ✓':''));
       document.getElementById('lea-card').style.display='block';
+      window._leaData={L:L,nombre:p.nombre||''};
     }
     document.getElementById('loading').style.display='none';
     document.getElementById('ficha-wrap').style.display='block';
@@ -716,6 +718,67 @@ async function descargarPDF(){
 }
 
 // ── Toast ──
+function descargarTarjeta(){
+  const Ld=window._leaData; if(!Ld||!Ld.L){ toast('La tarjeta aún no carga'); return; }
+  const L=Ld.L;
+  const short=t=>{const m=String(t||'').match(/\d+\s*%/);return m?m[0].replace(/\s+/g,'')+' OFF':'Premio';};
+  const hito=+L.hito||0, s1=short(L.premioHito), s2=short(L.premio);
+  const W=680, H=520, SC=2;
+  const cv=document.createElement('canvas'); cv.width=W*SC; cv.height=H*SC;
+  const x=cv.getContext('2d'); x.scale(SC,SC);
+  const rr=(x0,y0,w,h,r)=>{x.beginPath();x.moveTo(x0+r,y0);x.arcTo(x0+w,y0,x0+w,y0+h,r);x.arcTo(x0+w,y0+h,x0,y0+h,r);x.arcTo(x0,y0+h,x0,y0,r);x.arcTo(x0,y0,x0+w,y0,r);x.closePath();};
+  // fondo
+  x.fillStyle='#FDF8F2'; x.fillRect(0,0,W,H);
+  rr(10,10,W-20,H-20,22); x.strokeStyle='rgba(221,152,177,.55)'; x.lineWidth=2; x.stroke();
+  x.textAlign='center';
+  // encabezado
+  x.fillStyle='#B29257'; x.font='600 46px Georgia,serif'; x.fillText('LS',W/2,72);
+  x.font='700 13px Helvetica,Arial'; try{x.letterSpacing='5px';}catch(e){}
+  x.fillText('LEY STUDIO',W/2,96);
+  x.font='600 9px Helvetica,Arial'; x.fillStyle='#c9b490'; x.fillText('NAIL ARTIST',W/2,111);
+  try{x.letterSpacing='0px';}catch(e){}
+  x.fillStyle='#DD98B1'; x.font='italic 700 30px Georgia,serif'; x.fillText('Tarjeta de fidelidad',W/2,152);
+  // subtítulo
+  x.fillStyle='#8a7a6a'; x.font='13px Helvetica,Arial';
+  x.fillText('Completa todos los stickers y obtén un '+s2.replace(' OFF','')+' de descuento',W/2,182);
+  x.fillText('en tu siguiente servicio · al sello '+hito+' ya tienes '+s1,W/2,200);
+  // círculos (filas de 5)
+  const cols=Math.min(5,L.meta), r=30, gapX=76, gapY=82;
+  const rows=Math.ceil(L.meta/cols);
+  const y0=252;
+  for(let i=1;i<=L.meta;i++){
+    const col=(i-1)%cols, row=Math.floor((i-1)/cols);
+    const cxp=W/2+(col-(cols-1)/2)*gapX, cyp=y0+row*gapY;
+    const lleno=i<=Math.min(L.sellos,L.meta);
+    const esHito=hito&&i===hito, esMeta=hito&&i===L.meta;
+    x.beginPath(); x.arc(cxp,cyp,r,0,Math.PI*2);
+    if(lleno){ const g=x.createLinearGradient(cxp-r,cyp-r,cxp+r,cyp+r); g.addColorStop(0,'#DD98B1'); g.addColorStop(1,'#c4809d'); x.fillStyle=g; x.fill(); }
+    else if(esHito||esMeta){ x.fillStyle='#fff'; x.fill(); x.strokeStyle='rgba(221,152,177,.85)'; x.lineWidth=2; x.stroke(); }
+    else { x.fillStyle='rgba(221,152,177,.25)'; x.fill(); }
+    if(esHito||esMeta){
+      x.fillStyle=lleno?'#fff':'#c4809d'; x.font='800 12px Helvetica,Arial';
+      const lbl=esMeta?s2:s1;
+      x.fillText(lbl.split(' ')[0],cxp,cyp-1); x.fillText('OFF',cxp,cyp+13);
+      if(esHito&&L.hitoUsado){ x.beginPath(); x.arc(cxp+r-8,cyp-r+8,9,0,Math.PI*2); x.fillStyle='#B29257'; x.fill(); x.fillStyle='#fff'; x.font='700 11px Helvetica,Arial'; x.fillText('✓',cxp+r-8,cyp-r+12); }
+    } else if(lleno){ x.font='26px serif'; x.fillText('🌸',cxp,cyp+9); }
+  }
+  // pie
+  const yF=y0+(rows-1)*gapY+r+38;
+  x.fillStyle='#3D2B1F'; x.font='700 15px Helvetica,Arial';
+  x.fillText((Ld.nombre?Ld.nombre+' · ':'')+Math.min(L.sellos,L.meta)+' de '+L.meta+' sellos',W/2,yF);
+  x.fillStyle='#A9884D'; x.font='600 12.5px Helvetica,Arial';
+  const faltan=Math.max(0,L.meta-L.sellos);
+  x.fillText(L.completa?('¡Tarjeta completa! Tienes disponible tu '+s2):(L.hitoDisp?('Tienes disponible tu '+s1+' · a '+faltan+' sellos del '+s2):('A '+faltan+' sello'+(faltan!==1?'s':'')+' del '+s2)),W/2,yF+22);
+  x.fillStyle='#DD98B1'; x.font='11px Helvetica,Arial'; x.fillText('@ley_studiohn · leystudiohn.com',W/2,H-26);
+  // descargar
+  try{
+    const a=document.createElement('a');
+    a.download='tarjeta-fidelidad-ley-studio.png';
+    a.href=cv.toDataURL('image/png');
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('🌸 Tarjeta descargada');
+  }catch(e){ toast('No se pudo descargar'); }
+}
 function toast(msg){
   const el=document.getElementById('toast');
   el.textContent=msg; el.style.display='block';

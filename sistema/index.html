@@ -3719,7 +3719,7 @@ function sumarSello(id,delta){
   const antes=lealtadDe(c.nombre);
   if(delta<0 && antes.sellos<=0){ toast('No tiene sellos que quitar','warn'); return; }
   c.leaExtra=Math.max(-99,Math.min(99,(+c.leaExtra||0)+delta)); _touch(c);
-  saveAndSync(); renderClientes(); renderLealtadEnModal(c.id);
+  saveAndSync(); renderClientes(); renderLealtadEnModal(c.id); _republicarFicha(c);
   const lea=lealtadDe(c.nombre);
   if(delta>0 && lea.completa && !antes.completa) toast('🎉 ¡'+c.nombre+' completó su tarjeta! Canjear: '+lea.premio);
   else if(delta>0 && lea.hitoDisp && !antes.hitoDisp) toast('✨ '+c.nombre.split(' ')[0]+' llegó a '+lea.hito+' sellos — '+_leaShort(lea.premioHito)+' disponible');
@@ -3731,7 +3731,7 @@ function canjearHito(id){
   if(!lea.hitoDisp){ toast(lea.hitoUsado?'Ya usó este descuento en esta tarjeta':'Aún no llega a '+lea.hito+' sellos ('+lea.sellos+' de '+lea.hito+')','warn'); return; }
   if(!confirm('Canjear "'+lea.premioHito+'" de '+c.nombre+'?\n\nSus sellos se conservan y siguen sumando hacia el premio mayor ('+_leaShort(lea.premio)+' al completar '+lea.meta+').\nRecuerda aplicar el descuento al cobrar.')) return;
   c.leaC10=lea.canjes+1; _touch(c);
-  saveAndSync(); renderClientes(); renderLealtadEnModal(c.id);
+  saveAndSync(); renderClientes(); renderLealtadEnModal(c.id); _republicarFicha(c);
   toast('✨ '+_leaShort(lea.premioHito)+' canjeado — sigue acumulando hacia: '+lea.premio);
 }
 function canjearPremio(id){
@@ -3740,7 +3740,7 @@ function canjearPremio(id){
   if(!lea.completa){ toast('Aún no completa su tarjeta ('+lea.sellos+' de '+lea.meta+')','warn'); return; }
   if(!confirm('Canjear el premio de '+c.nombre+':\n"'+lea.premio+'"\n\nLa tarjeta se reinicia y los sellos sobrantes se conservan.\nRecuerda aplicar el descuento en su cita.')) return;
   c.leaCanjes=(+c.leaCanjes||0)+1; _touch(c);
-  saveAndSync(); renderClientes(); renderLealtadEnModal(c.id);
+  saveAndSync(); renderClientes(); renderLealtadEnModal(c.id); _republicarFicha(c);
   toast('🎉 Premio canjeado — nueva tarjeta: '+lealtadDe(c.nombre).sellos+' sellos');
 }
 async function enviarTarjetaWA(id){
@@ -3761,6 +3761,18 @@ async function enviarTarjetaWA(id){
     :`Hola ${nombre} 💅✨\n\nAquí puedes ver tu *Tarjeta de Fidelidad Ley Studio* 🌸 — ya llevas *${lea.sellos} de ${lea.meta} sellos*.\n\n${url}\n\nCada visita suma un sello: al sello ${lea.hito} tienes *${s1}* y al completar los ${lea.meta}, *${s2}* 🎁`;
   const telDig=String(c.tel).replace(/\D/g,'');
   window.open('https://wa.me/'+telDig+'?text='+encodeURIComponent(msg),'_blank');
+}
+// Republica la ficha/tarjeta pública de la clienta (si ya tiene enlace) para que
+// su tarjeta de fidelidad se mantenga al día sin reenviar el link.
+async function _republicarFicha(cl){
+  try{
+    if(!cl||!cl.fichaToken) return;
+    await authedFetch(`${FIREBASE_BASE}/pub/${cl.fichaToken}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(_pubPayload(cl))});
+  }catch(e){}
+}
+function _republicarFichaDe(nombre){
+  const cl=(D.clientes||[]).find(x=>x&&x.nombre===nombre);
+  if(cl) _republicarFicha(cl);
 }
 function renderLealtadEnModal(id){
   const box=document.getElementById('cl-lealtad'); if(!box) return;
@@ -4064,6 +4076,7 @@ function completarCita(id){
     toast('✅ Cita completada y registrada en Finanzas');
   }
   const lea=lealtadDe(c.clienta);
+  _republicarFichaDe(c.clienta);
   setTimeout(()=>{ toast(lea.completa?('🎉 ¡'+c.clienta+' completó su tarjeta! Canjear: '+lea.premio):(lea.sellos===lea.hito&&lea.hitoDisp?('✨ '+c.clienta+' llegó a '+lea.hito+' sellos — '+_leaShort(lea.premioHito)+' disponible'):('🌸 '+c.clienta+' suma su sello #'+lea.sellos+' de '+lea.meta))); },2500);
 }
 // ── Registrar cobro de una cita "Por cobrar" ──
