@@ -151,10 +151,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--cream);min-
       <div id="client-badge" class="f-client-badge" style="display:none"></div>
       <div id="lea-card" style="display:none;margin:14px auto 0;max-width:420px;background:linear-gradient(135deg,rgba(221,152,177,.1),rgba(178,146,87,.07));border:1.5px solid rgba(221,152,177,.45);border-radius:14px;padding:14px 16px;text-align:left">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:10px">
-          <span style="font-size:11px;font-weight:800;color:var(--gold-dk);letter-spacing:1.2px">🌸 TU TARJETA DE LEALTAD</span>
+          <span style="font-size:11px;font-weight:800;color:var(--gold-dk);letter-spacing:1.2px">🌸 TU TARJETA DE FIDELIDAD</span>
           <span id="lea-count" style="font-size:12px;font-weight:800;color:var(--pink)"></span>
         </div>
-        <div id="lea-dots" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div>
+        <div id="lea-sub" style="font-size:11px;color:var(--gold-dk);margin-bottom:10px;line-height:1.45"></div>
+        <div id="lea-dots" style="display:grid;gap:8px;justify-content:center"></div>
         <div id="lea-msg" style="font-size:12px;margin-top:10px;text-align:center;color:var(--gold-dk)"></div>
       </div>
     </div>
@@ -393,18 +394,38 @@ async function init(){
     prefill();
     if(p.lealtad&&p.lealtad.meta){
       const L=p.lealtad;
+      const esc=t=>String(t||'').replace(/</g,'&lt;');
+      const short=t=>{const m=String(t||'').match(/\d+\s*%/);return m?m[0].replace(/\s+/g,'')+' OFF':'Premio';};
+      const hito=+L.hito||0, s1=short(L.premioHito), s2=short(L.premio);
+      const size=38, cols=Math.min(5,L.meta);
       let dots='';
-      for(let i=0;i<L.meta;i++){
-        const lleno=i<Math.min(L.sellos,L.meta);
-        dots+='<div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;'+
-          (lleno?'background:linear-gradient(135deg,#DD98B1,#c4809d);box-shadow:0 2px 6px rgba(221,152,177,.4);':'background:#fff;border:1.5px dashed rgba(178,146,87,.45);color:rgba(178,146,87,.5);font-size:11px;font-weight:700;')+
-          '">'+(lleno?'🌸':(i+1))+'</div>';
+      for(let i=1;i<=L.meta;i++){
+        const lleno=i<=Math.min(L.sellos,L.meta);
+        const esHito=hito&&i===hito, esMeta=hito&&i===L.meta;
+        if(esHito||esMeta){
+          const lbl=(esMeta?s2:s1).replace(' OFF','<br>OFF');
+          const usado=esHito&&L.hitoUsado;
+          dots+='<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.05;font-size:9px;font-weight:800;position:relative;'+
+            (lleno?'background:linear-gradient(135deg,#DD98B1,#c4809d);color:#fff;box-shadow:0 2px 6px rgba(221,152,177,.4);':'background:#fff;border:1.5px solid rgba(221,152,177,.65);color:#c4809d;')+
+            '"><span>'+lbl+'</span>'+(usado?'<span style="position:absolute;top:-4px;right:-4px;background:#B29257;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>':'')+'</div>';
+        } else {
+          dots+='<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;'+
+            (lleno?'background:linear-gradient(135deg,#DD98B1,#c4809d);box-shadow:0 2px 6px rgba(221,152,177,.4);':'background:rgba(221,152,177,.22);')+
+            '">'+(lleno?'🌸':'')+'</div>';
+        }
       }
-      document.getElementById('lea-dots').innerHTML=dots;
+      const dv=document.getElementById('lea-dots');
+      dv.style.gridTemplateColumns='repeat('+cols+','+size+'px)';
+      dv.innerHTML=dots;
       document.getElementById('lea-count').textContent=Math.min(L.sellos,L.meta)+' de '+L.meta;
+      const sub=document.getElementById('lea-sub');
+      if(sub) sub.textContent=hito?('Completa todos los stickers y obtén un '+String(L.premio)+' — al sello '+hito+' ya tienes '+s1):'';
+      const faltan=Math.max(0,L.meta-L.sellos);
       document.getElementById('lea-msg').innerHTML=L.completa
-        ?'<strong style="color:#c4809d">🎉 ¡Tarjeta completa! Tienes disponible: '+String(L.premio).replace(/</g,'&lt;')+'</strong>'
-        :'Cada visita suma un sello · A '+(L.meta-L.sellos)+' visita'+((L.meta-L.sellos)!==1?'s':'')+' de: '+String(L.premio).replace(/</g,'&lt;');
+        ?'<strong style="color:#c4809d">🎉 ¡Tarjeta completa! Tienes disponible: '+esc(L.premio)+'</strong>'
+        :(L.hitoDisp
+          ?'<strong style="color:#A9884D">✨ ¡Ya tienes '+esc(L.premioHito)+'!</strong> · a '+faltan+' sello'+(faltan!==1?'s':'')+' del '+s2
+          :'Cada visita suma un sello · a '+faltan+' sello'+(faltan!==1?'s':'')+' del '+s2+(L.hitoUsado?' · '+s1+' ya canjeado ✓':''));
       document.getElementById('lea-card').style.display='block';
     }
     document.getElementById('loading').style.display='none';
